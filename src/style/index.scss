@@ -3,7 +3,7 @@
 }
 
 // 富文本样式
-.editor-box {
+.fb-editor {
   flex-flow: column nowrap;
   display: flex;
   padding: 0 24px;
@@ -12,7 +12,7 @@
 }
 
 // 工具栏
-.editor-controls {
+.fb-editor-controls {
   width: 100%;
   overflow: hidden;
   height: 40px;
@@ -128,7 +128,7 @@
 }
 
 // 输入框样式
-.editor-scroll {
+.fb-editor-scroll {
   width: 100%;
   max-height: 75px;
   overflow-y: auto;
@@ -143,7 +143,7 @@
     background-color: rgb(0 0 0 / 15%);
   }
 
-  .editor-wrapper {
+  .fb-editor-wrapper {
     width: 100%;
     min-height: 75px;
     overflow-x: hidden;
@@ -165,7 +165,7 @@
   }
 }
 
-.editor-container {
+.fb-editor-container {
   background-color: #fff;
   flex: 1;
   position: relative;
@@ -174,7 +174,7 @@
   }
 }
 
-.tip-placeholder {
+.fb-tip-placeholder {
   position: absolute;
   pointer-events: none;
   user-select: none;

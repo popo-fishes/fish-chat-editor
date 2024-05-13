@@ -6,7 +6,6 @@
 import { useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import type { ReactNode } from "react";
 import classNames from "classnames";
-import { Tooltip, Image } from "antd";
 import Editable from "../Editable";
 
 import emoji from "../../config/emoji";
@@ -109,23 +108,7 @@ const ChatEditor = forwardRef<IEditRef, IEditorProps>((props, ref) => {
       {/* 功能区 */}
       <div className="fb-editor-controls">
         {/* 默认工具栏 */}
-        <Tooltip
-          title="表情包"
-          overlayStyle={{ pointerEvents: "none" }}
-          overlayInnerStyle={{
-            fontSize: "12px",
-            padding: "5px 12px",
-            minHeight: "29px"
-          }}
-        >
-          <div
-            className="btn-emotion"
-            ref={emotionTarget}
-            onClick={() => {
-              setOpen(!openEmoji);
-            }}
-          />
-        </Tooltip>
+
         {/* 可扩展 */}
         {props?.toolbarRender?.()}
       </div>
@@ -151,9 +134,7 @@ const ChatEditor = forwardRef<IEditRef, IEditorProps>((props, ref) => {
                   setOpen(false);
                   editInputRef.current?.insertEmoji(item);
                 }}
-              >
-                <Image src={item.url} preview={false} width={22} height={22} />
-              </div>
+              ></div>
             ))}
           </div>
         </div>
