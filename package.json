@@ -1,0 +1,80 @@
+{
+  "name": "fish-bubble-chat-editor",
+  "version": "0.0.1",
+  "description": "Web Chat Rich Text Editor, Ready to Use Out of the Box, Easy to Configure",
+  "keywords": [
+    "fish-bubble-chat-editor",
+    "chat-editor",
+    "editor"
+  ],
+  "license": "MIT",
+  "module": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "rimraf -rf dist && rollup -c ./rollup.config.mjs && npm run build-theme && npm run build:typed",
+    "clean-node_modules": "rimraf -rf node_modules",
+    "build-theme": "gulp --require @esbuild-kit/cjs-loader",
+    "build:typed": "tsc --declaration --emitDeclarationOnly --noEmit false --outDir dist/types",
+    "lint": "eslint \"src/**/*.{ts,tsx,js}\""
+  },
+  "dependencies": {
+    "antd": "4.16.13",
+    "classnames": "^2.5.1",
+    "react": "17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@esbuild-kit/cjs-loader": "^2.2.1",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "@babel/preset-typescript": "^7.16.7",
+    "@pnpm/types": "^8.4.0",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^22.0.1",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/lodash": "^4.14.182",
+    "@types/node": "^20.4.10",
+    "@types/react": "17.0.2",
+    "@types/react-dom": "17.0.2",
+    "@types/gulp": "^4.0.9",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "esbuild": "0.19.11",
+    "eslint": "^8.47.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "fast-glob": "^3.3.1",
+    "lint-staged": "^15.1.0",
+    "lodash": "^4.17.21",
+    "prettier": "^3.1.0",
+    "rimraf": "^3.0.2",
+    "rollup": "^4.9.1",
+    "gulp": "^4.0.2",
+    "rollup-plugin-esbuild": "^6.1.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.6.2",
+    "tsx": "^3.6.0",
+    "typescript": "^5.1.6",
+    "@types/gulp-sass": "^5.0.0",
+    "gulp-sass": "^5.1.0",
+    "@types/sass": "1.45.0",
+    "gulp-autoprefixer": "^9.0.0",
+    "gulp-clean-css": "^4.3.0",
+    "chalk": "^5.0.1",
+    "consola": "^2.15.3",
+    "fs-extra": "^11.1.1",
+    "sass": "1.69.7"
+  },
+  "engines": {
+    "node": ">= 18"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx,md}": "eslint --fix"
+  }
+}
