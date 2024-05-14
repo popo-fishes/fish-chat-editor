@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 import { useState } from "react";
-import { ChatEditor } from "../../dist";
+import ChatEditor from "../../dist";
 import "./App.css";
 
 function App() {
