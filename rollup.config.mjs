@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 import glob from "fast-glob";
-import babel from "@rollup/plugin-babel";
+import { babel } from "@rollup/plugin-babel";
 import typescript from "@rollup/plugin-typescript";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
@@ -24,13 +24,16 @@ const excludeFiles = () => {
 const externalConfig = [(id) => /\/__expample__|main.tsx/.test(id), "react", "react-dom", "classnames", "react-is", "antd", "**/node_modules/**"];
 
 export default {
-  input: excludeFiles(),
+  input: "./src/index.ts",
   output: {
-    dir: "dist/",
+    // dir: "",
+    // format: "es",
+    // sourcemap: true,
+    // preserveModules: true,
+    // preserveModulesRoot: "src"
+    file: "dist/index.js",
     format: "es",
-    sourcemap: true,
-    preserveModules: true,
-    preserveModulesRoot: "src"
+    sourcemap: true
   },
   plugins: [
     nodeResolve({
@@ -38,9 +41,8 @@ export default {
     }),
     commonjs(),
     babel({
-      babelHelpers: "bundled",
       presets: ["@babel/preset-env"],
-      extensions: [".js", ".jsx", ".ts", ".tsx"],
+      extensions: [".js", ".jsx", ".ts", ".tsx", ".scss"],
       exclude: "**/node_modules/**"
     }),
     esbuild({

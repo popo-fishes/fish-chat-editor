@@ -18,10 +18,7 @@ type EventType = MouseEvent | TouchEvent;
 
 type TargetElement = Element | Document | Window | HTMLElement;
 
-function getTargetElement(
-  target?: BasicTarget<TargetElement>,
-  defaultTarget?: TargetElement
-): TargetElement | null | undefined {
+function getTargetElement(target?: BasicTarget<TargetElement>, defaultTarget?: TargetElement): TargetElement | null | undefined {
   // 如果target不存在，则返回默认dom
   if (!target) {
     return defaultTarget;
@@ -43,7 +40,7 @@ function getTargetElement(
 }
 
 // 管理目标元素外点击事件的 Hook。
-export default function useClickAway(
+export function useClickAway(
   /** 操作者 */
   onClickAway: (e: EventType) => void,
   /** 目标dom */
@@ -74,7 +71,7 @@ export default function useClickAway(
 
     document.addEventListener(eventName, handler, {
       passive: true,
-      capture,
+      capture
     });
     // 删除事件委托，避免内存泄漏
     return () => {

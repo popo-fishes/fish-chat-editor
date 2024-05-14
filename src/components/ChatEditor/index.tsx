@@ -5,13 +5,14 @@
  */
 import { useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import type { ReactNode } from "react";
+import { Tooltip, Image } from "antd";
 import classNames from "classnames";
 import Editable from "../Editable";
 
 import emoji from "../../config/emoji";
 import { getImgCdn } from "../../utils";
 import { ItemType, IEditInputRef } from "../../types";
-import useClickAway from "../../hooks/useClickAway";
+import { useClickAway } from "../../hooks/useClickAway";
 
 export interface IEditorProps {
   /** 自定义工具栏内容 */
@@ -24,6 +25,8 @@ export interface IEditorProps {
   onChange?: (val: string) => void;
   /** 点击发送按钮事件 */
   onSend?: (val: string) => void;
+  /** 提示占位符 */
+  placeholder?: string;
 }
 
 export interface IEditRef extends IEditInputRef {}
@@ -48,7 +51,7 @@ const data = getEmojiData();
 // 富文本组件
 const ChatEditor = forwardRef<IEditRef, IEditorProps>((props, ref) => {
   // 解析值
-  const { className: _className } = props;
+  const { className: _className, placeholder } = props;
   // 输入框控制器
   const editInputRef = useRef<IEditInputRef>(null);
   // 表情的弹窗
@@ -108,12 +111,29 @@ const ChatEditor = forwardRef<IEditRef, IEditorProps>((props, ref) => {
       {/* 功能区 */}
       <div className="fb-editor-controls">
         {/* 默认工具栏 */}
-
+        {/* 默认工具栏 */}
+        <Tooltip
+          title="表情包"
+          overlayStyle={{ pointerEvents: "none" }}
+          overlayInnerStyle={{
+            fontSize: "12px",
+            padding: "5px 12px",
+            minHeight: "29px"
+          }}
+        >
+          <div
+            className="btn-emotion"
+            ref={emotionTarget}
+            onClick={() => {
+              setOpen(!openEmoji);
+            }}
+          />
+        </Tooltip>
         {/* 可扩展 */}
         {props?.toolbarRender?.()}
       </div>
       {/* 编辑框 */}
-      <Editable placeholder="" ref={editInputRef} onChange={editChange} enterDown={enterDownClick} click={editInputClick} />
+      <Editable placeholder={placeholder} ref={editInputRef} onChange={editChange} enterDown={enterDownClick} click={editInputClick} />
       {/* 发送区 */}
       <div className="chat-op">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
@@ -134,7 +154,9 @@ const ChatEditor = forwardRef<IEditRef, IEditorProps>((props, ref) => {
                   setOpen(false);
                   editInputRef.current?.insertEmoji(item);
                 }}
-              ></div>
+              >
+                <Image src={item.url} preview={false} width={22} height={22} />
+              </div>
             ))}
           </div>
         </div>
