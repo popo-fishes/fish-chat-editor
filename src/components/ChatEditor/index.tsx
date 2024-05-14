@@ -10,9 +10,27 @@ import { Tooltip, Image } from "antd";
 import Editable from "../Editable";
 import { useClickAway } from "@/hooks";
 
-import { emojiData } from "@/config";
+import { getImgCdn } from "@/utils";
+import { emoji } from "@/config";
 
-import type { IChatEditorProps, IChatEditorRef, IEditableRef } from "../../types";
+import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
+
+const getEmojiData = () => {
+  const data: IEmojiType[] = [];
+  for (const i in emoji) {
+    const bli = i.replace("[", "");
+    const cli = bli.replace("]", "");
+    data.push({
+      url: getImgCdn("faces/" + emoji[i]),
+      name: i,
+      title: cli
+    });
+  }
+  return data;
+};
+
+// 表情数据
+const emojiData = getEmojiData();
 
 // 聊天组件
 const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
@@ -96,7 +114,7 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
           }}
         >
           <div
-            className="btn-emotion"
+            className="emotion"
             ref={emotionTarget}
             onClick={() => {
               setOpen(!openEmoji);
@@ -109,14 +127,14 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
       {/* 编辑框 */}
       <Editable placeholder={placeholder} ref={editInputRef} onChange={onEditableChange} onEnterDown={onEnterDownEvent} onClick={onEditableClick} />
       {/* 发送区 */}
-      <div className="chat-op">
+      <div className="fb-chat-op">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
         <button className={classNames("btn-send", isSend && "activate")} onClick={onSubmit}>
           发送
         </button>
       </div>
       {/* 表情选择列表 */}
-      <div className="emote-box" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
+      <div className="fb-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
             {emojiData.map((item, index) => (

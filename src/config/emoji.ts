@@ -2,9 +2,6 @@
  * @Date: 2024-3-14 15:40:27
  * @Description: 表情配置
  */
-import { getImgCdn } from "../utils";
-import type { IEmojiType } from "../types";
-
 export const emoji: { [key: string]: string } = {
   "[爱你]": "[爱你].png",
   "[爱心]": "[爱心].png",
@@ -49,20 +46,3 @@ export const emoji: { [key: string]: string } = {
   "[眨眼笑]": "[眨眼笑].png",
   "[ok]": "[ok].png"
 };
-
-const getEmojiData = () => {
-  const data: IEmojiType[] = [];
-  for (const i in emoji) {
-    const bli = i.replace("[", "");
-    const cli = bli.replace("]", "");
-    data.push({
-      url: getImgCdn("faces/" + emoji[i]),
-      name: i,
-      title: cli
-    });
-  }
-  return data;
-};
-
-// 表情数据
-export const emojiData = getEmojiData();

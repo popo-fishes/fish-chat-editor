@@ -11,7 +11,8 @@ function App() {
 
   return (
     <>
-      <div style={{ marginTop: "300px" }}>
+      <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-bubble-chat-editor</p>
+      <div style={{ marginTop: "180px" }}>
         <ChatEditor onChange={(v) => setVal(v)} />
       </div>
       <p style={{ marginTop: "15px" }}>富文本内容:</p>

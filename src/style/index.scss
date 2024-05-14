@@ -21,7 +21,7 @@
   user-select: none;
   padding-top: 8px;
   box-sizing: content-box;
-  .btn-emotion {
+  .emotion {
     width: 21px;
     height: 21px;
     background: url(ypImcdn("icon/emote.svg")) no-repeat;
@@ -38,7 +38,7 @@
 }
 
 // 底部操作区
-.chat-op {
+.fb-chat-op {
   user-select: none;
   padding-bottom: 5px;
   padding-top: 5px;
@@ -74,7 +74,7 @@
 }
 
 // 表情弹窗样式
-.emote-box {
+.fb-emote-pop {
   position: absolute;
   bottom: 157px;
   left: 1px;
