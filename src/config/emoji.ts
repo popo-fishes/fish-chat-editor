@@ -2,7 +2,7 @@
  * @Date: 2024-3-14 15:40:27
  * @Description: 表情配置
  */
-import { getImgCdn } from "@/utils";
+import { getImgCdn } from "../utils";
 import type { IEmojiType } from "../types";
 
 export const emoji: { [key: string]: string } = {

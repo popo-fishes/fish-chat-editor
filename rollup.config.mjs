@@ -24,17 +24,17 @@ const excludeFiles = () => {
 const externalConfig = [(id) => /\/__expample__|main.tsx/.test(id), "react", "react-dom", "classnames", "react-is", "antd", "**/node_modules/**"];
 
 export default {
-  input: excludeFiles(),
-  // input: "./src/index.ts",
+  //  input: excludeFiles(),
+  input: "./src/index.ts",
   output: {
-    dir: "dist",
-    format: "es",
-    sourcemap: true,
-    preserveModules: true,
-    preserveModulesRoot: "src"
-    // file: "dist/index.js",
+    // dir: "dist",
     // format: "es",
-    // sourcemap: true
+    // sourcemap: true,
+    // preserveModules: true,
+    // preserveModulesRoot: "src"
+    file: "dist/index.js",
+    format: "es",
+    sourcemap: true
   },
   plugins: [
     nodeResolve({
