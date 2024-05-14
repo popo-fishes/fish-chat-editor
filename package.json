@@ -18,10 +18,10 @@
     "url": "https://github.com/u-fish-bubble/fish-bubble-chat-editor"
   },
   "scripts": {
-    "build": "rimraf -rf dist && rollup -c ./rollup.config.mjs && npm run build-theme && npm run build:typed",
-    "clean-node_modules": "rimraf -rf node_modules",
-    "build-theme": "gulp --require @esbuild-kit/cjs-loader",
+    "build": "rimraf -rf dist && rollup -c ./rollup.config.mjs && npm run build:theme && npm run build:typed",
+    "build:theme": "gulp --require @esbuild-kit/cjs-loader",
     "build:typed": "tsc --declaration --emitDeclarationOnly --noEmit false --outDir dist/types",
+    "clean-node_modules": "rimraf -rf node_modules",
     "lint": "eslint \"src/**/*.{ts,tsx,js}\""
   },
   "dependencies": {

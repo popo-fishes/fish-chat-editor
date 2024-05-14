@@ -12,11 +12,11 @@
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "skipLibCheck": true,
-    "noEmit": false,
+    "noEmit": true,
+    "noUnusedLocals": false,
     /* Linting */
     "strict": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"]

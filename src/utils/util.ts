@@ -3,7 +3,7 @@
  * @LastEditors: Please set LastEditors
  * @Description: 工具方法
  */
-import { regContentImg, getRandomWord } from "../../utils";
+import { regContentImg, getRandomWord } from "./conmmon";
 import {
   isDOMElement,
   isDOMNode,

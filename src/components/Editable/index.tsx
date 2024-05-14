@@ -4,22 +4,11 @@
  * @Description: 富文本组件
  */
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
-import type { ItemType, IEditInputRef } from "../../types";
-import { emojiLabel, labelRep } from "../../utils";
-import { getText, setRangeNode, editTransformSpaceText, amendRangeLastNode, setText } from "./utils";
-import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "./dom";
+import type { IEmojiType, IEditableRef, IEditableProps } from "@/types";
+import { emojiLabel, labelRep } from "@/utils";
+import { getText, setRangeNode, editTransformSpaceText, amendRangeLastNode, setText } from "@/utils/util";
+import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "@/utils/dom";
 import { handleInputTransforms, handlePasteTransforms, onCopyEvent, onCut, handleAmendEmptyLine } from "./event";
-
-export interface IEditInputProps {
-  /** 提示占位符 */
-  placeholder?: string;
-  /** 输入框点击事件 */
-  click?: () => void;
-  /** 键盘回车事件 */
-  enterDown?: () => void;
-  /** 输入框内容变化时的回调 */
-  onChange?: (val: string) => void;
-}
 
 // 备份当前的光标位置
 let currentSelection: {
@@ -55,7 +44,7 @@ let isLock = false;
 /**
  * @name 富文本组件
  */
-const Editable = forwardRef<IEditInputRef, IEditInputProps>((props, ref) => {
+const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   /** 用于操作聊天输入框元素 */
   const editRef = useRef<any>(null);
   /** 是否显示提示placeholder */
@@ -70,7 +59,7 @@ const Editable = forwardRef<IEditInputRef, IEditInputProps>((props, ref) => {
     ref,
     () =>
       ({
-        insertEmoji: (item: ItemType) => insertEmoji(item),
+        insertEmoji: (item: IEmojiType) => insertEmoji(item),
         getValue: () => {
           const editValue = getText(editRef.current);
           // 返回输入框信息
@@ -102,7 +91,7 @@ const Editable = forwardRef<IEditInputRef, IEditInputProps>((props, ref) => {
           });
         },
         blur: () => editRef?.current?.blur()
-      }) as IEditInputRef
+      }) as IEditableRef
   );
 
   /** @name 清空输入框的值 */
@@ -158,12 +147,14 @@ const Editable = forwardRef<IEditInputRef, IEditInputProps>((props, ref) => {
           // 只读属性 Range.endOffset 返回代表 Range 结束位置在 Range.endContainer 中的偏移值的数字。
           endOffset: range.endOffset
         };
-      } catch (err) {}
+      } catch (err) {
+        console.log(err);
+      }
     }
   };
 
   /** @name 选择插入表情/图片 */
-  const insertEmoji = (item: ItemType) => {
+  const insertEmoji = (item: IEmojiType) => {
     if (!findParentWithAttribute(currentSelection.startContainer)) {
       return;
     }
@@ -283,7 +274,7 @@ const Editable = forwardRef<IEditInputRef, IEditInputProps>((props, ref) => {
       event.preventDefault();
       event.stopPropagation();
       // 执行回车事件给父组件
-      props?.enterDown?.();
+      props?.onEnterDown?.();
       return;
     }
     // 按下删除按键
@@ -340,7 +331,7 @@ const Editable = forwardRef<IEditInputRef, IEditInputProps>((props, ref) => {
           onClick={(e) => {
             e.preventDefault();
             onEditorClick(e);
-            props?.click?.();
+            props?.onClick?.();
           }}
           onDrop={(e) => {
             // 禁用拖放操作, 如果拖动输入框内的图片，会导致吧图片的地址输入到 富文本中

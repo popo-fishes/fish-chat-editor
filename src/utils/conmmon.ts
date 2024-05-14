@@ -1,21 +1,19 @@
 /*
- * @Author: penglei
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  * @Description: file content
  */
-import emoji from "../config/emoji";
+import { emoji } from "@/config";
 
 /** 表情图片的 标签扩展属性名称 */
 export const emojiLabel = {
   key: "data-yp-emoji-img-name",
-  value: "ypEmojiImgName",
+  value: "ypEmojiImgName"
 };
 
 const CDN_YPW = "https://cdn.yupaowang.com";
 /** 为了使chat-editor独立使用这里单独使用自定义cdn方法 */
-export const getImgCdn = (imgPath: string) =>
-  `${CDN_YPW}/yupao_pc/images/im/${imgPath}`;
+export const getImgCdn = (imgPath: string) => `${CDN_YPW}/yupao_pc/images/im/${imgPath}`;
 
 /** @name 字符串标签转换 */
 export const labelRep = (str: string, reversal?: boolean) => {
@@ -29,12 +27,7 @@ export const labelRep = (str: string, reversal?: boolean) => {
       .replace(/&quot;/g, '"')
       .replace(/&#039;/g, "'");
   }
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
 
 /**
@@ -42,47 +35,46 @@ export const labelRep = (str: string, reversal?: boolean) => {
  * min-长度
  */
 export const getRandomWord = (min: number) => {
-  // eslint-disable-next-line prefer-const
-  let str = "",
-    range = min,
-    arr = [
-      "0",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "a",
-      "b",
-      "c",
-      "d",
-      "e",
-      "f",
-      "g",
-      "h",
-      "i",
-      "j",
-      "k",
-      "l",
-      "m",
-      "n",
-      "o",
-      "p",
-      "q",
-      "r",
-      "s",
-      "t",
-      "u",
-      "v",
-      "w",
-      "x",
-      "y",
-      "z",
-    ];
+  let str = "";
+  const range = min;
+  const arr = [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z"
+  ];
   for (let i = 0; i < range; i++) {
     const pos = Math.round(Math.random() * (arr.length - 1));
     str += arr[pos];
@@ -182,9 +174,7 @@ export const replaceMsgText = (msgText?: string): string => {
     } else {
       // 没有找到图片就当文本处理
       if (msgStr) {
-        str += isEnd
-          ? `<span>${labelRep(msgStr)}</span>`
-          : `<span>${labelRep(msgStr)}</span><br>`;
+        str += isEnd ? `<span>${labelRep(msgStr)}</span>` : `<span>${labelRep(msgStr)}</span><br>`;
       } else {
         // 如果文本不存在直接加br
         str += "<br>";

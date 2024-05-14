@@ -40,7 +40,7 @@ function getTargetElement(target?: BasicTarget<TargetElement>, defaultTarget?: T
 }
 
 // 管理目标元素外点击事件的 Hook。
-export function useClickAway(
+export default function useClickAway(
   /** 操作者 */
   onClickAway: (e: EventType) => void,
   /** 目标dom */

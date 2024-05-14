@@ -4,8 +4,8 @@
  * @Description: dom操作
  */
 
-import { getRandomWord, emojiLabel } from "../../utils";
-import { getText } from "./utils";
+import { getRandomWord, emojiLabel } from "./conmmon";
+import { getText } from "./util";
 
 /** 表情图片的 标签扩展属性名称 */
 export const eleKey = {
