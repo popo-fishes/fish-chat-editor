@@ -4,7 +4,7 @@
  * @Description: 富文本组件
  */
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
-import type { IEmojiType, IEditableRef, IEditableProps } from "@/types";
+import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { emojiLabel, labelRep } from "@/utils";
 import { getText, setRangeNode, editTransformSpaceText, amendRangeLastNode, setText } from "@/utils/util";
 import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "@/utils/dom";

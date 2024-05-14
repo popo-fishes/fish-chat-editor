@@ -12,7 +12,7 @@ import { useClickAway } from "@/hooks";
 
 import { emojiData } from "@/config";
 
-import type { IChatEditorProps, IChatEditorRef, IEditableRef } from "@/types";
+import type { IChatEditorProps, IChatEditorRef, IEditableRef } from "../../types";
 
 // 聊天组件
 const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
