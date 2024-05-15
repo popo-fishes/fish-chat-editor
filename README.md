@@ -51,21 +51,3 @@ import FbChatEditor from "fish-bubble-chat-editor";
 | clear    | 清空输入框值 | () => void            |
 | focus    | 获取焦点     | () => void            |
 | blur     | 失去焦点     | () => void            |
-
-<table style="width:100%">
-  <tr>
-    <th>列1</th>
-    <th>列2</th>
-    <th>列3</th>
-  </tr>
-  <tr>
-    <td>行1列1</td>
-    <td>行1列2</td>
-    <td>行1列3</td>
-  </tr>
-  <tr>
-    <td>行2列1</td>
-    <td>行2列2</td>
-    <td>行2列3</td>
-  </tr>
-</table>
