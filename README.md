@@ -18,7 +18,10 @@ $ pnpm install fish-bubble-chat-editor
 
 ## 使用
 
+```js
+// main.tsx
 import "fish-bubble-chat-editor/dist/index.css";
+```
 
 ```js
 import FbChatEditor from "fish-bubble-chat-editor";
