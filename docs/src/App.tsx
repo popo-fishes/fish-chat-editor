@@ -3,12 +3,12 @@
  * @Description: Modify here please
  */
 import { useState } from "react";
-import ChatEditor from "../../dist";
+import ChatEditor, { Version } from "../../dist";
 import "./App.css";
 
 function App() {
   const [v, setVal] = useState("");
-
+  console.log("chatEditor version---------", Version);
   return (
     <>
       <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-bubble-chat-editor</p>

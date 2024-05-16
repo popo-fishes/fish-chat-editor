@@ -14,3 +14,7 @@
   切换淘宝源：
   npm config set registry https://registry.npmmirror.com
 ```
+
+### 注意点：
+
+src下面使用types类型的时候， 不能用别名@/, 必须使用相对路径"../../types"

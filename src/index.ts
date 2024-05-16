@@ -8,3 +8,5 @@ export * from "./hooks";
 export * from "./utils";
 
 export * from "./types";
+
+export const Version = "0.0.5";
