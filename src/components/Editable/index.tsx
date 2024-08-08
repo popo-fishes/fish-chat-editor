@@ -6,7 +6,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { emojiLabel, labelRep } from "@/utils";
-import { getText, setRangeNode, editTransformSpaceText, amendRangeLastNode, setText } from "@/utils/util";
+import { getText, setRangeNode, editTransformSpaceText, setText } from "@/utils/util";
 import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "@/utils/dom";
 import { handleInputTransforms, handlePasteTransforms, onCopyEvent, onCut, handleAmendEmptyLine } from "./event";
 
@@ -86,7 +86,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           props?.onChange?.("");
         },
         focus: () => {
-          amendRangeLastNode(editRef?.current, () => {
+          requestAnimationFrame(() => {
             editRef?.current?.focus();
           });
         },
@@ -225,18 +225,27 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     // 表示正在输入中文，还没输入完毕，不能执行下面逻辑  ||  必须等到转换完成，才继续执行
     if (isLock || isFlag) return;
     // 标记正在输入转换，必须等到转换完成，才继续开启状态
-    isFlag = true;
-    // 转换输入框的内容，比如[爱心]转为表情图片
-    handleInputTransforms(editRef.current, async () => {
-      // 获取输入框的值，主动触发输入框值变化
-      const val = getText(editRef.current);
-      // 控制提示
-      setTipHolder(val == "");
-      // 暴露值
-      props?.onChange?.(editTransformSpaceText(val));
-      // 必须等到转换完成，才继续开启状态
-      isFlag = false;
-    });
+    // isFlag = true;
+    /**
+     * 有些电脑输入框卡，可能原因就在这里，v2版本先注释掉转换的方法
+       // 转换输入框的内容，比如[爱心]转为表情图片
+      handleInputTransforms(editRef.current, async () => {
+        // 获取输入框的值，主动触发输入框值变化
+        const val = getText(editRef.current);
+        // 控制提示
+        setTipHolder(val == "");
+        // 暴露值
+        props?.onChange?.(editTransformSpaceText(val));
+        // 必须等到转换完成，才继续开启状态
+        isFlag = false;
+      });
+     */
+    // 获取输入框的值，主动触发输入框值变化
+    const val = getText(editRef.current);
+    // 控制提示
+    setTipHolder(val == "");
+    // 暴露值
+    props?.onChange?.(editTransformSpaceText(val));
   };
 
   /** @name 点击输入框事件（点击时） */
