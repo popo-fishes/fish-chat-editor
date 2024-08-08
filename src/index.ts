@@ -9,4 +9,4 @@ export * from "./utils";
 
 export * from "./types";
 
-export const Version = "1.0.1";
+export const Version = "1.0.2";
