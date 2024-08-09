@@ -1,30 +1,30 @@
-<!--
+<!--shell
  * @Date: 2023-12-30 11:43:31
  * @Description: Modify here please
 -->
 
-<p align="center">fish-bubble-chat-editor - 一个基于React的聊天富文本组件</p>
+<p align="center">fish-chat-editor - 一个基于React的聊天富文本组件</p>
 
 ## 安装
 
 ```shell
  # NPM
-$ npm install fish-bubble-chat-editor
+$ npm install fish-chat-editor
 # Yarn
-$ yarn add fish-bubble-chat-editor
+$ yarn add fish-chat-editor
 # pnpm
-$ pnpm install fish-bubble-chat-editor
+$ pnpm install fish-chat-editor
 ```
 
 ## 使用
 
 ```js
 // main.tsx
-import "fish-bubble-chat-editor/dist/index.css";
+import "fish-chat-editor/dist/index.css";
 ```
 
 ```js
-import FbChatEditor from "fish-bubble-chat-editor";
+import FbChatEditor from "fish-chat-editor";
 
 <FbChatEditor />;
 ```

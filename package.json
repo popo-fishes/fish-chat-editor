@@ -1,9 +1,9 @@
 {
-  "name": "fish-bubble-chat-editor",
+  "name": "fish-chat-editor",
   "version": "1.0.2",
   "description": "Web Chat Rich Text Editor, Ready to Use Out of the Box, Easy to Configure",
   "keywords": [
-    "fish-bubble-chat-editor",
+    "fish-chat-editor",
     "chat-editor",
     "editor"
   ],
@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/u-fish-bubble/fish-bubble-chat-editor"
+    "url": "https://github.com/u-fish-bubble/fish-chat-editor"
   },
   "scripts": {
     "build": "rimraf -rf dist && rollup -c ./rollup.config.mjs && npm run build:theme && npm run build:typed",

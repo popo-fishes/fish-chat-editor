@@ -11,7 +11,7 @@ function App() {
   console.log("chatEditor version---------", Version);
   return (
     <>
-      <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-bubble-chat-editor</p>
+      <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-chat-editor</p>
       <div style={{ marginTop: "180px" }}>
         <ChatEditor onChange={(v) => setVal(v)} />
       </div>
