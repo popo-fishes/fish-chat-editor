@@ -5,9 +5,9 @@
  */
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
-import { emojiLabel, labelRep } from "@/utils";
-import { getText, setRangeNode, editTransformSpaceText, setText } from "@/utils/util";
-import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "@/utils/dom";
+import { emojiLabel, labelRep } from "../../utils";
+import { getText, setRangeNode, editTransformSpaceText, setText, amendRangeLastNode } from "../../utils/util";
+import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "../../utils/dom";
 import { handleInputTransforms, handlePasteTransforms, onCopyEvent, onCut, handleAmendEmptyLine } from "./event";
 
 // 备份当前的光标位置
@@ -86,7 +86,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           props?.onChange?.("");
         },
         focus: () => {
-          requestAnimationFrame(() => {
+          amendRangeLastNode(editRef.current, () => {
             editRef?.current?.focus();
           });
         },
@@ -223,7 +223,13 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   /** @name 输入框值变化onChange事件 */
   const onEditorInputChange = (e: any) => {
     // 表示正在输入中文，还没输入完毕，不能执行下面逻辑  ||  必须等到转换完成，才继续执行
-    if (isLock || isFlag) return;
+
+    /***
+     * 在谷歌浏览器，输入遇见输入框先清除焦点然后调用focus方法，重新修正光标的位置，会导致，下次输入中文时 onCompositionEnd事件不会触发，导致
+     * isLock变量状态有问题，这里先注释掉，不判断了，直接变化值，就去暴露值
+     */
+    // if (isLock || isFlag) return;
+
     // 标记正在输入转换，必须等到转换完成，才继续开启状态
     // isFlag = true;
     /**

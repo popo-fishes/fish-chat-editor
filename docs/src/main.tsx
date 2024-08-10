@@ -3,14 +3,15 @@
  * @Description: Modify here please
  */
 import React from "react";
-import ReactDOM from "react-dom/client";
+import ReactDOM from "react-dom";
 import App from "./App.tsx";
 import "./index.css";
 import "antd/dist/antd.css";
 import "../../dist/index.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
+  document.getElementById("root")!
 );

@@ -3,7 +3,7 @@
  * @LastEditors: Please set LastEditors
  * @Description: file content
  */
-import { emoji } from "@/config";
+import { emoji } from "../config";
 
 /** 表情图片的 标签扩展属性名称 */
 export const emojiLabel = {

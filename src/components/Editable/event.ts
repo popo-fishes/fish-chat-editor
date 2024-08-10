@@ -4,7 +4,7 @@
  * @Description: 富文本输入框事件处理
  */
 
-import { regContentImg, getRandomWord, labelRep } from "@/utils";
+import { regContentImg, getRandomWord, labelRep } from "../../utils";
 import {
   addTargetElement,
   removeNode,
@@ -15,9 +15,9 @@ import {
   findParentWithAttribute,
   getRangeAroundNode,
   getPlainText
-} from "@/utils/dom";
+} from "../../utils/dom";
 
-import { setRangeNode, setCursorNode, insertText } from "@/utils/util";
+import { setRangeNode, setCursorNode, insertText } from "../../utils/util";
 
 // 是否正在处理粘贴内容
 let isPasteLock = false;

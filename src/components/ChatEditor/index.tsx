@@ -8,10 +8,10 @@ import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
 import Editable from "../Editable";
-import { useClickAway } from "@/hooks";
+import { useClickAway } from "../../hooks";
 
-import { getImgCdn } from "@/utils";
-import { emoji } from "@/config";
+import { getImgCdn } from "../../utils";
+import { emoji } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
