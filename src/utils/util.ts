@@ -135,14 +135,15 @@ export const editTransformSpaceText = (content: string) => {
 };
 
 /** @name 修正光标的位置，把光标指向到富文本节点的最后一个字符上 */
-export const amendRangeLastNode = (editNode: any, callBack?: () => void) => {
+export const amendRangeLastNode = (editNode: any, callBack?: (node?: any) => void) => {
   // 获取页面的选择区域
   const selection: any = window.getSelection();
   if (!editNode || !editNode.childNodes) return callBack?.();
 
+  let lastElement = null;
+
   if (selection && selection.rangeCount > 0) {
-    // 判断当前的焦点是否在富文本编辑器的行 节点上。如果不在就设置在行节点上
-    const lastElement = editNode.childNodes[editNode.childNodes.length - 1];
+    lastElement = editNode.childNodes[editNode.childNodes.length - 1];
 
     if (!lastElement) {
       console.error("富文本不存在节点，请排查问题");
@@ -162,11 +163,12 @@ export const amendRangeLastNode = (editNode: any, callBack?: () => void) => {
     selection.removeAllRanges();
     selection.addRange(range);
   }
-  return callBack?.();
+  return callBack?.(lastElement);
 };
 
 /**
  * @name 在选区插入节点
+ * 核心方法之一
  */
 export const insertText = (content: string, callBack?: () => void) => {
   if (!content) return callBack?.();

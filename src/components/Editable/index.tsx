@@ -86,7 +86,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           props?.onChange?.("");
         },
         focus: () => {
-          amendRangeLastNode(editRef.current, () => {
+          requestAnimationFrame(() => {
             editRef?.current?.focus();
           });
         },
@@ -155,7 +155,16 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
 
   /** @name 选择插入表情/图片 */
   const insertEmoji = (item: IEmojiType) => {
+    // 非常重要的逻辑
     if (!findParentWithAttribute(currentSelection.startContainer)) {
+      // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
+      amendRangeLastNode(editRef.current, (node) => {
+        if (node) {
+          // 设置当前光标节点
+          setInitRangePosition(node);
+          insertEmoji(item);
+        }
+      });
       return;
     }
 
@@ -228,7 +237,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
      * 在谷歌浏览器，输入遇见输入框先清除焦点然后调用focus方法，重新修正光标的位置，会导致，下次输入中文时 onCompositionEnd事件不会触发，导致
      * isLock变量状态有问题，这里先注释掉，不判断了，直接变化值，就去暴露值
      */
-    // if (isLock || isFlag) return;
+    if (isLock || isFlag) return;
 
     // 标记正在输入转换，必须等到转换完成，才继续开启状态
     // isFlag = true;
@@ -295,6 +304,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     // 按下删除按键
     if (event.keyCode === 8) {
       const selection = window.getSelection();
+      // 如果当前已经是一个空节点 就 阻止事件 不然会把我的空文本节点给删除了导致BUG
       if (selection?.isCollapsed && isEmptyEditNode(editRef.current)) {
         event.preventDefault();
         return;
@@ -307,7 +317,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
    */
   const onPasteChange = (e: any) => {
     e.preventDefault();
-    handlePasteTransforms(e, () => {
+    handlePasteTransforms(e, editRef.current, () => {
       // 获取输入框的值，主动触发输入框值变化
       const val = getText(editRef.current);
       // 控制提示

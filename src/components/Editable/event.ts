@@ -17,7 +17,7 @@ import {
   getPlainText
 } from "../../utils/dom";
 
-import { setRangeNode, setCursorNode, insertText } from "../../utils/util";
+import { setRangeNode, setCursorNode, insertText, amendRangeLastNode } from "../../utils/util";
 
 // 是否正在处理粘贴内容
 let isPasteLock = false;
@@ -177,7 +177,17 @@ export const handleAmendEmptyLine = (editNode: any, callBack?: () => void) => {
   // 判断当前光标节点的顶级节点是否是一个富文本节点
   const topElementNode = findParentWithAttribute(rangeStartContainer);
 
-  if (!topElementNode) return callBack?.();
+  // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
+  if (!topElementNode) {
+    // 非常重要的逻辑
+    amendRangeLastNode(editNode, (node) => {
+      if (node) {
+        // 在调用自己一次
+        handleAmendEmptyLine(editNode, callBack);
+      }
+    });
+    return;
+  }
 
   const [behindNodeList, nextNodeList] = getRangeAroundNode();
 
@@ -207,7 +217,7 @@ export const handleAmendEmptyLine = (editNode: any, callBack?: () => void) => {
 };
 
 /** @name 处理粘贴事件的内容转换 */
-export const handlePasteTransforms = (e: any, callBack?: () => void) => {
+export const handlePasteTransforms = (e: any, editNode: any, callBack?: () => void) => {
   // 获取粘贴的内容
   const clp = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
   const isFile = clp?.types?.includes("File");
@@ -238,12 +248,53 @@ export const handlePasteTransforms = (e: any, callBack?: () => void) => {
     document.execCommand("delete", false, undefined);
     // 在删除完成后执行其他操作
     isPasteLock = true;
+
+    // 获取当前光标
+    const range = selection?.getRangeAt(0);
+    // 获取当前光标的开始容器节点
+    const topElementNode: any = findParentWithAttribute(range.startContainer);
+
+    // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
+    if (!topElementNode) {
+      // 非常重要的逻辑
+      amendRangeLastNode(editNode, (node) => {
+        if (node) {
+          insertText(repContent, () => {
+            isPasteLock = false;
+            callBack?.();
+          });
+        }
+      });
+      return;
+    }
+
     insertText(repContent, () => {
       isPasteLock = false;
       callBack?.();
     });
   } else {
     isPasteLock = true;
+
+    // 获取当前光标
+    const range = selection?.getRangeAt(0);
+
+    // 获取当前光标的开始容器节点
+    const topElementNode: any = findParentWithAttribute(range.startContainer);
+
+    // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
+    if (!topElementNode) {
+      // 非常重要的逻辑
+      amendRangeLastNode(editNode, (node) => {
+        if (node) {
+          insertText(repContent, () => {
+            isPasteLock = false;
+            callBack?.();
+          });
+        }
+      });
+      return;
+    }
+
     insertText(repContent, () => {
       isPasteLock = false;
       callBack?.();

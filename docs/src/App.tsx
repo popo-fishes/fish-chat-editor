@@ -9,7 +9,6 @@ import "./App.css";
 function App() {
   const [v, setVal] = useState("");
   const editorRef = useRef();
-  console.log("chatEditor version---------", Version);
 
   // 发送文本消息
   const onSend = async (v) => {
@@ -18,6 +17,8 @@ function App() {
     // 延迟
     editorRef.current?.focus();
   };
+
+  console.log(v);
 
   return (
     <>
