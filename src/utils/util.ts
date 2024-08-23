@@ -142,7 +142,7 @@ export const amendRangeLastNode = (editNode: any, callBack?: (node?: any) => voi
 
   let lastElement = null;
 
-  if (selection && selection.rangeCount > 0) {
+  if (selection && selection.rangeCount >= 0) {
     lastElement = editNode.childNodes[editNode.childNodes.length - 1];
 
     if (!lastElement) {
