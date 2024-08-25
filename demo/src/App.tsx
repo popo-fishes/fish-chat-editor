@@ -23,7 +23,7 @@ function App() {
   return (
     <>
       <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-chat-editor</p>
-      <a href="https://github.com/fish-popo/fish-chat-editor/blob/main/README.md" target="_blank">
+      <a href="https://github.com/popo-fishes/fish-chat-editor/blob/main/README.md" target="_blank">
         fish-chat-editor文档
       </a>
       <div style={{ marginTop: "180px" }}>
