@@ -6,6 +6,7 @@
 
 import { getRandomWord, emojiLabel } from "./conmmon";
 import { getText } from "./util";
+import type { EditorElement } from "../types";
 
 /** 表情图片的 标签扩展属性名称 */
 export const eleKey = {
@@ -54,7 +55,7 @@ export const createLineElement = (): HTMLParagraphElement => {
  * @param clear 是否需要清空内容，在添加节点
  * @returns
  */
-export const addTargetElement = (targetNode: any, childNodes: any[], clear: boolean = true) => {
+export const addTargetElement = (targetNode: HTMLElement, childNodes: HTMLElement[], clear: boolean = true) => {
   if (targetNode) {
     if (childNodes && childNodes.length && clear) {
       targetNode.innerHTML = "";
@@ -71,8 +72,8 @@ export const addTargetElement = (targetNode: any, childNodes: any[], clear: bool
  * @param childNodes
  * @returns
  */
-export const cloneNodes = (childNodes: any) => {
-  const nodes: any = [];
+export const cloneNodes = (childNodes: HTMLElement[]) => {
+  const nodes: any[] = [];
   for (let i = 0; i < childNodes.length; i++) {
     const clonedNode = childNodes[i].cloneNode(true); // 复制节点及其子节点
     nodes.push(clonedNode);
@@ -84,9 +85,9 @@ export const cloneNodes = (childNodes: any) => {
  * @name 删除节点
  * @param childNodes
  */
-export const removeNode = (childNodes: any) => {
+export const removeNode = (childNodes: HTMLElement[]) => {
   // 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
-  const nodes: any = Array.from(childNodes);
+  const nodes: HTMLElement[] = Array.from(childNodes);
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
     node?.remove();
@@ -97,9 +98,9 @@ export const removeNode = (childNodes: any) => {
  * @name 给定一个节点，在节点的前面插入多个节点
  * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
  */
-export const insertBeforeNode = (targetElement: any, childNodes: any) => {
+export const insertBeforeNode = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
   if (!targetElement || !childNodes || !childNodes?.length) return;
-  const nodes: any = Array.from(cloneNodes(childNodes));
+  const nodes: HTMLElement[] = Array.from(cloneNodes(childNodes));
   const fragment = new DocumentFragment();
   for (let i = 0; i < nodes.length; i++) {
     fragment.appendChild(nodes[i]);
@@ -113,7 +114,7 @@ export const insertBeforeNode = (targetElement: any, childNodes: any) => {
 /**
  * @name 获取节点在全部子节点下面的位置
  */
-export const getNodeIndex = (nodes: any, child: any) => {
+export const getNodeIndex = (nodes: HTMLElement[], child: HTMLElement) => {
   let position = 0;
   for (let i = 0; i < nodes.length; i++) {
     position++;
@@ -130,7 +131,7 @@ export const getNodeIndex = (nodes: any, child: any) => {
  * @param targetElement
  * @returns
  */
-export const getDomPreviousOrnextSibling = (targetElement: any) => {
+export const getDomPreviousOrnextSibling = (targetElement: HTMLElement) => {
   if (!targetElement) return [[], []];
   // 以前的节点
   const previousNodes: any = [];
@@ -157,7 +158,7 @@ export const getDomPreviousOrnextSibling = (targetElement: any) => {
  * @name 判断是否存在元素节点，或者是否文本节点不为空字符串
  * @returns boolean
  */
-export const judgeDomOrNotTtxt = (nodes: any): boolean => {
+export const judgeDomOrNotTtxt = (nodes: HTMLElement[]): boolean => {
   if (!nodes || !nodes.length) return false;
   let isFlag = false;
   const tempNode = nodes.filter((item: any) => item?.nodeType);
@@ -180,7 +181,7 @@ export const judgeDomOrNotTtxt = (nodes: any): boolean => {
  * @name 当前编辑器是否只有一个节点，且节点是一个空节点
  * @returns boolean
  */
-export const isEmptyEditNode = (editNode: any) => {
+export const isEmptyEditNode = (editNode: EditorElement) => {
   if (!editNode || !editNode?.childNodes) return true;
   if (editNode?.childNodes && editNode?.childNodes.length > 1) {
     return false;
@@ -194,7 +195,7 @@ export const isEmptyEditNode = (editNode: any) => {
 /**
  * @name 判断节点是不是一个富文本元素节点：element
  */
-export const isEditElement = (node: any): boolean => {
+export const isEditElement = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;
   const isSlateNode = node.hasAttribute(eleKey["key"]);
@@ -226,9 +227,9 @@ export const findParentWithAttribute = (node: any) => {
  */
 export const getRangeAroundNode = () => {
   // 之后的节点
-  let behindNodeList: any = [];
+  let behindNodeList: any[] = [];
   // 以前的节点
-  let nextNodeList: any = [];
+  let nextNodeList: any[] = [];
 
   // 获取页面的选择区域
   const selection: any = window.getSelection();
@@ -336,7 +337,7 @@ export const getPlainText = (domNode: any) => {
 
   if (isDOMElement(domNode)) {
     for (const childNode of Array.from(domNode.childNodes)) {
-      text += getPlainText(childNode);
+      text += getPlainText(childNode as Element);
     }
 
     const display = getComputedStyle(domNode).getPropertyValue("display");
@@ -383,19 +384,19 @@ export const getNodeContent = (node: any): string => {
 /**
  * @name 把符文本dom转成一个数组值
  */
-export const handleEditNodeTransformsValue = (editNode: any): string[] => {
+export const handleEditNodeTransformsValue = (editNode: EditorElement): string[] => {
   const result: string[] = [];
   if (!editNode || !editNode?.childNodes) return [];
-  const nodes: any = Array.from(cloneNodes(editNode.childNodes));
+  const nodes: any = Array.from(cloneNodes((editNode as any).childNodes));
   for (const cld of Array.from(nodes)) {
-    const content = getNodeContent(cld);
+    const content = getNodeContent(cld as Element);
     result.push(content);
   }
   return result;
 };
 
 /** @name 判断富文本行节点是否 不是一个空节点，如果不是空节点，就删除它子节点的br标签 */
-export const judgeEditRowNotNull = (node: any): boolean => {
+export const judgeEditRowNotNull = (node: HTMLElement): boolean => {
   if (!isEditElement(node)) return false;
   if (!getNodeContent(node)) return false;
   const nodes: any = Array.from(node.childNodes);

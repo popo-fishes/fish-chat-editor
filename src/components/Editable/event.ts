@@ -3,7 +3,6 @@
  * @LastEditors: Please set LastEditors
  * @Description: 富文本输入框事件处理
  */
-
 import { regContentImg, getRandomWord, labelRep } from "../../utils";
 import {
   addTargetElement,
@@ -19,11 +18,13 @@ import {
 
 import { setRangeNode, setCursorNode, insertText, amendRangeLastNode } from "../../utils/util";
 
+import type { EditorElement } from "../../types";
+
 // 是否正在处理粘贴内容
 let isPasteLock = false;
 
 /** @name 处理复制事件 */
-export const onCopyEvent = (event: any) => {
+export const onCopyEvent = (event: React.ClipboardEvent<HTMLDivElement>) => {
   // 阻止默认事件，防止复制真实发生
   event.preventDefault();
 
@@ -56,7 +57,7 @@ export const onCopyEvent = (event: any) => {
 };
 
 /** @name 处理剪切事件 */
-export const onCut = (event: any) => {
+export const onCut = (event: React.ClipboardEvent<HTMLDivElement>) => {
   event.preventDefault();
   const selection = window.getSelection();
   // 存在选区
@@ -93,7 +94,7 @@ export const onCut = (event: any) => {
  *  @name 处理输入框的值
  * 把输入的文字转换成图片
  */
-export const handleInputTransforms = (editNode: any, callBack: () => void) => {
+export const handleInputTransforms = (editNode: EditorElement, callBack: () => void) => {
   // 获取当前文档中的选区
   const selection = window.getSelection();
 
@@ -161,7 +162,7 @@ export const handleInputTransforms = (editNode: any, callBack: () => void) => {
 /**
  * @name 处理换行符
  */
-export const handleAmendEmptyLine = (editNode: any, callBack?: () => void) => {
+export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => void) => {
   // 获取页面的选择区域
   const selection = window.getSelection();
 
@@ -217,13 +218,29 @@ export const handleAmendEmptyLine = (editNode: any, callBack?: () => void) => {
 };
 
 /** @name 处理粘贴事件的内容转换 */
-export const handlePasteTransforms = (e: any, editNode: any, callBack?: () => void) => {
+export const handlePasteTransforms = (e: React.ClipboardEvent<HTMLDivElement>, editNode: EditorElement, callBack?: () => void) => {
   // 获取粘贴的内容
   const clp = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
-  const isFile = clp?.types?.includes("File");
+  const isFile = clp?.types?.includes("Files");
   const isHtml = clp?.types?.includes("text/html");
   const isPlain = clp?.types?.includes("text/plain");
   let content = "";
+  console.log(clp, clp?.types);
+  if (isHtml) {
+    console.log(clp.getData("text/html"));
+  }
+  if (isPlain) {
+    console.log(clp.getData("text/plain"));
+  }
+  if (isFile) {
+    console.log(clp.getData("text/Files"));
+    const files = clp.files;
+    // 处理获取到的文件
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      console.log(file.name, file);
+    }
+  }
   // 如果是粘贴的是文件
   if (isFile && !isHtml && !isPlain) {
     console.error("暂不支持粘贴文件 clp.types");
@@ -246,40 +263,17 @@ export const handlePasteTransforms = (e: any, editNode: any, callBack?: () => vo
   if (selection && !selection.isCollapsed) {
     // 后续可以拓展删除节点方法，先原生的
     document.execCommand("delete", false, undefined);
-    // 在删除完成后执行其他操作
-    isPasteLock = true;
+  }
 
-    // 获取当前光标
-    const range = selection?.getRangeAt(0);
-    // 获取当前光标的开始容器节点
-    const topElementNode: any = findParentWithAttribute(range.startContainer);
-
-    // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
-    if (!topElementNode) {
-      // 非常重要的逻辑
-      amendRangeLastNode(editNode, (node) => {
-        if (node) {
-          insertText(repContent, () => {
-            isPasteLock = false;
-            callBack?.();
-          });
-        }
-      });
-      return;
-    }
-
-    insertText(repContent, () => {
-      isPasteLock = false;
-      callBack?.();
-    });
-  } else {
+  // 在删除完成后执行其他操作
+  {
     isPasteLock = true;
 
     // 获取当前光标
     const range = selection?.getRangeAt(0);
 
     // 获取当前光标的开始容器节点
-    const topElementNode: any = findParentWithAttribute(range.startContainer);
+    const topElementNode = findParentWithAttribute(range.startContainer);
 
     // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
     if (!topElementNode) {

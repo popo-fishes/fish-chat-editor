@@ -1,5 +1,5 @@
 /*
- * @Date: 2024-3-14 15:40:27
+ * @Date: 2024-5-14 15:40:27
  * @LastEditors: Please set LastEditors
  * @Description: file content
  */
@@ -7,13 +7,36 @@ import { emoji } from "../config";
 
 /** 表情图片的 标签扩展属性名称 */
 export const emojiLabel = {
-  key: "data-yp-emoji-img-name",
-  value: "ypEmojiImgName"
+  key: "data-fish-emoji-img-name",
+  value: "fishEmojiImgName"
 };
 
-const CDN_YPW = "https://cdn.yupaowang.com";
-/** 为了使chat-editor独立使用这里单独使用自定义cdn方法 */
-export const getImgCdn = (imgPath: string) => `${CDN_YPW}/yupao_pc/images/im/${imgPath}`;
+let globalCdn = "";
+
+/**
+ * @name 获取表情图片的CDN路径，且吧传递进来的CDN路径保存到全局变量
+ * @param CDN_IMG
+ * @returns
+ */
+export const setEmojiCdn = (CDN_IMG?: string) => {
+  if (CDN_IMG) {
+    globalCdn = CDN_IMG;
+    return CDN_IMG;
+  }
+  if (globalCdn) {
+    return globalCdn;
+  }
+  return "";
+};
+
+/**
+ * @name 获取图片CDN链接
+ * @param img 图片的路径或名称
+ * @returns 返回拼接后的图片CDN链接
+ */
+export const getEmojiCdn = (img: string) => {
+  return setEmojiCdn() + img;
+};
 
 /** @name 字符串标签转换 */
 export const labelRep = (str: string, reversal?: boolean) => {
@@ -97,7 +120,7 @@ export const regContentImg = (strCont?: string, imgSize?: number) => {
       // 给当前替换的图片给一个位置的值，防止过滤匹配图片的时候出现问题
       const t = "emoji-" + getRandomWord(5);
       // 替换表情
-      const strimg = `<img src="${getImgCdn(`faces/${emoji[i]}`)}" width="${imgSize || 18}px" height="${imgSize || 18}px" ${emojiLabel.key}="${i}" data-key="${t}"/>`;
+      const strimg = `<img src="${getEmojiCdn(`${emoji[i]}`)}" width="${imgSize || 18}px" height="${imgSize || 18}px" ${emojiLabel.key}="${i}" data-key="${t}"/>`;
       return strimg;
     });
   }

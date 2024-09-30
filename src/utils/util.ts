@@ -18,9 +18,10 @@ import {
   handleEditNodeTransformsValue,
   getNodeContent
 } from "./dom";
+import type { EditorElement } from "../types";
 
 /** @name 把光标指向元素节点, 并把位置设置为0，0 */
-export const setCursorNode = (node: any) => {
+export const setCursorNode = (node: HTMLElement) => {
   if (!node) return;
   const selection = window.getSelection();
   const range = document.createRange();
@@ -36,7 +37,7 @@ export const setCursorNode = (node: any) => {
 };
 
 /** @name 设置当前光标在某个节点的位置 */
-export const setRangeNode = (node: any, type: "before" | "after", callBack?: () => void) => {
+export const setRangeNode = (node: HTMLElement, type: "before" | "after", callBack?: () => void) => {
   if (!node) return callBack?.();
   // 用户选择的文本范围或光标的当前位置
   const selection = window.getSelection();
@@ -63,7 +64,7 @@ export const setRangeNode = (node: any, type: "before" | "after", callBack?: () 
  * @param editNode 富文本节点
  * @returns
  */
-export const getText = (editNode: any): string => {
+export const getText = (editNode: EditorElement): string => {
   if (!editNode || !isDOMNode(editNode)) return "";
 
   const contents = editNode.cloneNode(true);
@@ -92,7 +93,7 @@ export const getText = (editNode: any): string => {
  * @param editNode 富文本节点
  * @returns
  */
-export const getHtml = (editNode: any): string => {
+export const getHtml = (editNode: EditorElement): string => {
   if (!editNode || !isDOMNode(editNode)) return "";
 
   const contents = editNode.cloneNode(true);
@@ -135,7 +136,7 @@ export const editTransformSpaceText = (content: string) => {
 };
 
 /** @name 修正光标的位置，把光标指向到富文本节点的最后一个字符上 */
-export const amendRangeLastNode = (editNode: any, callBack?: (node?: any) => void) => {
+export const amendRangeLastNode = (editNode: EditorElement, callBack?: (node?: HTMLElement) => void) => {
   // 获取页面的选择区域
   const selection: any = window.getSelection();
   if (!editNode || !editNode.childNodes) return callBack?.();
@@ -336,7 +337,7 @@ export const insertText = (content: string, callBack?: () => void) => {
 };
 
 /** @name 设置文本值 */
-export const setText = (editNode: any, content: string, callBack?: () => void) => {
+export const setText = (editNode: EditorElement, content: string, callBack?: () => void) => {
   if (!content || !editNode) return callBack?.();
   // 把光标设置在富文本内容的最后一行的最后一个位置
   amendRangeLastNode(editNode, () => {

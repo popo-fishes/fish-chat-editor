@@ -33,14 +33,16 @@ import FbChatEditor from "fish-chat-editor";
 
 ### Editor props
 
-| 参数          | 说明             | 类型            | 默认值 |
-| ------------- | ---------------- | --------------- | ------ |
-| placeholder   | 提示占位符       | string          | ——     |
-| className     | 扩展类名         | string          | ——     |
-| toolbarRender | 自定义工具栏内容 | () => ReactNode | ——     |
-| onSend        | 点击发送按钮事件 | () => ReactNode | ——     |
-| onEnterDown   | 键盘回车事件     | Function        | ——     |
-| onChange      | 输入框内容变化时 | Function        | ——     |
+| 参数          | 说明                                                    | 类型            | 默认值 |
+| ------------- | ------------------------------------------------------- | --------------- | ------ |
+| placeholder   | 提示占位符                                              | string          | ——     |
+| className     | 扩展类名                                                | string          | ——     |
+| emojiList     | 表情列表数据                                            | IEmojiType[]    | ——     |
+| emojiCdn      | emoji cdn地址, 当你需要自定义emojiList 那么它是必须的。 | string          | ——     |
+| toolbarRender | 自定义工具栏内容                                        | () => ReactNode | ——     |
+| onSend        | 点击发送按钮事件                                        | () => ReactNode | ——     |
+| onEnterDown   | 键盘回车事件                                            | Function        | ——     |
+| onChange      | 输入框内容变化时                                        | Function        | ——     |
 
 ### Editor Methods
 

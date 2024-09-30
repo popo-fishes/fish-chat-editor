@@ -4,7 +4,7 @@
  * @Description: 富文本组件
  */
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
-import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
+import type { IEmojiType, IEditableRef, IEditableProps, EditorElement } from "../../types";
 import { emojiLabel, labelRep } from "../../utils";
 import { getText, setRangeNode, editTransformSpaceText, setText, amendRangeLastNode } from "../../utils/util";
 import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "../../utils/dom";
@@ -46,7 +46,7 @@ let isLock = false;
  */
 const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   /** 用于操作聊天输入框元素 */
-  const editRef = useRef<any>(null);
+  const editRef = useRef<EditorElement>(null);
   /** 是否显示提示placeholder */
   const [showTipHolder, setTipHolder] = useState<boolean>(true);
 
@@ -117,7 +117,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   };
 
   /** @name 初始化设置光标的开始位置 */
-  const setInitRangePosition = (curDom: any) => {
+  const setInitRangePosition = (curDom: HTMLElement) => {
     // 光标位置为开头
     currentSelection = {
       startContainer: curDom,
@@ -153,7 +153,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     }
   };
 
-  /** @name 选择插入表情/图片 */
+  /** @name 选择插入表情图片 */
   const insertEmoji = (item: IEmojiType) => {
     // 非常重要的逻辑
     if (!findParentWithAttribute(currentSelection.startContainer)) {
@@ -227,10 +227,10 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   };
 
   /** @name 获取焦点 */
-  const onEditorFocus = (e: any) => {};
+  const onEditorFocus = (e: React.FocusEvent<HTMLDivElement>) => {};
 
   /** @name 输入框值变化onChange事件 */
-  const onEditorInputChange = (e: any) => {
+  const onEditorInputChange = (e: React.CompositionEvent<HTMLDivElement>) => {
     // 表示正在输入中文，还没输入完毕，不能执行下面逻辑  ||  必须等到转换完成，才继续执行
 
     /***
@@ -264,9 +264,9 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   };
 
   /** @name 点击输入框事件（点击时） */
-  const onEditorClick = (e: any) => {
+  const onEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // 点击时，如果点击到的是图片需要吧当前光标变为点击图片的前面
-    const target = e?.target;
+    const target = e?.target as any;
     if (target?.nodeName == "IMG") {
       setRangeNode(target, "before", () => {
         // 重新聚焦输入框
@@ -280,7 +280,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
    * @param event
    * @returns
    */
-  const onEditorKeydown = (event: any) => {
+  const onEditorKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const keyCode = event.keyCode;
     // ctrl + Enter换行
     if (event.ctrlKey && keyCode === 13) {
@@ -315,7 +315,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   /**
    * @name 输入框的粘贴事件
    */
-  const onPasteChange = (e: any) => {
+  const onPasteChange = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     handlePasteTransforms(e, editRef.current, () => {
       // 获取输入框的值，主动触发输入框值变化
@@ -347,13 +347,13 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
             // 标记正在输入中文
             isLock = true;
           }}
-          onCompositionEnd={(e) => {
+          onCompositionEnd={(e: React.CompositionEvent<HTMLDivElement>) => {
             // 标记正在输入中文, 结束以后再去触发onInput
             isLock = false;
             // 在调用
             onEditorInputChange(e);
           }}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
             e.preventDefault();
             onEditorClick(e);
             props?.onClick?.();

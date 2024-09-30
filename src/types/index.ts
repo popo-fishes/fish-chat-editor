@@ -4,6 +4,8 @@
  */
 import type { ReactNode } from "react";
 
+export type EditorElement = HTMLDivElement;
+
 export type IEmojiType = {
   url: string;
   name: string;
@@ -17,6 +19,10 @@ export interface IChatEditorRef extends IEditableRef {}
 export interface IChatEditorProps extends Pick<IEditableProps, "placeholder" | "onEnterDown" | "onChange"> {
   /** 扩展类名 */
   className?: string;
+  /** 表情列表数据 */
+  emojiList?: IEmojiType[];
+  /** emoji cdn地址, 当你需要自定义emojiList 那么它是必须的。*/
+  emojiCdn?: string;
   /** 自定义工具栏内容 */
   toolbarRender?: () => ReactNode;
   /** 点击发送按钮事件 */

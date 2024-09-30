@@ -3,39 +3,22 @@
  * @LastEditors: Please set LastEditors
  * @Description: 聊天组件
  */
-import { useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
 import Editable from "../Editable";
 import { useClickAway } from "../../hooks";
 
-import { getImgCdn } from "../../utils";
+import { setEmojiCdn } from "../../utils";
 import { emoji } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
-const getEmojiData = () => {
-  const data: IEmojiType[] = [];
-  for (const i in emoji) {
-    const bli = i.replace("[", "");
-    const cli = bli.replace("]", "");
-    data.push({
-      url: getImgCdn("faces/" + emoji[i]),
-      name: i,
-      title: cli
-    });
-  }
-  return data;
-};
-
-// 表情数据
-const emojiData = getEmojiData();
-
 // 聊天组件
 const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
-  const { className: _className, placeholder, onChange, onEnterDown, onSend } = props;
+  const { placeholder, onChange, onEnterDown, onSend, emojiList = [], emojiCdn, ...restProps } = props;
   // 输入框控制器
   const editInputRef = useRef<IEditableRef>(null);
   // 表情的弹窗
@@ -46,6 +29,33 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   const [openEmoji, setOpen] = useState<boolean>(false);
   // 可以点击发送按钮？?
   const [isSend, setSend] = useState<boolean>(false);
+
+  const cdnUrl = useMemo(() => {
+    const cdn = setEmojiCdn(emojiCdn || "http://43.136.119.145:83/image/");
+    return cdn;
+  }, [emojiCdn]);
+
+  const mergeEmojiList = useMemo(() => {
+    if (!cdnUrl) return [];
+
+    // 如果外面传递了表情数据用外面的
+    if (emojiList?.length) {
+      return [...emojiList];
+    }
+
+    const data: IEmojiType[] = [];
+    for (const i in emoji) {
+      const bli = i.replace("[", "");
+      const cli = bli.replace("]", "");
+      data.push({
+        url: `${cdnUrl}${emoji[i]}`,
+        name: i,
+        title: cli
+      });
+    }
+
+    return data;
+  }, [emojiList, cdnUrl]);
 
   /** @name 暴露方法 */
   useImperativeHandle(ref, () => {
@@ -100,7 +110,7 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   }, [onSend, isSend]);
 
   return (
-    <div className={classNames("fb-editor", _className)}>
+    <div className={classNames("fb-editor", restProps.className)}>
       {/* 功能区 */}
       <div className="fb-editor-controls">
         {/* 默认工具栏 */}
@@ -137,7 +147,7 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
       <div className="fb-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
-            {emojiData.map((item, index) => (
+            {mergeEmojiList.map((item, index) => (
               <div
                 className="emoji-item"
                 title={item.title}
