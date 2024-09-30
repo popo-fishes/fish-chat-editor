@@ -218,9 +218,9 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
 };
 
 /** @name 处理粘贴事件的内容转换 */
-export const handlePasteTransforms = (e: React.ClipboardEvent<HTMLDivElement>, editNode: EditorElement, callBack?: () => void) => {
+export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNode: EditorElement, callBack?: () => void) => {
   // 获取粘贴的内容
-  const clp = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+  const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
   const isFile = clp?.types?.includes("Files");
   const isHtml = clp?.types?.includes("text/html");
   const isPlain = clp?.types?.includes("text/plain");

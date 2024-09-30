@@ -13,11 +13,11 @@ import { handleInputTransforms, handlePasteTransforms, onCopyEvent, onCut, handl
 // 备份当前的光标位置
 let currentSelection: {
   /** Range起始节点 */
-  startContainer?: any;
+  startContainer?: HTMLElement;
   /** range.startOffset 是一个只读属性，用于返回一个表示 Range 在 startContainer 中的起始位置的数字 */
   startOffset: number;
   /** Range终点的节点 */
-  endContainer?: any;
+  endContainer?: HTMLElement;
   /** 只读属性 Range.endOffset 返回代表 Range 结束位置在 Range.endContainer 中的偏移值的数字 */
   endOffset: number;
 } = {
@@ -139,11 +139,11 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
         const range = selection?.getRangeAt(0);
         currentSelection = {
           // Range起始节点
-          startContainer: range.startContainer,
+          startContainer: range.startContainer as HTMLElement,
           // range.startOffset 是一个只读属性，用于返回一个表示 Range 在 startContainer 中的起始位置的数字。
           startOffset: range.startOffset,
           // Range终点的节点
-          endContainer: range.endContainer,
+          endContainer: range.endContainer as HTMLElement,
           // 只读属性 Range.endOffset 返回代表 Range 结束位置在 Range.endContainer 中的偏移值的数字。
           endOffset: range.endOffset
         };
@@ -179,11 +179,15 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
        * 如果是文本节点，拆分节点
        * https://developer.mozilla.org/en-US/docs/Web/API/Text/splitText
        * */
-      const newNode = currentSelection.startContainer?.splitText(currentSelection.startOffset);
-      // 设置光标开始节点为拆分之后节点的父级节点
-      currentSelection.startContainer = newNode.parentNode;
-      // 在拆分后的节点之前插入图片
-      currentSelection.startContainer.insertBefore(node, newNode);
+      if (currentSelection.startContainer instanceof Text) {
+        const newNode = currentSelection.startContainer?.splitText(currentSelection.startOffset);
+        // 设置光标开始节点为拆分之后节点的父级节点
+        currentSelection.startContainer = newNode.parentNode as HTMLElement;
+        // 在拆分后的节点之前插入图片
+        currentSelection.startContainer.insertBefore(node, newNode);
+      } else {
+        console.error("Start container is not a text node.");
+      }
     } else {
       // 非文本节点
       if (currentSelection.startContainer?.childNodes.length) {
@@ -214,7 +218,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   };
 
   /** @name 失去焦点 */
-  const onEditorBlur = () => {
+  const onEditorBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     // 备份当前光标位置
     backuprange();
     // 用户选择的文本范围或光标的当前位置
@@ -347,13 +351,13 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
             // 标记正在输入中文
             isLock = true;
           }}
-          onCompositionEnd={(e: React.CompositionEvent<HTMLDivElement>) => {
+          onCompositionEnd={(e) => {
             // 标记正在输入中文, 结束以后再去触发onInput
             isLock = false;
             // 在调用
             onEditorInputChange(e);
           }}
-          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          onClick={(e) => {
             e.preventDefault();
             onEditorClick(e);
             props?.onClick?.();
