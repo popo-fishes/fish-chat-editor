@@ -1,5 +1,5 @@
 /*
- * @Date: 2024-3-14 15:40:27
+ * @Date: 2024-09-30 15:40:27
  * @LastEditors: Please set LastEditors
  * @Description: 富文本组件
  */
@@ -45,6 +45,8 @@ let isLock = false;
  * @name 富文本组件
  */
 const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
+  const { placeholder, ...restProps } = props;
+
   /** 用于操作聊天输入框元素 */
   const editRef = useRef<EditorElement>(null);
   /** 是否显示提示placeholder */
@@ -74,7 +76,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
             // 控制提示
             setTipHolder(val == "");
             // 返回输入框信息
-            props?.onChange?.(editTransformSpaceText(val));
+            restProps.onChange?.(editTransformSpaceText(val));
           });
         },
         clear: () => {
@@ -83,7 +85,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           setInitRangePosition(curDom);
           // 失去焦点
           editRef?.current?.blur();
-          props?.onChange?.("");
+          restProps.onChange?.("");
         },
         focus: () => {
           requestAnimationFrame(() => {
@@ -213,7 +215,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       const val = getText(editRef.current);
       // 控制提示
       setTipHolder(val == "");
-      props?.onChange?.(val);
+      restProps.onChange?.(val);
     });
   };
 
@@ -254,7 +256,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
         // 控制提示
         setTipHolder(val == "");
         // 暴露值
-        props?.onChange?.(editTransformSpaceText(val));
+        restProps.onChange?.(editTransformSpaceText(val));
         // 必须等到转换完成，才继续开启状态
         isFlag = false;
       });
@@ -264,7 +266,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     // 控制提示
     setTipHolder(val == "");
     // 暴露值
-    props?.onChange?.(editTransformSpaceText(val));
+    restProps.onChange?.(editTransformSpaceText(val));
   };
 
   /** @name 点击输入框事件（点击时） */
@@ -302,7 +304,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       event.preventDefault();
       event.stopPropagation();
       // 执行回车事件给父组件
-      props?.onEnterDown?.();
+      restProps.onEnterDown?.();
       return;
     }
     // 按下删除按键
@@ -327,7 +329,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       // 控制提示
       setTipHolder(val == "");
       // 暴露值
-      props?.onChange?.(editTransformSpaceText(val));
+      restProps.onChange?.(editTransformSpaceText(val));
     });
   };
 
@@ -360,7 +362,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           onClick={(e) => {
             e.preventDefault();
             onEditorClick(e);
-            props?.onClick?.();
+            restProps.onClick?.();
           }}
           onDrop={(e) => {
             // 禁用拖放操作, 如果拖动输入框内的图片，会导致吧图片的地址输入到 富文本中
@@ -379,7 +381,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
         />
       </div>
       <div className="fb-tip-placeholder" style={{ display: showTipHolder ? "block" : "none" }}>
-        {props?.placeholder == "" ? "" : props?.placeholder || "请输入发送的消息"}
+        {placeholder == "" ? "" : placeholder || "请输入发送的消息"}
       </div>
     </div>
   );

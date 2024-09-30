@@ -168,7 +168,7 @@ export const amendRangeLastNode = (editNode: EditorElement, callBack?: (node?: H
 };
 
 /**
- * @name 在选区插入节点
+ * @name 在选区插入文本
  * 核心方法之一
  */
 export const insertText = (content: string, callBack?: () => void) => {
@@ -343,4 +343,40 @@ export const setText = (editNode: EditorElement, content: string, callBack?: () 
   amendRangeLastNode(editNode, () => {
     insertText(content, () => callBack?.());
   });
+};
+
+/** @name 在选区插入节点（目前是图片） */
+export const insertNode = (nodes: HTMLElement[], callBack?: () => void) => {
+  if (!nodes || nodes?.length == 0) return callBack?.();
+
+  console.time("editable插入节点耗时");
+
+  // 获取页面的选择区域
+  const selection = window.getSelection();
+
+  // 获取当前光标
+  const range = selection?.getRangeAt(0);
+
+  // 必须存在光标
+  if (!selection || selection?.rangeCount == 0 || !range) {
+    console.timeEnd("editable插入内容耗时");
+    callBack?.();
+    return;
+  }
+
+  // 获取当前光标的开始容器节点
+  const topElementNode: any = findParentWithAttribute(range.startContainer);
+  // console.log(topElementNode, range);
+  // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
+  if (!topElementNode) {
+    console.error("选区的容器节点不属于富文本节点");
+    console.timeEnd("editable插入内容耗时");
+    callBack?.();
+    return;
+  }
+
+  const fragment = new DocumentFragment();
+  for (let i = 0; i < nodes.length; i++) {
+    fragment.appendChild(nodes[i]);
+  }
 };

@@ -4,7 +4,7 @@
  * @Description: dom操作
  */
 
-import { getRandomWord, emojiLabel } from "./conmmon";
+import { getRandomWord, emojiLabel, prefixNmae } from "./conmmon";
 import { getText } from "./util";
 import type { EditorElement } from "../types";
 
@@ -40,7 +40,7 @@ export const isDOMText = (value: any) => {
 /** @name 创建换行节点 */
 export const createLineElement = (): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
-  const id = "editor-element-" + getRandomWord(8);
+  const id = `${prefixNmae}element` + getRandomWord(8);
   dom_p.setAttribute(eleKey["key"], "element");
   dom_p.id = id;
   dom_p.innerHTML = "<br/>";

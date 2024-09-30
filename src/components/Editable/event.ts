@@ -1,9 +1,10 @@
 /*
- * @Date: 2024-3-14 15:40:27
+ * @Date: 2024-09-30 15:40:27
  * @LastEditors: Please set LastEditors
  * @Description: 富文本输入框事件处理
  */
-import { regContentImg, getRandomWord, labelRep } from "../../utils";
+import isObject from "lodash/isObject";
+import { regContentImg, getRandomWord, labelRep, prefixNmae } from "../../utils";
 import {
   addTargetElement,
   removeNode,
@@ -17,6 +18,8 @@ import {
 } from "../../utils/dom";
 
 import { setRangeNode, setCursorNode, insertText, amendRangeLastNode } from "../../utils/util";
+
+import { fileToBase64 } from "../../utils/file";
 
 import type { EditorElement } from "../../types";
 
@@ -217,89 +220,116 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
   callBack?.();
 };
 
-/** @name 处理粘贴事件的内容转换 */
+/**
+ * @name 处理粘贴事件的内容转换
+ * @param e 粘贴事件
+ * @param editNode 编辑器节点
+ * @param callBack 成功回调
+ */
 export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNode: EditorElement, callBack?: () => void) => {
   // 获取粘贴的内容
   const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
   const isFile = clp?.types?.includes("Files");
   const isHtml = clp?.types?.includes("text/html");
   const isPlain = clp?.types?.includes("text/plain");
-  let content = "";
-  console.log(clp, clp?.types);
-  if (isHtml) {
-    console.log(clp.getData("text/html"));
-  }
-  if (isPlain) {
-    console.log(clp.getData("text/plain"));
-  }
+
+  /**
+   * @name 如果是文件
+   */
   if (isFile) {
-    console.log(clp.getData("text/Files"));
-    const files = clp.files;
+    const files = isObject(clp.files) ? Object.values(clp.files) : clp.files;
+    // console.log(files);
+    // 必须是图片
+    const vfiles = files?.filter((item) => item.type.includes("image/"));
+    // 截取前面5个文件
+    const sfiles = vfiles.slice(-5);
+
+    const promiseData = [];
     // 处理获取到的文件
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      console.log(file.name, file);
+    for (let i = 0; i < sfiles.length; i++) {
+      const file = sfiles[i];
+      promiseData.push(fileToBase64(file));
     }
-  }
-  // 如果是粘贴的是文件
-  if (isFile && !isHtml && !isPlain) {
-    console.error("暂不支持粘贴文件 clp.types");
-  } else if ((isHtml || isPlain) && !isFile) {
-    // 如果是粘贴的是文本
-    content = clp.getData("text/plain");
-  }
-  const selection = window.getSelection();
-  // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;",
-  const repContent = labelRep(content);
-
-  if (!repContent) {
-    isPasteLock = false;
-    return;
-  }
-
-  if (isPasteLock) return;
-
-  // 存在选区
-  if (selection && !selection.isCollapsed) {
-    // 后续可以拓展删除节点方法，先原生的
-    document.execCommand("delete", false, undefined);
-  }
-
-  // 在删除完成后执行其他操作
-  {
-    isPasteLock = true;
-
-    // 获取当前光标
-    const range = selection?.getRangeAt(0);
-
-    // 获取当前光标的开始容器节点
-    const topElementNode = findParentWithAttribute(range.startContainer);
-
-    // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
-    if (!topElementNode) {
-      // 非常重要的逻辑
-      amendRangeLastNode(editNode, (node) => {
-        if (node) {
-          insertText(repContent, () => {
-            isPasteLock = false;
-            callBack?.();
-          });
+    Promise.allSettled(promiseData).then((res) => {
+      const datas = [];
+      // 请求结束后再去清除掉
+      res.forEach((result) => {
+        if (result.status == "fulfilled" && result.value) {
+          datas.push(result.value);
         }
       });
-      return;
-    }
 
-    insertText(repContent, () => {
-      isPasteLock = false;
-      callBack?.();
+      const nodes: HTMLDivElement[] = [];
+      datas.forEach((baseItem) => {
+        // 创建一个图片容器节点
+        const tempEl = document.createElement("div");
+        tempEl.id = `${prefixNmae}image-container-` + getRandomWord(4);
+        tempEl.classList.add(`${prefixNmae}image-container`);
+
+        const node = new Image();
+        node.src = baseItem;
+
+        tempEl.appendChild(node);
+
+        nodes.push(tempEl);
+      });
+
+      console.log(nodes);
     });
   }
 
-  // 方案二, 不会支持自定义富文本节点
-  if (repContent) {
-    // 把表情文本转换为图片,
-    // const htmlNodeStr = regContentImg(repContent);
-    // 内容插入
-    // document.execCommand("insertHTML", false, htmlNodeStr);
+  /**
+   * @name 如果是文本
+   */
+  if ((isHtml || isPlain) && !isFile) {
+    // 如果是粘贴的是文本
+    const content = clp.getData("text/plain");
+    // x.getSelection
+    const selection = window.getSelection();
+    // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;",
+    const repContent = labelRep(content);
+
+    if (!repContent) {
+      isPasteLock = false;
+      return;
+    }
+
+    if (isPasteLock) return;
+
+    // 存在选区
+    if (selection && !selection.isCollapsed) {
+      // 后续可以拓展删除节点方法，先原生的
+      document.execCommand("delete", false, undefined);
+    }
+
+    // 在删除完成后执行其他操作
+    {
+      isPasteLock = true;
+
+      // 获取当前光标
+      const range = selection?.getRangeAt(0);
+
+      // 获取当前光标的开始容器节点
+      const topElementNode = findParentWithAttribute(range.startContainer);
+
+      // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
+      if (!topElementNode) {
+        // !!非常重要的逻辑
+        amendRangeLastNode(editNode, (node) => {
+          if (node) {
+            insertText(repContent, () => {
+              isPasteLock = false;
+              callBack?.();
+            });
+          }
+        });
+        return;
+      }
+
+      insertText(repContent, () => {
+        isPasteLock = false;
+        callBack?.();
+      });
+    }
   }
 };

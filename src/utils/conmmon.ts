@@ -5,6 +5,8 @@
  */
 import { emoji } from "../config";
 
+export const prefixNmae = "fb-e-";
+
 /** 表情图片的 标签扩展属性名称 */
 export const emojiLabel = {
   key: "data-fish-emoji-img-name",
@@ -108,7 +110,7 @@ export const getRandomWord = (min: number) => {
 /**
  * @name 文本转换图片替换方法
  * @strCont 字符串
- * @imgSize 表情图片的大小 默认为16px
+ * @imgSize 表情图片的大小 默认为18px
  */
 export const regContentImg = (strCont?: string, imgSize?: number) => {
   if (!strCont) return "";
