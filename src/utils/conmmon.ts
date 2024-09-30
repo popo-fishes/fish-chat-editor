@@ -120,7 +120,7 @@ export const regContentImg = (strCont?: string, imgSize?: number) => {
     // 替换
     strCont = strCont?.replace(reg, function () {
       // 给当前替换的图片给一个位置的值，防止过滤匹配图片的时候出现问题
-      const t = "emoji-" + getRandomWord(5);
+      const t = "emoji-" + getRandomWord(4);
       // 替换表情
       const strimg = `<img src="${getEmojiCdn(`${emoji[i]}`)}" width="${imgSize || 18}px" height="${imgSize || 18}px" ${emojiLabel.key}="${i}" data-key="${t}"/>`;
       return strimg;

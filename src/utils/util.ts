@@ -246,7 +246,7 @@ export const insertText = (content: string, callBack?: () => void) => {
     if (!behindNodeList || !nextNodeList) return callBack?.();
 
     /** 给最后一个节点加入一个i标签方便我们插入内容后，设置光标的焦点位置 */
-    const keyId = "editorFocusHack" + new Date().getTime() + getRandomWord(8);
+    const keyId = "editorFocusHack" + new Date().getTime() + getRandomWord(4);
     const iElement = document.createElement("i");
     iElement.id = keyId;
 
@@ -366,7 +366,8 @@ export const insertNode = (nodes: HTMLElement[], callBack?: () => void) => {
 
   // 获取当前光标的开始容器节点
   const topElementNode: any = findParentWithAttribute(range.startContainer);
-  // console.log(topElementNode, range);
+
+  console.log(topElementNode, range);
   // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
   if (!topElementNode) {
     console.error("选区的容器节点不属于富文本节点");
@@ -375,8 +376,9 @@ export const insertNode = (nodes: HTMLElement[], callBack?: () => void) => {
     return;
   }
 
-  const fragment = new DocumentFragment();
-  for (let i = 0; i < nodes.length; i++) {
-    fragment.appendChild(nodes[i]);
-  }
+  topElementNode.appendChild(nodes[0]);
+  // const fragment = new DocumentFragment();
+  // for (let i = 0; i < nodes.length; i++) {
+  //   fragment.appendChild(nodes[i]);
+  // }
 };

@@ -156,7 +156,7 @@
     white-space: pre-wrap;
     // 解决输入英文 数字换行问题
     word-break: break-all;
-    img {
+    img[data-fish-emoji-img-name] {
       margin-top: -2px;
       margin-right: 3px;
       cursor: default;
@@ -185,4 +185,21 @@
   left: 0;
   top: -1px;
   width: 90%;
+}
+
+.fb-e-image-container {
+  display: inline-block;
+  margin: 0 3px;
+  box-sizing: border-box;
+  outline: none;
+  padding: 0;
+  img {
+    cursor: default;
+    display: inline !important;
+    // max-width: 100%;
+    min-height: 20px;
+    min-width: 20px;
+    max-width: 200px;
+    min-height: 200px;
+  }
 }

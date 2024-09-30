@@ -17,7 +17,7 @@ import {
   getPlainText
 } from "../../utils/dom";
 
-import { setRangeNode, setCursorNode, insertText, amendRangeLastNode } from "../../utils/util";
+import { setRangeNode, setCursorNode, insertText, insertNode, amendRangeLastNode } from "../../utils/util";
 
 import { fileToBase64 } from "../../utils/file";
 
@@ -124,7 +124,7 @@ export const handleInputTransforms = (editNode: EditorElement, callBack: () => v
   const afterText = currNode.nodeValue.substring(end as any);
 
   // 把当前光标位置内容前面拼接 上 一个I 标签，有利于我们后面去定位光标位置。
-  const keyId = "editorFocusHack" + new Date().getTime() + getRandomWord(8);
+  const keyId = "editorFocusHack" + new Date().getTime() + getRandomWord(4);
   // 我们这里先给个唯一的ID字符串，等转义完毕我们在吧这个ID替换为I标签
   // 避免最开始就把我I标签转义为"&lt; i &lt;"
   beforeText += `id=${keyId}`;
@@ -250,32 +250,34 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
       const file = sfiles[i];
       promiseData.push(fileToBase64(file));
     }
-    Promise.allSettled(promiseData).then((res) => {
-      const datas = [];
-      // 请求结束后再去清除掉
-      res.forEach((result) => {
-        if (result.status == "fulfilled" && result.value) {
-          datas.push(result.value);
-        }
-      });
+    Promise.allSettled(promiseData)
+      .then((res) => {
+        const datas = [];
+        // 请求结束后再去清除掉
+        res.forEach((result) => {
+          if (result.status == "fulfilled" && result.value) {
+            datas.push(result.value);
+          }
+        });
 
-      const nodes: HTMLDivElement[] = [];
-      datas.forEach((baseItem) => {
-        // 创建一个图片容器节点
-        const tempEl = document.createElement("div");
-        tempEl.id = `${prefixNmae}image-container-` + getRandomWord(4);
-        tempEl.classList.add(`${prefixNmae}image-container`);
+        const nodes: HTMLDivElement[] = [];
+        datas.forEach((baseItem) => {
+          // 创建一个图片容器节点
+          const tempEl = document.createElement("div");
+          tempEl.id = `${prefixNmae}image-container-` + getRandomWord(4);
+          tempEl.classList.add(`${prefixNmae}image-container`);
 
-        const node = new Image();
-        node.src = baseItem;
+          const node = new Image();
+          node.src = `data:image/jpeg;base64,${baseItem}`;
 
-        tempEl.appendChild(node);
+          tempEl.appendChild(node);
 
-        nodes.push(tempEl);
-      });
+          nodes.push(tempEl);
+        });
 
-      console.log(nodes);
-    });
+        insertNode(nodes);
+      })
+      .catch(() => {});
   }
 
   /**

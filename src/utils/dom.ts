@@ -40,7 +40,7 @@ export const isDOMText = (value: any) => {
 /** @name 创建换行节点 */
 export const createLineElement = (): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
-  const id = `${prefixNmae}element` + getRandomWord(8);
+  const id = `${prefixNmae}element-` + getRandomWord(4);
   dom_p.setAttribute(eleKey["key"], "element");
   dom_p.id = id;
   dom_p.innerHTML = "<br/>";
