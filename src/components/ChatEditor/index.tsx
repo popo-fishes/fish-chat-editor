@@ -1,7 +1,7 @@
 /*
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
- * @Description: 聊天组件
+ * @Description: 聊天富文本
  */
 import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
 import classNames from "classnames";
@@ -15,7 +15,9 @@ import { emoji } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
-// 聊天组件
+/**
+ * @name 聊天富文本
+ */
 const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
   const { placeholder, onChange, onEnterDown, onSend, emojiList = [], emojiCdn, ...restProps } = props;
