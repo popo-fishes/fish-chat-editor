@@ -4,15 +4,9 @@
  * @Description: dom操作
  */
 
-import { getRandomWord, emojiLabel, prefixNmae } from "./conmmon";
-import { getText } from "./util";
-import type { EditorElement } from "../types";
+import { getElementAttributeKey, elementDataKeys, getText, getElementAttributeDatasetName } from ".";
 
-/** 表情图片的 标签扩展属性名称 */
-export const eleKey = {
-  key: "data-slate-node",
-  value: "slateNode"
-};
+import type { EditorElement } from "../types";
 
 /**
  * @name 返回DOM节点的主机窗口
@@ -35,17 +29,6 @@ export const isDOMElement = (value: any) => {
 /** @name 检查DOM节点是否为文本节点。 */
 export const isDOMText = (value: any) => {
   return isDOMNode(value) && value.nodeType === 3;
-};
-
-/** @name 创建换行节点 */
-export const createLineElement = (): HTMLParagraphElement => {
-  const dom_p = document.createElement("p");
-  const id = `${prefixNmae}element-` + getRandomWord(4);
-  dom_p.setAttribute(eleKey["key"], "element");
-  dom_p.id = id;
-  dom_p.innerHTML = "<br/>";
-
-  return dom_p;
 };
 
 /**
@@ -198,9 +181,10 @@ export const isEmptyEditNode = (editNode: EditorElement) => {
 export const isEditElement = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;
-  const isSlateNode = node.hasAttribute(eleKey["key"]);
-  if (isSlateNode) {
-    const isValElement = node?.dataset?.[eleKey["value"]] || "";
+  const keys = elementDataKeys["editorNode"];
+  const hasAttr = node.hasAttribute(keys["key"]);
+  if (hasAttr) {
+    const isValElement = node?.dataset?.[keys["value"]] || "";
     if (isValElement == "element") {
       return true;
     }
@@ -342,9 +326,11 @@ export const getPlainText = (domNode: any) => {
 
     const display = getComputedStyle(domNode).getPropertyValue("display");
 
+    const emojiNodeAttrKey = getElementAttributeKey("emojiNode");
+    const emojiNodeAttrName = getElementAttributeDatasetName("emojiNode");
     // 是否是一个表情图片,如果是取出
-    const isEmojiVal = domNode?.dataset?.[emojiLabel.value] || "";
-    const isEmojiNode = domNode.nodeName == "IMG" && domNode.hasAttribute(emojiLabel.key);
+    const isEmojiVal = domNode?.dataset?.[emojiNodeAttrName] || "";
+    const isEmojiNode = domNode.nodeName == "IMG" && domNode.hasAttribute(emojiNodeAttrKey);
 
     if (isEmojiNode && isEmojiVal) {
       text += isEmojiVal;
@@ -369,9 +355,12 @@ export const getNodeContent = (node: any): string => {
     for (let i = 0; i < node.childNodes.length; i++) {
       content += getNodeContent(node.childNodes[i]);
     }
+
+    const emojiNodeAttrKey = getElementAttributeKey("emojiNode");
+    const emojiNodeAttrName = getElementAttributeDatasetName("emojiNode");
     // 是否是一个表情图片,如果是取出
-    const isEmojiVal = node?.dataset?.[emojiLabel.value] || "";
-    const isEmojiNode = node.nodeName == "IMG" && node.hasAttribute(emojiLabel.key);
+    const isEmojiVal = node?.dataset?.[emojiNodeAttrName] || "";
+    const isEmojiNode = node.nodeName == "IMG" && node.hasAttribute(emojiNodeAttrKey);
 
     if (isEmojiNode && isEmojiVal) {
       content += isEmojiVal;

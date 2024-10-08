@@ -4,18 +4,23 @@
  * @Description: 富文本输入框事件处理
  */
 import isObject from "lodash/isObject";
-import { regContentImg, getRandomWord, labelRep, prefixNmae } from "../../utils";
 import {
   addTargetElement,
   removeNode,
   createLineElement,
+  getElementAttributeKey,
+  regContentImg,
+  getRandomWord,
+  labelRep,
+  prefixNmae,
+  createLineSapnElement,
   cloneNodes,
   judgeDomOrNotTtxt,
   isDOMText,
   findParentWithAttribute,
   getRangeAroundNode,
   getPlainText
-} from "../../utils/dom";
+} from "../../utils";
 
 import { setRangeNode, setCursorNode, insertText, insertNode, amendRangeLastNode } from "../../utils/util";
 
@@ -256,23 +261,27 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         // 请求结束后再去清除掉
         res.forEach((result) => {
           if (result.status == "fulfilled" && result.value) {
-            datas.push(result.value);
+            datas.push(`data:image/jpeg;base64,${result.value}`);
           }
         });
 
-        const nodes: HTMLDivElement[] = [];
+        const nodes: HTMLSpanElement[] = [];
         datas.forEach((baseItem) => {
           // 创建一个图片容器节点
-          const tempEl = document.createElement("div");
-          tempEl.id = `${prefixNmae}image-container-` + getRandomWord(4);
-          tempEl.classList.add(`${prefixNmae}image-container`);
+          // const tempEl = document.createElement("div");
+          // tempEl.id = `${prefixNmae}image-container-` + getRandomWord(4);
+          // tempEl.classList.add(`${prefixNmae}image-container`);
 
           const node = new Image();
-          node.src = `data:image/jpeg;base64,${baseItem}`;
+          node.src = baseItem;
+          node.id = `${prefixNmae}image-` + getRandomWord(4);
+          node.classList.add(`${prefixNmae}image`);
+          const key = getElementAttributeKey("imgNode");
+          node.setAttribute(key, "true");
 
-          tempEl.appendChild(node);
+          // tempEl.appendChild(createLineSapnElement(node));
 
-          nodes.push(tempEl);
+          nodes.push(node);
         });
 
         insertNode(nodes);

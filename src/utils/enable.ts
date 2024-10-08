@@ -4,14 +4,7 @@
  * @Description: file content
  */
 import { emoji } from "../config";
-
-export const prefixNmae = "fb-e-";
-
-/** 表情图片的 标签扩展属性名称 */
-export const emojiLabel = {
-  key: "data-fish-emoji-img-name",
-  value: "fishEmojiImgName"
-};
+import { getElementAttributeKey } from ".";
 
 let globalCdn = "";
 
@@ -121,8 +114,9 @@ export const regContentImg = (strCont?: string, imgSize?: number) => {
     strCont = strCont?.replace(reg, function () {
       // 给当前替换的图片给一个位置的值，防止过滤匹配图片的时候出现问题
       const t = "emoji-" + getRandomWord(4);
+      const key = getElementAttributeKey("emojiNode");
       // 替换表情
-      const strimg = `<img src="${getEmojiCdn(`${emoji[i]}`)}" width="${imgSize || 18}px" height="${imgSize || 18}px" ${emojiLabel.key}="${i}" data-key="${t}"/>`;
+      const strimg = `<img src="${getEmojiCdn(`${emoji[i]}`)}" width="${imgSize || 18}px" height="${imgSize || 18}px" ${key}="${i}" data-key="${t}"/>`;
       return strimg;
     });
   }
@@ -156,9 +150,9 @@ export const replaceMsgText = (msgText?: string): string => {
 
     // 筛选出所有的img
     const imgArr = msgStr.match(imgReg);
-
+    const key = getElementAttributeKey("emojiNode");
     // 代表当前存在图片表情，继续匹配
-    if (msgStr?.indexOf(emojiLabel.key) !== -1 && imgArr?.length) {
+    if (msgStr?.indexOf(key) !== -1 && imgArr?.length) {
       let cMsg = msgStr; // 最新的字符串
       // 发现图片, 循环添加
       for (let i = 0; i < imgArr.length; i++) {
@@ -166,10 +160,10 @@ export const replaceMsgText = (msgText?: string): string => {
         const msgImgList = cMsg?.split(imgArr[i]);
         /**
          * 把剩下文本在次装进入消息数组中
-         * 如：`哈哈<img src="/static/imgs/[愉快].png" ${emojiLabel.key}="[愉快]" />哈哈`
+         * 如：`哈哈<img src="/static/imgs/[愉快].png" ${key}="[愉快]" />哈哈`
          * 我们需要得到的是数组: [
          *  '哈哈',
-         *  '<img src="/static/imgs/[愉快].png" ${emojiLabel.key}="[愉快]" />',
+         *  '<img src="/static/imgs/[愉快].png" ${key}="[愉快]" />',
          *  '哈哈'
          * ]
          */

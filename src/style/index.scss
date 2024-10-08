@@ -37,6 +37,12 @@
   }
 }
 
+.fb-editor-container {
+  background-color: #fff;
+  flex: 1;
+  position: relative;
+}
+
 // 底部操作区
 .fb-chat-op {
   user-select: none;
@@ -130,7 +136,7 @@
 // 输入框样式
 .fb-editor-scroll {
   width: 100%;
-  max-height: 75px;
+  max-height: 200px;
   overflow-y: auto;
   &::-webkit-scrollbar {
     width: 4px;
@@ -145,7 +151,7 @@
 
   .fb-editor-wrapper {
     width: 100%;
-    min-height: 75px;
+    min-height: 200px;
     overflow-x: hidden;
     border: none;
     outline: none;
@@ -162,15 +168,11 @@
       cursor: default;
       display: inline !important;
     }
-  }
-}
-
-.fb-editor-container {
-  background-color: #fff;
-  flex: 1;
-  position: relative;
-  p {
-    line-height: 1.5;
+    p {
+      line-height: 1.5;
+      // display: flex;
+      // align-items: end;
+    }
   }
 }
 
@@ -201,5 +203,19 @@
     min-width: 20px;
     max-width: 200px;
     min-height: 200px;
+    border-style: none;
+    vertical-align: baseline;
   }
+}
+
+.fb-e-image {
+  cursor: default;
+  display: inline !important;
+  // max-width: 100%;
+  min-height: 20px;
+  min-width: 20px;
+  max-width: 200px;
+  min-height: 200px;
+  border-style: none;
+  vertical-align: baseline;
 }

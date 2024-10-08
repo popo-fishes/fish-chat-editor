@@ -5,7 +5,7 @@ export { default } from "./components/ChatEditor";
 
 export * from "./hooks";
 
-export * from "./utils";
+export { replaceMsgText, labelRep } from "./utils";
 
 export * from "./types";
 

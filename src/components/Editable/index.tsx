@@ -5,9 +5,20 @@
  */
 import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps, EditorElement } from "../../types";
-import { emojiLabel, labelRep } from "../../utils";
-import { getText, setRangeNode, editTransformSpaceText, setText, amendRangeLastNode } from "../../utils/util";
-import { createLineElement, findParentWithAttribute, isEmptyEditNode, judgeEditRowNotNull } from "../../utils/dom";
+import {
+  getElementAttributeKey,
+  labelRep,
+  createLineElement,
+  findParentWithAttribute,
+  isEmptyEditNode,
+  judgeEditRowNotNull,
+  getText,
+  setRangeNode,
+  editTransformSpaceText,
+  setText,
+  amendRangeLastNode
+} from "../../utils";
+
 import { handleInputTransforms, handlePasteTransforms, onCopyEvent, onCut, handleAmendEmptyLine } from "./event";
 
 // 备份当前的光标位置
@@ -174,7 +185,8 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     node.src = item.url;
     node.setAttribute("style", `width: ${18}px;height:${18}px`);
     // 插入表情的时候，加上唯一标识。然后再复制（onCopy事件）的时候处理图片。
-    node.setAttribute(emojiLabel.key, item.name);
+    const emojiNodeKey = getElementAttributeKey("emojiNode");
+    node.setAttribute(emojiNodeKey, item.name);
 
     if (currentSelection.startContainer?.nodeType == 3) {
       /**
@@ -340,7 +352,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           className="fb-editor-wrapper"
           ref={editRef}
           contentEditable
-          data-slate-node="input-editor"
+          data-fish-editor
           spellCheck
           onPaste={onPasteChange}
           onBlur={onEditorBlur}

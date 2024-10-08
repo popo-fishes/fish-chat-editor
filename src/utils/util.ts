@@ -3,9 +3,10 @@
  * @LastEditors: Please set LastEditors
  * @Description: 工具方法
  */
-import { regContentImg, getRandomWord } from "./conmmon";
 import {
   isDOMElement,
+  regContentImg,
+  getRandomWord,
   isDOMNode,
   createLineElement,
   findParentWithAttribute,
@@ -17,7 +18,7 @@ import {
   judgeEditRowNotNull,
   handleEditNodeTransformsValue,
   getNodeContent
-} from "./dom";
+} from ".";
 import type { EditorElement } from "../types";
 
 /** @name 把光标指向元素节点, 并把位置设置为0，0 */

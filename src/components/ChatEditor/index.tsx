@@ -11,7 +11,7 @@ import Editable from "../Editable";
 import { useClickAway } from "../../hooks";
 
 import { setEmojiCdn } from "../../utils";
-import { emoji } from "../../config";
+import { emoji as defaultEmoData } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
@@ -46,11 +46,11 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
     }
 
     const data: IEmojiType[] = [];
-    for (const i in emoji) {
+    for (const i in defaultEmoData) {
       const bli = i.replace("[", "");
       const cli = bli.replace("]", "");
       data.push({
-        url: `${cdnUrl}${emoji[i]}`,
+        url: `${cdnUrl}${defaultEmoData[i]}`,
         name: i,
         title: cli
       });
