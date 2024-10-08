@@ -54,13 +54,13 @@ export const createLineElement = (): HTMLParagraphElement => {
   const key = getElementAttributeKey("editorNode");
   dom_p.setAttribute(key, "element");
   dom_p.id = id;
-  //dom_p.appendChild(createLineTextElement());
+  //dom_p.appendChild(createChunkTextElement());
   dom_p.innerHTML = "<br>";
   return dom_p;
 };
 
 /** @name 创建一个编辑器的行内--块节点 */
-export const createLineSapnElement = (node: HTMLElement): HTMLSpanElement => {
+export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
   const id = `${prefixNmae}element-` + getRandomWord(4);
   // 获取属性1
@@ -75,12 +75,18 @@ export const createLineSapnElement = (node: HTMLElement): HTMLSpanElement => {
 };
 
 /** @name 创建一个编辑器的行内--文本节点 */
-export const createLineTextElement = (): HTMLSpanElement => {
+export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
   const id = `${prefixNmae}element-` + getRandomWord(4);
   const elementAttribute = getElementAttributeKey("editorNode");
   dom_span.setAttribute(elementAttribute, "text");
+  dom_span.setAttribute("data-fish-length", "0");
   dom_span.id = id;
-  dom_span.innerHTML = "<br>";
+  if (isEmpty) {
+    dom_span.innerHTML = "&#xFEFF;";
+  } else {
+    dom_span.innerHTML = "<br>";
+  }
+
   return dom_span;
 };

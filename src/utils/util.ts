@@ -9,6 +9,7 @@ import {
   getRandomWord,
   isDOMNode,
   createLineElement,
+  createChunkTextElement,
   findParentWithAttribute,
   getRangeAroundNode,
   addTargetElement,
@@ -244,8 +245,6 @@ export const insertText = (content: string, callBack?: () => void) => {
     // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
     const [behindNodeList, nextNodeList] = getRangeAroundNode();
 
-    if (!behindNodeList || !nextNodeList) return callBack?.();
-
     /** 给最后一个节点加入一个i标签方便我们插入内容后，设置光标的焦点位置 */
     const keyId = "editorFocusHack" + new Date().getTime() + getRandomWord(4);
     const iElement = document.createElement("i");
@@ -262,6 +261,7 @@ export const insertText = (content: string, callBack?: () => void) => {
     {
       // 获取焦点节点文本是空文本
       const content = getNodeContent(topElementNode);
+
       if (content == "\n" || content == "") {
         if (isDOMElement(firstNode)) {
           // 直接把第一个插入的节点内容 赋值给 当前光标节点的顶级富文本节点
@@ -278,7 +278,9 @@ export const insertText = (content: string, callBack?: () => void) => {
           if (prevLast) {
             insertBeforeNode(prevLast, firstNode.childNodes);
           } else {
-            // 如果光标位置的后面没节点, 则在光标前面第一个节点的后面插入节点
+            /**
+             * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后插入节点
+             */
             if (nextNodeList[0]) {
               const nodes: any = Array.from(cloneNodes(firstNode.childNodes));
               const fragment = new DocumentFragment();
@@ -290,7 +292,10 @@ export const insertText = (content: string, callBack?: () => void) => {
           }
         }
 
-        // 2. 如果第一个插入的节点和最后一个插入的节点是 相同的，代表是插入一个节点, 如果是一个节点，就不能去删除原始节点后面的节点，因为没有换行。
+        /**
+         * 2.1 如果第一个插入的节点和最后一个插入的节点是 相同的，代表是插入一个节点, 如果是一个节点，就不能去删除原始节点后面的节点，因为没有换行。
+         * 2.2 我们这里判断如果不是一个节点，那么就删除后面的节点
+         */
         if (firstNode !== lastNode) {
           // 1: 把后面的节点放到 插入的尾部节点中
           if (nextNodeList.length) {
@@ -368,7 +373,6 @@ export const insertNode = (nodes: HTMLElement[], callBack?: () => void) => {
   // 获取当前光标的开始容器节点
   const topElementNode: any = findParentWithAttribute(range.startContainer);
 
-  console.log(topElementNode, range);
   // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
   if (!topElementNode) {
     console.error("选区的容器节点不属于富文本节点");
@@ -377,9 +381,51 @@ export const insertNode = (nodes: HTMLElement[], callBack?: () => void) => {
     return;
   }
 
-  topElementNode.appendChild(nodes[0]);
-  // const fragment = new DocumentFragment();
-  // for (let i = 0; i < nodes.length; i++) {
-  //   fragment.appendChild(nodes[i]);
-  // }
+  // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
+  const [behindNodeList, nextNodeList] = getRangeAroundNode();
+
+  /** 处理原始光标行位置节点的内容 */
+  {
+    // 获取焦点节点文本是空文本
+    const content = getNodeContent(topElementNode);
+
+    if (content == "\n" || content == "") {
+      // 直接把第一个插入的节点内容 赋值给 当前光标节点的顶级富文本节点
+      addTargetElement(topElementNode, nodes);
+    } else {
+      // 不是空
+
+      // 1. 在当前光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
+      const prevLast = behindNodeList[0];
+      if (prevLast) {
+        insertBeforeNode(prevLast, nodes);
+      } else {
+        /**
+         * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后在它的前面插入节点
+         */
+        if (nextNodeList[0]) {
+          const fragment = new DocumentFragment();
+          for (let i = 0; i < nodes.length; i++) {
+            fragment.appendChild(nodes[i]);
+          }
+          topElementNode.insertBefore(fragment, nextNodeList[0]);
+        }
+      }
+    }
+  }
+
+  // 设置光标的位置
+  {
+    // 获取光标节点
+    const focusNode = nodes[nodes.length - 1] as any;
+
+    focusNode?.scrollIntoView(true);
+    // 设置光标
+    setRangeNode(focusNode, "after", () => {
+      // 执行回调
+      callBack?.();
+    });
+  }
+
+  console.timeEnd("editable插入节点耗时");
 };

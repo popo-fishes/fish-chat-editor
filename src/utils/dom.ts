@@ -83,14 +83,18 @@ export const removeNode = (childNodes: HTMLElement[]) => {
  */
 export const insertBeforeNode = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
   if (!targetElement || !childNodes || !childNodes?.length) return;
-  const nodes: HTMLElement[] = Array.from(cloneNodes(childNodes));
   const fragment = new DocumentFragment();
-  for (let i = 0; i < nodes.length; i++) {
-    fragment.appendChild(nodes[i]);
+  for (let i = 0; i < childNodes.length; i++) {
+    fragment.appendChild(childNodes[i]);
   }
   const parentNode = targetElement.parentNode;
+  // 获取插入节点的下一个兄弟节点
   const nextSibling = targetElement.nextSibling;
 
+  /**
+   * 在兄弟节点前面插入，
+   * nextSibling 如果为 null，fragment 将被插入到parentNode的子节点列表末尾。
+   */
   parentNode.insertBefore(fragment, nextSibling);
 };
 
@@ -184,8 +188,8 @@ export const isEditElement = (node: HTMLElement): boolean => {
   const keys = elementDataKeys["editorNode"];
   const hasAttr = node.hasAttribute(keys["key"]);
   if (hasAttr) {
-    const isValElement = node?.dataset?.[keys["value"]] || "";
-    if (isValElement == "element") {
+    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
+    if (elementAttrVal == "element") {
       return true;
     }
     return false;

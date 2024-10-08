@@ -8,12 +8,13 @@ import {
   addTargetElement,
   removeNode,
   createLineElement,
+  createChunkTextElement,
   getElementAttributeKey,
   regContentImg,
   getRandomWord,
   labelRep,
   prefixNmae,
-  createLineSapnElement,
+  createChunkSapnElement,
   cloneNodes,
   judgeDomOrNotTtxt,
   isDOMText,
@@ -200,7 +201,6 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
 
   const [behindNodeList, nextNodeList] = getRangeAroundNode();
 
-  if (!behindNodeList || !nextNodeList) return callBack?.();
   /**
    * 创建换行节点
    * @dec 把之前的节点放到需要换行的节点后面
@@ -279,9 +279,9 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
           const key = getElementAttributeKey("imgNode");
           node.setAttribute(key, "true");
 
-          // tempEl.appendChild(createLineSapnElement(node));
-
-          nodes.push(node);
+          // tempEl.appendChild(createChunkSapnElement(node));
+          const textNode = createChunkTextElement();
+          nodes.push(...[node, textNode]);
         });
 
         insertNode(nodes);
