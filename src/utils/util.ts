@@ -9,7 +9,7 @@ import {
   getRandomWord,
   isDOMNode,
   createLineElement,
-  findParentWithAttribute,
+  findNodetWithElement,
   getRangeAroundNode,
   addTargetElement,
   removeNode,
@@ -144,7 +144,7 @@ export const amendRangeLastNode = (editNode: EditorElement, callBack?: (node?: H
 
   let lastElement = null;
 
-  if (selection && selection.rangeCount >= 0) {
+  if (selection && selection.rangeCount > 0) {
     lastElement = editNode.childNodes[editNode.childNodes.length - 1];
 
     if (!lastElement) {
@@ -195,7 +195,7 @@ export const insertText = (content: string, callBack?: () => void) => {
   }
 
   // 获取当前光标的开始容器节点
-  const topElementNode: any = findParentWithAttribute(range.startContainer);
+  const topElementNode: any = findNodetWithElement(range.startContainer);
   // console.log(topElementNode, range);
   // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
   if (!topElementNode) {
@@ -275,7 +275,7 @@ export const insertText = (content: string, callBack?: () => void) => {
         if (firstContent !== "\n" && firstContent !== "") {
           const prevLast = behindNodeList[0];
           if (prevLast) {
-            insertBeforeNode(prevLast, firstNode.childNodes);
+            insertBeforeNode(prevLast, cloneNodes(firstNode.childNodes));
           } else {
             /**
              * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后插入节点
@@ -370,7 +370,7 @@ export const insertNode = (nodes: HTMLElement[], callBack?: () => void) => {
   }
 
   // 获取当前光标的开始容器节点
-  const topElementNode: any = findParentWithAttribute(range.startContainer);
+  const topElementNode: any = findNodetWithElement(range.startContainer);
 
   // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
   if (!topElementNode) {

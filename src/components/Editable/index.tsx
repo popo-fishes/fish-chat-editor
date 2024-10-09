@@ -9,13 +9,18 @@ import {
   getElementAttributeKey,
   labelRep,
   createLineElement,
-  findParentWithAttribute,
+  findNodetWithElement,
   isEmptyEditNode,
   judgeEditRowNotNull,
   getText,
   setRangeNode,
   editTransformSpaceText,
+  createChunkTextElement,
   isImgNode,
+  isDOMElement,
+  findNodeWithImg,
+  getRandomWord,
+  findNodeWithInline,
   setText,
   amendRangeLastNode
 } from "../../utils";
@@ -170,7 +175,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   /** @name 选择插入表情图片 */
   const insertEmoji = (item: IEmojiType) => {
     // 非常重要的逻辑
-    if (!findParentWithAttribute(currentSelection.startContainer)) {
+    if (!findNodetWithElement(currentSelection.startContainer)) {
       // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
       amendRangeLastNode(editRef.current, (node) => {
         if (node) {
@@ -246,7 +251,10 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   };
 
   /** @name 获取焦点 */
-  const onEditorFocus = (e: React.FocusEvent<HTMLDivElement>) => {};
+  const onEditorFocus = (event: React.FocusEvent<HTMLDivElement>) => {
+    // const focusedElement = document.activeElement;
+    // console.log(event, focusedElement);
+  };
 
   /** @name 输入框值变化onChange事件 */
   const onEditorInputChange = (e: React.CompositionEvent<HTMLDivElement>) => {
@@ -292,13 +300,40 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
         // 重新聚焦输入框
         editRef?.current?.focus();
       });
+      return;
     }
-    // 点击图标节点，失去光标
+    // 点击图片节点，失去光标
     if (isImgNode(target)) {
       // 用户选择的文本范围或光标的当前位置
       const selection = window.getSelection();
       // 清除选定对象的所有光标对象
       selection?.removeAllRanges();
+      return;
+    }
+
+    /**
+     * 如果存在光标
+     * 点击了输入框后，如果当前光标位置节点是一个 块节点，且是一个图片节点，就把当前光标移动到它的前面的一个兄弟节点身上。
+     * 1：要保证图片的块节点不可以输入内容
+     * 2：粘贴图片时，我们会在图片节点前面插入了一个文本输入节点。
+     */
+    // 是一个DOM元素节点，并且存在图片节点
+    if (isDOMElement(target) && findNodeWithImg(target)) {
+      // 必须是内联节点
+      const pnode = findNodeWithInline(target);
+
+      if (pnode) {
+        // 用户选择的文本范围或光标的当前位置
+        const selection = window.getSelection();
+        // 清除选定对象的所有光标对象
+        selection?.removeAllRanges();
+
+        const textNode = createChunkTextElement();
+
+        pnode.insertAdjacentElement("afterend", textNode);
+
+        setRangeNode(textNode, "after", () => {});
+      }
     }
   };
 
@@ -354,6 +389,15 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     });
   };
 
+  /** @name 鼠标按下时 */
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e?.target as any;
+    // 是一个DOM元素节点，且光标位置为1，并且存在图片节点, 那么就禁止获取焦点。
+    if (isDOMElement(target) && findNodeWithImg(target) && findNodeWithInline(target)) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="fb-editor-container">
       <div className="fb-editor-scroll">
@@ -374,6 +418,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
             // 标记正在输入中文
             isLock = true;
           }}
+          onMouseDown={onMouseDown}
           onCompositionEnd={(e) => {
             // 标记正在输入中文, 结束以后再去触发onInput
             isLock = false;

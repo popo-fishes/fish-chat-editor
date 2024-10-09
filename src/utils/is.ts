@@ -77,6 +77,22 @@ export const isImgNode = (node: HTMLElement): boolean => {
   return false;
 };
 
+/** @name 判断是否为一个图片节点，不包含表情图 */
+export const isInlineNode = (node: HTMLElement): boolean => {
+  if (!node) return false;
+  if (!isDOMElement(node)) return false;
+  const keys = elementDataKeys["inlineNode"];
+  const hasAttr = node.hasAttribute(keys["key"]);
+  if (hasAttr) {
+    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
+    if (elementAttrVal == "true") {
+      return true;
+    }
+    return false;
+  }
+  return false;
+};
+
 /**
  * @name 判断是否存在元素节点，或者是否文本节点不为空字符串
  * @returns boolean

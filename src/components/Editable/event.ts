@@ -18,7 +18,7 @@ import {
   cloneNodes,
   isDomOrNotTtxt,
   isDOMText,
-  findParentWithAttribute,
+  findNodetWithElement,
   getRangeAroundNode,
   getPlainText
 } from "../../utils";
@@ -185,7 +185,7 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
   const rangeStartContainer: any = range.startContainer;
 
   // 判断当前光标节点的顶级节点是否是一个富文本节点
-  const topElementNode = findParentWithAttribute(rangeStartContainer);
+  const topElementNode = findNodetWithElement(rangeStartContainer);
 
   // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
   if (!topElementNode) {
@@ -321,7 +321,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
       const range = selection?.getRangeAt(0);
 
       // 获取当前光标的开始容器节点
-      const topElementNode = findParentWithAttribute(range.startContainer);
+      const topElementNode = findNodetWithElement(range.startContainer);
 
       // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
       if (!topElementNode) {

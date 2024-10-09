@@ -4,10 +4,10 @@
  * @Description: dom操作
  */
 
-import { getElementAttributeKey, isDOMText, isDOMElement, isEditElement, getElementAttributeDatasetName } from ".";
+import { getElementAttributeKey, isDOMText, isDOMElement, isInlineNode, isEditElement, isImgNode, getElementAttributeDatasetName } from ".";
 import type { EditorElement } from "../types";
 /**
- * @name 给一个节点元素，添加子节点
+ * @name 给目前节点，添加子节点
  * @param targetNode
  * @param childNodes
  * @param clear 是否需要清空内容，在添加节点
@@ -102,15 +102,37 @@ export const getDomPreviousOrnextSibling = (targetElement: HTMLElement) => {
   return [previousNodes, nextNodes];
 };
 
-/** @name 判断节点是不是一个富文本元素节点：element，如果不是找它的父级节点再查下去 */
-export const findParentWithAttribute = (node: any) => {
+/** @name 判断节点是否富文本元素节点，如果不是找它的父节点再查下去 */
+export const findNodetWithElement = (node: any) => {
   if (!node || !node?.parentNode) {
     return null; // 如果节点没有父节点，则返回 null
   }
 
   if (isEditElement(node)) return node;
 
-  return findParentWithAttribute(node.parentNode); // 否则继续查询父节点的父节点
+  return findNodetWithElement(node.parentNode); // 否则继续查询父节点的父节点
+};
+
+/** @name 判断节点是否图片元素节点，如果不是找它的子节点再查下去 */
+export const findNodeWithImg = (node: any) => {
+  if (!node) {
+    return null;
+  }
+
+  if (isImgNode(node)) return node;
+
+  return findNodeWithImg(node?.firstChild || null); // 否则继续查询子节点
+};
+
+/** @name 判断节点是否内联元素节点，如果不是找它的父节点再查下去 */
+export const findNodeWithInline = (node: any) => {
+  if (!node || !node?.parentNode) {
+    return null; // 如果节点没有父节点，则返回 null
+  }
+
+  if (isInlineNode(node)) return node;
+
+  return findNodeWithInline(node.parentNode); // 否则继续查询父节点的父节点
 };
 
 /**
@@ -136,7 +158,7 @@ export const getRangeAroundNode = () => {
   // Range.startContainer 是只读属性，返回 Range 开始的节点
   const rangeStartContainer: any = range.startContainer;
 
-  const topElementNode = findParentWithAttribute(rangeStartContainer);
+  const topElementNode = findNodetWithElement(rangeStartContainer);
 
   // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
   if (!topElementNode) return [behindNodeList, nextNodeList];

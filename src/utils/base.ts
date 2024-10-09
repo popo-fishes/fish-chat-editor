@@ -7,15 +7,7 @@ import { getRandomWord } from ".";
 export const prefixNmae = "fb-e-";
 
 /** 标签扩展属性配置表 */
-export const elementDataKeys: {
-  /** 节点名 */
-  [key: string]: {
-    /** 属性名 */
-    key: string;
-    /** dataset-name */
-    value: string;
-  };
-} = {
+export const elementDataKeys = {
   // 编辑器节点
   editorNode: {
     key: "data-fish-node",
@@ -63,10 +55,8 @@ export const createLineElement = (): HTMLParagraphElement => {
 export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
   const id = `${prefixNmae}element-` + getRandomWord(4);
-  // 获取属性1
-  const elementAttribute = getElementAttributeKey("editorNode");
-  dom_span.setAttribute(elementAttribute, "element");
-  // 获取属性2
+
+  // 获取属性
   const inlineAttribute = getElementAttributeKey("inlineNode");
   dom_span.setAttribute(inlineAttribute, "true");
   dom_span.id = id;
