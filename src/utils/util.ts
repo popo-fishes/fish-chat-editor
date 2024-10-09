@@ -9,7 +9,6 @@ import {
   getRandomWord,
   isDOMNode,
   createLineElement,
-  createChunkTextElement,
   findParentWithAttribute,
   getRangeAroundNode,
   addTargetElement,

@@ -16,7 +16,7 @@ import {
   prefixNmae,
   createChunkSapnElement,
   cloneNodes,
-  judgeDomOrNotTtxt,
+  isDomOrNotTtxt,
   isDOMText,
   findParentWithAttribute,
   getRangeAroundNode,
@@ -213,7 +213,7 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
   removeNode(nextNodeList);
 
   // 判断原始节点中是否还存在内容，如果不存在，就给元素节点中给一个br标签（占位）不然换行看不出来
-  const judgeOriginNotTtxt = judgeDomOrNotTtxt([...behindNodeList]);
+  const judgeOriginNotTtxt = isDomOrNotTtxt([...behindNodeList]);
 
   // 不满足条件
   if (!judgeOriginNotTtxt) {
@@ -268,20 +268,20 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         const nodes: HTMLSpanElement[] = [];
         datas.forEach((baseItem) => {
           // 创建一个图片容器节点
-          // const tempEl = document.createElement("div");
-          // tempEl.id = `${prefixNmae}image-container-` + getRandomWord(4);
-          // tempEl.classList.add(`${prefixNmae}image-container`);
+          const container = document.createElement("span");
+          container.id = `${prefixNmae}image-container-` + getRandomWord(4);
+          container.classList.add(`${prefixNmae}image-container`);
 
           const node = new Image();
           node.src = baseItem;
-          node.id = `${prefixNmae}image-` + getRandomWord(4);
-          node.classList.add(`${prefixNmae}image`);
           const key = getElementAttributeKey("imgNode");
           node.setAttribute(key, "true");
 
-          // tempEl.appendChild(createChunkSapnElement(node));
+          container.appendChild(node);
+
           const textNode = createChunkTextElement();
-          nodes.push(...[node, textNode]);
+
+          nodes.push(...[createChunkSapnElement(container), textNode]);
         });
 
         insertNode(nodes);

@@ -136,7 +136,7 @@
 // 输入框样式
 .fb-editor-scroll {
   width: 100%;
-  max-height: 200px;
+  max-height: 210px;
   overflow-y: auto;
   &::-webkit-scrollbar {
     width: 4px;
@@ -151,7 +151,7 @@
 
   .fb-editor-wrapper {
     width: 100%;
-    min-height: 200px;
+    min-height: 210px;
     overflow-x: hidden;
     border: none;
     outline: none;
@@ -189,10 +189,14 @@
 
 .fb-e-image-container {
   display: inline-block;
-  margin: 0 3px;
+  margin: 0 1px;
   box-sizing: border-box;
+  border-radius: 4px;
+  border: 2px solid transparent;
   outline: none;
-  padding: 0;
+  &:hover {
+    border: 2px solid #b4d5ff;
+  }
   img {
     cursor: default;
     display: inline !important;
@@ -202,19 +206,6 @@
     max-width: 200px;
     min-height: 200px;
     border-style: none;
-    vertical-align: baseline;
+    vertical-align: bottom;
   }
-}
-
-.fb-e-image {
-  cursor: default;
-  display: inline !important;
-  // max-width: 100%;
-  min-height: 20px;
-  min-width: 20px;
-  max-width: 200px;
-  min-height: 200px;
-  border-style: none;
-  vertical-align: baseline;
-  margin: 0 3px;
 }

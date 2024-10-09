@@ -11,3 +11,5 @@ export * from "./file";
 export * from "./util";
 
 export * from "./base";
+
+export * from "./is";

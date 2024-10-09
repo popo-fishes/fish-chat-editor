@@ -4,33 +4,8 @@
  * @Description: dom操作
  */
 
-import { getElementAttributeKey, elementDataKeys, getText, getElementAttributeDatasetName } from ".";
-
+import { getElementAttributeKey, isDOMText, isDOMElement, isEditElement, getElementAttributeDatasetName } from ".";
 import type { EditorElement } from "../types";
-
-/**
- * @name 返回DOM节点的主机窗口
- */
-export const getDefaultView = (value: any): Window | null => {
-  return (value && value.ownerDocument && value.ownerDocument.defaultView) || null;
-};
-
-/** @name 检查一个值是否为DOM节点。 */
-export const isDOMNode = (value: any) => {
-  const window = getDefaultView(value);
-  return !!window && value;
-};
-
-/** @name 检查一个值是否为元素节点。 */
-export const isDOMElement = (value: any) => {
-  return isDOMNode(value) && value.nodeType === 1;
-};
-
-/** @name 检查DOM节点是否为文本节点。 */
-export const isDOMText = (value: any) => {
-  return isDOMNode(value) && value.nodeType === 3;
-};
-
 /**
  * @name 给一个节点元素，添加子节点
  * @param targetNode
@@ -99,20 +74,6 @@ export const insertBeforeNode = (targetElement: HTMLElement, childNodes: HTMLEle
 };
 
 /**
- * @name 获取节点在全部子节点下面的位置
- */
-export const getNodeIndex = (nodes: HTMLElement[], child: HTMLElement) => {
-  let position = 0;
-  for (let i = 0; i < nodes.length; i++) {
-    position++;
-    if (nodes[i] === child) {
-      break;
-    }
-  }
-  return position;
-};
-
-/**
  * @name 获取当前节点的 前面全部兄弟节点 和后面全部兄弟节点
  * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/nextSibling
  * @param targetElement
@@ -139,62 +100,6 @@ export const getDomPreviousOrnextSibling = (targetElement: HTMLElement) => {
     currentElement = currentElement.nextSibling;
   }
   return [previousNodes, nextNodes];
-};
-
-/**
- * @name 判断是否存在元素节点，或者是否文本节点不为空字符串
- * @returns boolean
- */
-export const judgeDomOrNotTtxt = (nodes: HTMLElement[]): boolean => {
-  if (!nodes || !nodes.length) return false;
-  let isFlag = false;
-  const tempNode = nodes.filter((item: any) => item?.nodeType);
-  for (let i = 0; i < tempNode.length; i++) {
-    const currentElement = tempNode[i];
-    // 如果是文本节点,存在值
-    if (isDOMText(currentElement) && currentElement.nodeValue) {
-      isFlag = true;
-      break;
-    }
-    if (isDOMElement(currentElement)) {
-      isFlag = true;
-      break;
-    }
-  }
-  return isFlag;
-};
-
-/**
- * @name 当前编辑器是否只有一个节点，且节点是一个空节点
- * @returns boolean
- */
-export const isEmptyEditNode = (editNode: EditorElement) => {
-  if (!editNode || !editNode?.childNodes) return true;
-  if (editNode?.childNodes && editNode?.childNodes.length > 1) {
-    return false;
-  }
-
-  if (!getText(editNode)) return true;
-
-  return false;
-};
-
-/**
- * @name 判断节点是不是一个富文本元素节点：element
- */
-export const isEditElement = (node: HTMLElement): boolean => {
-  if (!node) return false;
-  if (!isDOMElement(node)) return false;
-  const keys = elementDataKeys["editorNode"];
-  const hasAttr = node.hasAttribute(keys["key"]);
-  if (hasAttr) {
-    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
-    if (elementAttrVal == "element") {
-      return true;
-    }
-    return false;
-  }
-  return false;
 };
 
 /** @name 判断节点是不是一个富文本元素节点：element，如果不是找它的父级节点再查下去 */
