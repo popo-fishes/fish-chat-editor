@@ -6,23 +6,39 @@ import { getRandomWord } from ".";
 
 export const prefixNmae = "fb-e-";
 
-/** 标签扩展属性配置表 */
-export const elementDataKeys = {
-  // 编辑器节点
-  editorNode: {
+/** 编辑器标签扩展属性配置表 */
+export const elementAttributeData = {
+  /**
+   * 编辑器节点
+   * 如果属性值为：text 代表是文本节点是，如果为element 代表是行 | 行内块节点（它是不可以编辑的）
+   */
+  fishNode: {
     key: "data-fish-node",
     value: "fishNode"
   },
-  // 编辑器节点行内块节点
-  inlineNode: {
+  /**
+   * 行内块节点
+   * 属性值: true 代表是行内块节点
+   */
+  fishInline: {
     key: "data-fish-inline",
     value: "fishInline"
   },
-  // 表情节点行内块节点
+
+  /**
+   * 表情节点
+   * 属性值：value 代表是表情
+   */
   emojiNode: {
     key: "data-fish-emoji-name",
     value: "fishEmojiName"
   },
+
+  /**
+   * todo
+   * 图片节点
+   * 属性值：true 代表是图片节点
+   */
   imgNode: {
     key: "data-fish-is-img",
     value: "fishIsImg"
@@ -31,23 +47,22 @@ export const elementDataKeys = {
 
 /** @name 获取编辑器节点属性key */
 export const getElementAttributeKey = (name: string) => {
-  return elementDataKeys[name]?.key || "";
+  return elementAttributeData[name]?.key || "";
 };
 
 /** @name 获取编辑器节点属性datasetName */
 export const getElementAttributeDatasetName = (name: string) => {
-  return elementDataKeys[name]?.value || "";
+  return elementAttributeData[name]?.value || "";
 };
 
 /** @name 创建一个编辑器--行节点 */
 export const createLineElement = (): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
   const id = `${prefixNmae}element-` + getRandomWord(4);
-  const key = getElementAttributeKey("editorNode");
+  const key = getElementAttributeKey("fishNode");
   dom_p.setAttribute(key, "element");
   dom_p.id = id;
-  //dom_p.appendChild(createChunkTextElement());
-  dom_p.innerHTML = "<br>";
+  dom_p.appendChild(createChunkTextElement(false));
   return dom_p;
 };
 
@@ -55,9 +70,11 @@ export const createLineElement = (): HTMLParagraphElement => {
 export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
   const id = `${prefixNmae}element-` + getRandomWord(4);
-
-  // 获取属性
-  const inlineAttribute = getElementAttributeKey("inlineNode");
+  // 获取属性1
+  const key = getElementAttributeKey("fishNode");
+  dom_span.setAttribute(key, "element");
+  // 获取属性2
+  const inlineAttribute = getElementAttributeKey("fishInline");
   dom_span.setAttribute(inlineAttribute, "true");
   dom_span.id = id;
   dom_span.appendChild(node);
@@ -68,9 +85,8 @@ export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
 export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
   const id = `${prefixNmae}element-` + getRandomWord(4);
-  const elementAttribute = getElementAttributeKey("editorNode");
+  const elementAttribute = getElementAttributeKey("fishNode");
   dom_span.setAttribute(elementAttribute, "text");
-  dom_span.setAttribute("data-fish-length", "0");
   dom_span.id = id;
   if (isEmpty) {
     dom_span.innerHTML = "&#xFEFF;";

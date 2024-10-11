@@ -2,7 +2,7 @@
  * @Date: 2024-10-09 09:43:04
  * @Description: Modify here please
  */
-import { elementDataKeys, getText } from ".";
+import { elementAttributeData, getText } from ".";
 import type { EditorElement } from "../types";
 
 /**
@@ -44,12 +44,12 @@ export const isEmptyEditNode = (editNode: EditorElement) => {
 };
 
 /**
- * @name 判断节点是不是一个富文本元素节点：element
+ * @name 判断节点是否一个块属性节点：element
  */
 export const isEditElement = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;
-  const keys = elementDataKeys["editorNode"];
+  const keys = elementAttributeData["fishNode"];
   const hasAttr = node.hasAttribute(keys["key"]);
   if (hasAttr) {
     const elementAttrVal = node?.dataset?.[keys["value"]] || "";
@@ -61,11 +61,27 @@ export const isEditElement = (node: HTMLElement): boolean => {
   return false;
 };
 
-/** @name 判断是否为一个图片节点，不包含表情图 */
+/** @name 判断是否为一个文本属性节点：text */
+export const isEditTextNode = (node: HTMLElement): boolean => {
+  if (!node) return false;
+  if (!isDOMElement(node)) return false;
+  const keys = elementAttributeData["fishNode"];
+  const hasAttr = node.hasAttribute(keys["key"]);
+  if (hasAttr) {
+    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
+    if (elementAttrVal == "text") {
+      return true;
+    }
+    return false;
+  }
+  return false;
+};
+
+/** @name 判断是否为一个图片属性节点，不包含表情图 */
 export const isImgNode = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;
-  const keys = elementDataKeys["imgNode"];
+  const keys = elementAttributeData["imgNode"];
   const hasAttr = node.hasAttribute(keys["key"]);
   if (hasAttr) {
     const elementAttrVal = node?.dataset?.[keys["value"]] || "";
@@ -77,11 +93,11 @@ export const isImgNode = (node: HTMLElement): boolean => {
   return false;
 };
 
-/** @name 判断是否为一个图片节点，不包含表情图 */
-export const isInlineNode = (node: HTMLElement): boolean => {
+/** @name 判断是否为一个内联块属性节点*/
+export const isFishInline = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;
-  const keys = elementDataKeys["inlineNode"];
+  const keys = elementAttributeData["fishInline"];
   const hasAttr = node.hasAttribute(keys["key"]);
   if (hasAttr) {
     const elementAttrVal = node?.dataset?.[keys["value"]] || "";

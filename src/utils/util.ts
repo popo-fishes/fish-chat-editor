@@ -8,14 +8,17 @@ import {
   regContentImg,
   getRandomWord,
   isDOMNode,
+  isFishInline,
   createLineElement,
   findNodetWithElement,
   getRangeAroundNode,
   addTargetElement,
   removeNode,
+  isEditElement,
   cloneNodes,
   insertBeforeNode,
   judgeEditRowNotNull,
+  getElementBelowTextNode,
   handleEditNodeTransformsValue,
   getNodeContent
 } from ".";
@@ -144,7 +147,9 @@ export const amendRangeLastNode = (editNode: EditorElement, callBack?: (node?: H
 
   let lastElement = null;
 
-  if (selection && selection.rangeCount > 0) {
+  console.log(selection.rangeCount);
+
+  if (selection && selection.rangeCount >= 0) {
     lastElement = editNode.childNodes[editNode.childNodes.length - 1];
 
     if (!lastElement) {
@@ -166,6 +171,43 @@ export const amendRangeLastNode = (editNode: EditorElement, callBack?: (node?: H
     selection.addRange(range);
   }
   return callBack?.(lastElement);
+};
+
+/**
+ * @name 修正光标的位置
+ */
+export const amendRangePosition = (editNode: EditorElement, callBack?: (node?: HTMLElement) => void) => {
+  // 获取页面的选择区域
+  const selection: any = window.getSelection();
+  if (!editNode || !editNode.childNodes) return callBack?.();
+
+  let lastElement = editNode.childNodes[editNode.childNodes.length - 1];
+
+  if (!lastElement) {
+    console.error("富文本不存在节点，请排查问题");
+    return;
+  }
+
+  if (isEditElement(lastElement as HTMLElement) && !isFishInline(lastElement as HTMLElement)) {
+    const dom = getElementBelowTextNode(lastElement as HTMLElement);
+
+    if (dom) {
+      // 创建 Range 对象
+      const range = document.createRange();
+      // 将 Range 对象的起始位置和结束位置都设置为节点的尾部
+      range.selectNodeContents(dom);
+      // 参数一个布尔值： true 折叠到 Range 的 start 节点，false 折叠到 end 节点。如果省略，则默认为 false
+      range.collapse(false);
+
+      // 将 Range 对象添加到 Selection 中
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      callBack?.(dom);
+      return;
+    }
+  }
+  console.error("富文本不存在节点，请排查问题");
 };
 
 /**

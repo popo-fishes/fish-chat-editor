@@ -10,6 +10,8 @@ import {
   createLineElement,
   createChunkTextElement,
   getElementAttributeKey,
+  findNodeOrParentExistTextNode,
+  amendRangePosition,
   regContentImg,
   getRandomWord,
   labelRep,
@@ -179,28 +181,29 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
   const range = selection?.getRangeAt(0);
 
   // 必须存在光标
-  if ((selection && selection.rangeCount == 0) || !range) return callBack?.();
+  if ((selection && selection.rangeCount == 0) || !range) return;
 
   // 获取当前光标的开始容器节点
   const rangeStartContainer: any = range.startContainer;
 
-  // 判断当前光标节点的顶级节点是否是一个富文本节点
-  const topElementNode = findNodetWithElement(rangeStartContainer);
+  // 判断光标节点是否为一个文本节点
+  const rangeNode = findNodeOrParentExistTextNode(rangeStartContainer);
 
-  // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
-  if (!topElementNode) {
-    // 非常重要的逻辑
-    amendRangeLastNode(editNode, (node) => {
-      if (node) {
-        // 在调用自己一次
-        handleAmendEmptyLine(editNode, callBack);
-      }
-    });
+  if (!rangeNode) {
+    console.log(rangeStartContainer, rangeNode);
+    // 非常重要的逻辑--修正光标位置
+    // amendRangePosition(editNode, (node) => {
+    //   if (node) {
+    //     // 在调用自己一次
+    //     handleAmendEmptyLine(editNode, callBack);
+    //   }
+    // });
     return;
   }
 
   const [behindNodeList, nextNodeList] = getRangeAroundNode();
 
+  const topElementNode = null;
   /**
    * 创建换行节点
    * @dec 把之前的节点放到需要换行的节点后面

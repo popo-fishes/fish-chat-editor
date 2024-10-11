@@ -4,26 +4,8 @@
  * @Description: dom操作
  */
 
-import { getElementAttributeKey, isDOMText, isDOMElement, isInlineNode, isEditElement, isImgNode, getElementAttributeDatasetName } from ".";
+import { getElementAttributeKey, isDOMText, isDOMElement, isEditTextNode, isFishInline, isEditElement, isImgNode, getElementAttributeDatasetName } from ".";
 import type { EditorElement } from "../types";
-/**
- * @name 给目前节点，添加子节点
- * @param targetNode
- * @param childNodes
- * @param clear 是否需要清空内容，在添加节点
- * @returns
- */
-export const addTargetElement = (targetNode: HTMLElement, childNodes: HTMLElement[], clear: boolean = true) => {
-  if (targetNode) {
-    if (childNodes && childNodes.length && clear) {
-      targetNode.innerHTML = "";
-    }
-    for (let i = 0; i < childNodes.length; i++) {
-      targetNode.appendChild(childNodes[i]);
-    }
-  }
-  return targetNode;
-};
 
 /**
  * @name 克隆节点
@@ -71,6 +53,25 @@ export const insertBeforeNode = (targetElement: HTMLElement, childNodes: HTMLEle
    * nextSibling 如果为 null，fragment 将被插入到parentNode的子节点列表末尾。
    */
   parentNode.insertBefore(fragment, nextSibling);
+};
+
+/**
+ * @name 给目标节点，添加子节点
+ * @param targetNode
+ * @param childNodes
+ * @param clear 是否需要清空内容，在添加节点
+ * @returns
+ */
+export const addTargetElement = (targetNode: HTMLElement, childNodes: HTMLElement[], clear: boolean = true) => {
+  if (targetNode) {
+    if (childNodes && childNodes.length && clear) {
+      targetNode.innerHTML = "";
+    }
+    for (let i = 0; i < childNodes.length; i++) {
+      targetNode.appendChild(childNodes[i]);
+    }
+  }
+  return targetNode;
 };
 
 /**
@@ -124,13 +125,38 @@ export const findNodeWithImg = (node: any) => {
   return findNodeWithImg(node?.firstChild || null); // 否则继续查询子节点
 };
 
+/** @name 判断节点下面是否存在文本节点 */
+export const findNodeExistTextNode = (node: any) => {
+  if (!node) {
+    return null;
+  }
+
+  if (isEditTextNode(node)) return node;
+
+  return findNodeExistTextNode(node?.firstChild || null); // 否则继续查询子节点
+};
+
+/**
+ * @name 判断当前给定的节点：是否为文本节点，或者它的父级节点是否为文本节点
+ */
+export const findNodeOrParentExistTextNode = (node: any) => {
+  if (!node) {
+    return null;
+  }
+
+  if (isEditTextNode(node)) return node;
+
+  if (isEditTextNode(node?.parentNode)) return node.parentNode;
+  return null;
+};
+
 /** @name 判断节点是否内联元素节点，如果不是找它的父节点再查下去 */
 export const findNodeWithInline = (node: any) => {
   if (!node || !node?.parentNode) {
     return null; // 如果节点没有父节点，则返回 null
   }
 
-  if (isInlineNode(node)) return node;
+  if (isFishInline(node)) return node;
 
   return findNodeWithInline(node.parentNode); // 否则继续查询父节点的父节点
 };
@@ -158,10 +184,10 @@ export const getRangeAroundNode = () => {
   // Range.startContainer 是只读属性，返回 Range 开始的节点
   const rangeStartContainer: any = range.startContainer;
 
-  const topElementNode = findNodetWithElement(rangeStartContainer);
+  const rangeNode = findNodeOrParentExistTextNode(rangeStartContainer);
 
-  // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
-  if (!topElementNode) return [behindNodeList, nextNodeList];
+  // 光标节点不是一个文本节点  直接返回
+  if (!rangeNode) return [behindNodeList, nextNodeList];
 
   // console.log(rangeStartContainer, range);
   /** 处理节点类型 */
@@ -315,16 +341,54 @@ export const handleEditNodeTransformsValue = (editNode: EditorElement): string[]
   return result;
 };
 
-/** @name 判断富文本行节点是否 不是一个空节点，如果不是空节点，就删除它子节点的br标签 */
+/** @name 判断文本节点是否存在多个节点，且存在br标签，就删除br标签 */
 export const judgeEditRowNotNull = (node: HTMLElement): boolean => {
   if (!isEditElement(node)) return false;
-  if (!getNodeContent(node)) return false;
-  const nodes: any = Array.from(node.childNodes);
+  if (!isEditTextNode(node)) return false;
+  const nodes: any[] = Array.from(node.childNodes);
   if (!nodes || !nodes?.length) return false;
+
+  let exist = false;
   for (const cld of nodes) {
     if ((cld as any)?.nodeName == "BR") {
       (cld as any)?.remove();
+      exist = true;
+      break;
     }
   }
-  return true;
+  return exist;
+};
+
+/** @name 判断文本节点是否存在多个节点，且存在br标签，就删除br标签 */
+export const deleteTextNodeBrNode = (node: HTMLElement): boolean => {
+  if (!isEditTextNode(node)) return false;
+  const nodes: any[] = Array.from(node.childNodes);
+  if (!nodes || !nodes?.length) return false;
+
+  let exist = false;
+  for (const cld of nodes) {
+    if ((cld as any)?.nodeName == "BR") {
+      (cld as any)?.remove();
+      exist = true;
+      break;
+    }
+  }
+  return exist;
+};
+
+/**
+ *  @name 获取传入节点块--下面的第一个文本节点
+ */
+export const getElementBelowTextNode = (node: HTMLElement): HTMLElement | null => {
+  if (!isEditElement(node)) return null;
+  const nodes: any = Array.from(node.childNodes);
+  if (!nodes || !nodes?.length) return null;
+  let dom: HTMLElement = null;
+  for (const cld of nodes) {
+    if (isEditTextNode(cld)) {
+      dom = cld;
+      break;
+    }
+  }
+  return dom;
 };
