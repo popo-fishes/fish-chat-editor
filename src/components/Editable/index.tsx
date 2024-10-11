@@ -3,7 +3,7 @@
  * @LastEditors: Please set LastEditors
  * @Description: 富文本组件
  */
-import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
+import React, { useEffect, useRef, forwardRef, useImperativeHandle, useState } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps, EditorElement } from "../../types";
 import {
   getElementAttributeKey,
@@ -32,7 +32,7 @@ import {
   isEditTextNode
 } from "../../utils";
 
-import { handleInputTransforms, handlePasteTransforms, onCopyEvent, onCut, handleAmendEmptyLine } from "./event";
+import { handleInputTransforms, onKeyUp, handlePasteTransforms, onCopyEvent, onCut, handleAmendEmptyLine } from "./event";
 
 // 备份当前的光标位置
 let currentSelection: {
@@ -432,6 +432,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           onCopy={onCopyEvent}
           onCut={onCut}
           onKeyDown={onEditorKeydown}
+          onKeyUp={onKeyUp}
           onCompositionStart={(e) => {
             // 标记正在输入中文
             isLock = true;

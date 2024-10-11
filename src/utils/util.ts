@@ -147,8 +147,6 @@ export const amendRangeLastNode = (editNode: EditorElement, callBack?: (node?: H
 
   let lastElement = null;
 
-  console.log(selection.rangeCount);
-
   if (selection && selection.rangeCount >= 0) {
     lastElement = editNode.childNodes[editNode.childNodes.length - 1];
 
@@ -187,7 +185,7 @@ export const amendRangePosition = (editNode: EditorElement, callBack?: (node?: H
     console.error("富文本不存在节点，请排查问题");
     return;
   }
-
+  // 是一个节点块，且不是内联块属性节点
   if (isEditElement(lastElement as HTMLElement) && !isFishInline(lastElement as HTMLElement)) {
     const dom = getElementBelowTextNode(lastElement as HTMLElement);
 

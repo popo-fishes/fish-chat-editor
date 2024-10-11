@@ -17,7 +17,7 @@ export const elementAttributeData = {
     value: "fishNode"
   },
   /**
-   * 行内块节点
+   * 行内块节点（编辑节点中的块，比如图片）
    * 属性值: true 代表是行内块节点
    */
   fishInline: {
@@ -56,13 +56,16 @@ export const getElementAttributeDatasetName = (name: string) => {
 };
 
 /** @name 创建一个编辑器--行节点 */
-export const createLineElement = (): HTMLParagraphElement => {
+export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
   const id = `${prefixNmae}element-` + getRandomWord(4);
   const key = getElementAttributeKey("fishNode");
   dom_p.setAttribute(key, "element");
   dom_p.id = id;
-  dom_p.appendChild(createChunkTextElement(false));
+  // 创建一个空的p标签
+  if (!isEmpty) {
+    dom_p.appendChild(createChunkTextElement(false));
+  }
   return dom_p;
 };
 

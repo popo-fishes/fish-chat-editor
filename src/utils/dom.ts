@@ -4,7 +4,18 @@
  * @Description: dom操作
  */
 
-import { getElementAttributeKey, isDOMText, isDOMElement, isEditTextNode, isFishInline, isEditElement, isImgNode, getElementAttributeDatasetName } from ".";
+import {
+  getElementAttributeKey,
+  isDOMText,
+  getRandomWord,
+  prefixNmae,
+  isDOMElement,
+  isEditTextNode,
+  isFishInline,
+  isEditElement,
+  isImgNode,
+  getElementAttributeDatasetName
+} from ".";
 import type { EditorElement } from "../types";
 
 /**
@@ -163,6 +174,7 @@ export const findNodeWithInline = (node: any) => {
 
 /**
  * @name 获取当前光标位置的元素节点 前面的节点 和 后面的节点
+ * ！！核心方法
  * 返回的数组中都是从近到远的 排序，距离当前光标节点越近的排在第一个
  * @return [behindNodeList:[], nextNodeList: []]
  */
@@ -377,10 +389,11 @@ export const deleteTextNodeBrNode = (node: HTMLElement): boolean => {
 };
 
 /**
- *  @name 获取传入节点块--下面的第一个文本节点
+ *  @name 传入一个编辑节点块--获取下面的第一个文本节点
  */
 export const getElementBelowTextNode = (node: HTMLElement): HTMLElement | null => {
-  if (!isEditElement(node)) return null;
+  // 1： 如果不是一个节点块，直接返回。 2： 是一个内联块属性节点，直接返回
+  if (!isEditElement(node) && isFishInline(node)) return null;
   const nodes: any = Array.from(node.childNodes);
   if (!nodes || !nodes?.length) return null;
   let dom: HTMLElement = null;
@@ -391,4 +404,32 @@ export const getElementBelowTextNode = (node: HTMLElement): HTMLElement | null =
     }
   }
   return dom;
+};
+
+/** @name 传入一个文本节点--获取它的编辑节点块，找它的父节点再找下去 */
+export const getNodeParentElement = (node: any) => {
+  if (!node || !node?.parentNode) {
+    return null; // 如果节点没有父节点，则返回 null
+  }
+  // 1： 是一个节点块， 2： 不是一个内联块属性节点
+  if (isEditElement(node) && !isFishInline(node)) return node;
+
+  return getNodeParentElement(node.parentNode); // 否则继续查询父节点的父节点
+};
+
+/**
+ *  @name 传入节点--如果它不是一个文本节点，就把它的全部属性删除了，更新它的属性。
+ *  @desc: 1.以此满足富文本的标签格式。
+ */
+export const duplicateTextNode = (node: any) => {
+  if (!node) return;
+  const isTextNode = findNodeOrParentExistTextNode(node);
+  // 如果它不是一个文本节点 且 是一个span标签
+  if (!isTextNode && node.nodeName !== "SPAN") return;
+  node.removeAttribute("style");
+  const id = `${prefixNmae}element-` + getRandomWord(4);
+  const elementAttribute = getElementAttributeKey("fishNode");
+  node.setAttribute(elementAttribute, "text");
+  node.id = id;
+  return node;
 };

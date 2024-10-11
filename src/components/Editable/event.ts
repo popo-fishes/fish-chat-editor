@@ -10,18 +10,23 @@ import {
   createLineElement,
   createChunkTextElement,
   getElementAttributeKey,
+  getElementBelowTextNode,
   findNodeOrParentExistTextNode,
   amendRangePosition,
   regContentImg,
+  duplicateTextNode,
   getRandomWord,
   labelRep,
   prefixNmae,
   createChunkSapnElement,
   cloneNodes,
   isDomOrNotTtxt,
+  isFishInline,
+  isEditTextNode,
   isDOMText,
   findNodetWithElement,
   getRangeAroundNode,
+  getNodeParentElement,
   getPlainText
 } from "../../utils";
 
@@ -188,44 +193,106 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
 
   // 判断光标节点是否为一个文本节点
   const rangeNode = findNodeOrParentExistTextNode(rangeStartContainer);
-
+  // console.log(rangeNode, range);
   if (!rangeNode) {
-    console.log(rangeStartContainer, rangeNode);
     // 非常重要的逻辑--修正光标位置
-    // amendRangePosition(editNode, (node) => {
-    //   if (node) {
-    //     // 在调用自己一次
-    //     handleAmendEmptyLine(editNode, callBack);
-    //   }
-    // });
+    amendRangePosition(editNode, (node) => {
+      if (node) {
+        // 在调用自己一次
+        handleAmendEmptyLine(editNode, callBack);
+      }
+    });
     return;
   }
 
   const [behindNodeList, nextNodeList] = getRangeAroundNode();
 
-  const topElementNode = null;
+  if (behindNodeList) {
+    console.log(behindNodeList, nextNodeList);
+  }
+
   /**
    * 创建换行节点
    * @dec 把之前的节点放到需要换行的节点后面
    */
-  const lineNode = addTargetElement(createLineElement(), cloneNodes(nextNodeList));
+  // 创建换行节点
+  const lineDom = createLineElement(true);
+  // // 取出文本节点
+  // const textNode = getElementBelowTextNode(lineDom);
 
-  topElementNode.insertAdjacentElement("afterend", lineNode);
+  // 当前光标的顶层编辑行节点
+  const topElementNode = getNodeParentElement(rangeNode);
+  // console.log(textNode, topElementNode);
 
-  // 删除原始节点中的换行部分的节点
-  removeNode(nextNodeList);
-
-  // 判断原始节点中是否还存在内容，如果不存在，就给元素节点中给一个br标签（占位）不然换行看不出来
-  const judgeOriginNotTtxt = isDomOrNotTtxt([...behindNodeList]);
-
-  // 不满足条件
-  if (!judgeOriginNotTtxt) {
-    topElementNode.innerHTML = "<br/>";
+  if (!topElementNode) {
+    console.error("无编辑行节点，不可插入");
+    return;
   }
-  // 设置光标节点
-  setCursorNode(lineNode);
-  // 执行回调
-  callBack?.();
+
+  // 把节点放到换行块节点的 文本节点中
+  const clNodes = cloneNodes(nextNodeList);
+
+  if (clNodes.length) {
+    // 标记顺序
+    const data: HTMLElement[][] = [];
+    // 标记块节点的开始索引
+    const blockindex = clNodes.findIndex((item) => isEditTextNode(item) || isFishInline(item));
+    // 代表没有块节点，全部是个体
+    if (blockindex == -1) {
+      data.push(clNodes);
+    } else {
+      // 截取前面的个体, 组合为一个数组
+      if (blockindex == 0) {
+        const restArr = clNodes.slice(blockindex);
+        data.push(restArr);
+      } else {
+        const slicedArr = clNodes.slice(0, blockindex);
+        const restArr = clNodes.slice(blockindex);
+        data.push(slicedArr);
+        // 变二维插入
+        for (const cld of restArr) {
+          data.push([cld]);
+        }
+      }
+    }
+    console.log(data);
+    // 遍历
+    // for (let i = 0; i < data.length; i++) {
+    //   // 代表是个体
+    //   if (i == 0) {
+    //     const textNode = createChunkTextElement(true);
+    //     const nodes = data[i].map((item) => item);
+    //     addTargetElement(textNode, nodes);
+    //     lineDom.appendChild(textNode);
+    //   } else {
+    //     // 代表是块
+    //     const nodes = data[i].map((item) => item);
+    //     if (nodes?.[0]) {
+    //       lineDom.appendChild(nodes?.[0]);
+    //     }
+    //   }
+    // }
+  }
+
+  console.log(lineDom);
+
+  // // 把当前换行节点插入在下一行
+  // topElementNode.insertAdjacentElement("afterend", lineDom);
+
+  // // 删除原始节点中的换行部分的节点
+  // removeNode(nextNodeList);
+
+  // // // 判断原始节点中是否还存在内容，如果不存在，就给元素节点中给一个br标签（占位）不然换行看不出来
+  // // const judgeOriginNotTtxt = isDomOrNotTtxt([...behindNodeList]);
+
+  // // // 不满足条件
+  // // if (!judgeOriginNotTtxt) {
+  // //   topElementNode.innerHTML = "<br/>";
+  // // }
+  // // 设置光标为换行节点的开始位置
+  // setCursorNode(textNode);
+  // // 执行回调
+  // callBack?.();
 };
 
 /**
@@ -344,6 +411,34 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         isPasteLock = false;
         callBack?.();
       });
+    }
+  }
+};
+
+/**
+ * @name 键盘按键被松开时发生
+ */
+export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const selection = window.getSelection();
+  /**
+   * 获取当前光标的节点，查询是否存在不符合编辑节点格式的节点，然后修正它。
+   * 这种情况常出现在： 按键 删除行-富文本自动合并行时，会主动创建一些自定义标签
+   * 比如：<span style="background-color: transparent;">345</span>
+   */
+  if (selection && selection.rangeCount > 0) {
+    // 获取当前光标
+    const range = selection?.getRangeAt(0);
+
+    /**
+     * 当前节点是文本节点。它的下一个兄弟节点，不是一个文本节点时，需要处理下 富文本的Dom格式
+     */
+    const textNode = findNodeOrParentExistTextNode(range.startContainer);
+    if (textNode && textNode.nextSibling) {
+      // 兄弟节点不是一个文本节点，且是一个span标签
+      const brotherNode = findNodeOrParentExistTextNode(textNode.nextSibling);
+      if (!brotherNode && textNode.nextSibling.nodeName === "SPAN") {
+        duplicateTextNode(textNode.nextSibling);
+      }
     }
   }
 };
