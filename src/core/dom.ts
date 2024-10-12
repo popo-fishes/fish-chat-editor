@@ -37,16 +37,86 @@ const getDomPreviousOrnextSibling = (targetElement: HTMLElement): [][] => {
 };
 
 /**
+ * @name 克隆节点集合
+ * @param childNodes
+ * @returns
+ */
+export const cloneNodes = (childNodes: HTMLElement[]) => {
+  const nodes: any[] = [];
+  for (let i = 0; i < childNodes.length; i++) {
+    const clonedNode = childNodes[i].cloneNode(true); // 复制节点及其子节点
+    nodes.push(clonedNode);
+  }
+  return nodes;
+};
+
+/**
+ * @name 删除节点集合
+ * @param childNodes
+ */
+export const removeNodes = (childNodes: HTMLElement[]) => {
+  // 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
+  const nodes: HTMLElement[] = Array.from(childNodes);
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    node?.remove();
+  }
+};
+
+/**
+ * @name 传入目标节点，在目标节点之后插入多个节点
+ * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
+ */
+export const toTargetAfterInsertNode = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
+  if (!targetElement || !childNodes || !childNodes?.length) return;
+  const fragment = new DocumentFragment();
+  for (let i = 0; i < childNodes.length; i++) {
+    fragment.appendChild(childNodes[i]);
+  }
+  const parentNode = targetElement.parentNode;
+  /**
+   * !!! 获取插入节点的下一个兄弟节点（只有获取到下一个兄弟节点，才是代表插入到targetElement节点之后）
+   */
+  const nextSibling = targetElement.nextSibling;
+
+  /**
+   * 在兄弟节点前面插入，
+   * nextSibling 如果为 null，fragment 将被插入到parentNode的子节点列表末尾。
+   */
+  parentNode.insertBefore(fragment, nextSibling);
+};
+
+/**
+ * @name 给目标节点，添加子节点集合
+ * @param targetNode 目标节点
+ * @param childNodes 节点集合
+ * @param clear 是否需要清空内容，在添加节点
+ * @returns
+ */
+export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElement[], clear: boolean = true) => {
+  if (targetNode) {
+    if (childNodes && childNodes.length && clear) {
+      targetNode.innerHTML = "";
+    }
+    for (let i = 0; i < childNodes.length; i++) {
+      targetNode.appendChild(childNodes[i]);
+    }
+  }
+  return targetNode;
+};
+
+/**
+ * !!! 重要方法
  * @name 获取节点的前面的节点和后面的节点
  * @desc: 默认当前光标位置节点作为目标
- * @return
+ * @return 返回的都是真实的dom节点
  * 返回的数组中都是从近到远的 排序，距离当前光标节点越近的排在第一个
  * [behindNodeList:[], nextNodeList: []]
  */
 export const getRangeAroundNode = () => {
-  /** 之后的节点 */
+  /** 之后的节点, 这里面的都是真实dom节点 */
   let behindNodeList: any[] = [];
-  /** 以前的节点 */
+  /** 以前的节点, 这里面的都是真实dom节点 */
   let nextNodeList: any[] = [];
 
   // 获取页面的选择区域
@@ -163,71 +233,4 @@ export const getRangeAroundNode = () => {
   // console.log(tempPrev, tempNext);
 
   return [tempPrev, tempNext];
-};
-
-/**
- * @name 克隆节点
- * @param childNodes
- * @returns
- */
-export const cloneNodes = (childNodes: HTMLElement[]) => {
-  const nodes: any[] = [];
-  for (let i = 0; i < childNodes.length; i++) {
-    const clonedNode = childNodes[i].cloneNode(true); // 复制节点及其子节点
-    nodes.push(clonedNode);
-  }
-  return nodes;
-};
-
-/**
- * @name 删除节点
- * @param childNodes
- */
-export const removeNodes = (childNodes: HTMLElement[]) => {
-  // 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
-  const nodes: HTMLElement[] = Array.from(childNodes);
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
-    node?.remove();
-  }
-};
-
-/**
- * @name 给定一个节点，在节点的前面插入多个节点
- * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
- */
-export const insertBeforeNode = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
-  if (!targetElement || !childNodes || !childNodes?.length) return;
-  const fragment = new DocumentFragment();
-  for (let i = 0; i < childNodes.length; i++) {
-    fragment.appendChild(childNodes[i]);
-  }
-  const parentNode = targetElement.parentNode;
-  // 获取插入节点的下一个兄弟节点
-  const nextSibling = targetElement.nextSibling;
-
-  /**
-   * 在兄弟节点前面插入，
-   * nextSibling 如果为 null，fragment 将被插入到parentNode的子节点列表末尾。
-   */
-  parentNode.insertBefore(fragment, nextSibling);
-};
-
-/**
- * @name 给目标节点，添加子节点
- * @param targetNode
- * @param childNodes
- * @param clear 是否需要清空内容，在添加节点
- * @returns
- */
-export const addTargetElement = (targetNode: HTMLElement, childNodes: HTMLElement[], clear: boolean = true) => {
-  if (targetNode) {
-    if (childNodes && childNodes.length && clear) {
-      targetNode.innerHTML = "";
-    }
-    for (let i = 0; i < childNodes.length; i++) {
-      targetNode.appendChild(childNodes[i]);
-    }
-  }
-  return targetNode;
 };

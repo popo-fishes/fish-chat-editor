@@ -10,7 +10,7 @@ import { helper, base, dom, isNode, util, range, transforms } from ".";
 import type { IEditorElement } from "../types";
 
 const { createLineElement } = base;
-const { getRangeAroundNode, addTargetElement, removeNodes, cloneNodes, insertBeforeNode } = dom;
+const { getRangeAroundNode, toTargetAddNodes, removeNodes, cloneNodes, toTargetAfterInsertNode } = dom;
 const { isDOMElement, isDOMNode } = isNode;
 const { findNodetWithElement } = util;
 const { setRangeNode, amendRangeLastNode } = range;
@@ -178,7 +178,7 @@ export const insertText = (content: string, callBack?: () => void) => {
       if (content == "\n" || content == "") {
         if (isDOMElement(firstNode)) {
           // 直接把第一个插入的节点内容 赋值给 当前光标节点的顶级富文本节点
-          addTargetElement(topElementNode, cloneNodes(firstNode.childNodes));
+          toTargetAddNodes(topElementNode, cloneNodes(firstNode.childNodes));
         }
       } else {
         // 不是空
@@ -189,7 +189,7 @@ export const insertText = (content: string, callBack?: () => void) => {
         if (firstContent !== "\n" && firstContent !== "") {
           const prevLast = behindNodeList[0];
           if (prevLast) {
-            insertBeforeNode(prevLast, cloneNodes(firstNode.childNodes));
+            toTargetAfterInsertNode(prevLast, cloneNodes(firstNode.childNodes));
           } else {
             /**
              * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后插入节点
@@ -213,7 +213,7 @@ export const insertText = (content: string, callBack?: () => void) => {
           // 1: 把后面的节点放到 插入的尾部节点中
           if (nextNodeList.length) {
             // 插入的尾部节点中
-            addTargetElement(lastNode, cloneNodes(nextNodeList), false);
+            toTargetAddNodes(lastNode, cloneNodes(nextNodeList), false);
             /**
              * 如果我添加的节点本身没有内容，就需要先清空节点吧BR标签删除掉
              * 没有内容lastNode会只带一个 br标签子节点，如果不处理，会导致有2行的BUG视觉效果
@@ -295,14 +295,14 @@ export const insertNode = (nodes: HTMLElement[], callBack?: () => void) => {
 
     if (content == "\n" || content == "") {
       // 直接把第一个插入的节点内容 赋值给 当前光标节点的顶级富文本节点
-      addTargetElement(topElementNode, nodes);
+      toTargetAddNodes(topElementNode, nodes);
     } else {
       // 不是空
 
       // 1. 在当前光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
       const prevLast = behindNodeList[0];
       if (prevLast) {
-        insertBeforeNode(prevLast, nodes);
+        toTargetAfterInsertNode(prevLast, nodes);
       } else {
         /**
          * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后在它的前面插入节点

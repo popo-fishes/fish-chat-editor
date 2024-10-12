@@ -194,6 +194,8 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
 
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode();
 
+  console.log(behindNodeList, nextNodeList);
+
   /**
    * 创建换行节点
    * @dec 把之前的节点放到需要换行的节点后面
@@ -204,10 +206,10 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
   // const textNode = getElementBelowTextNode(lineDom);
 
   // 当前光标的顶层编辑行节点
-  const topElementNode = getNodeOfEditorRowNode(rangeNode);
-  // console.log(textNode, topElementNode);
+  const rowElementNode = getNodeOfEditorRowNode(rangeNode);
+  console.log(rangeNode.childNodes);
 
-  if (!topElementNode) {
+  if (!rowElementNode) {
     console.warn("无编辑行节点，不可插入");
     return;
   }
@@ -238,14 +240,14 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
         }
       }
     }
-    console.log(data);
+    // console.log(data);
     // 遍历
     // for (let i = 0; i < data.length; i++) {
     //   // 代表是个体
     //   if (i == 0) {
     //     const textNode = createChunkTextElement(true);
     //     const nodes = data[i].map((item) => item);
-    //     addTargetElement(textNode, nodes);
+    //     toTargetAddNodes(textNode, nodes);
     //     lineDom.appendChild(textNode);
     //   } else {
     //     // 代表是块
@@ -257,10 +259,10 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
     // }
   }
 
-  console.log(lineDom);
+  //console.log(lineDom);
 
   // // 把当前换行节点插入在下一行
-  // topElementNode.insertAdjacentElement("afterend", lineDom);
+  // rowElementNode.insertAdjacentElement("afterend", lineDom);
 
   // // 删除原始节点中的换行部分的节点
   // removeNode(nextNodeList);

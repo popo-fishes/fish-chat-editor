@@ -155,7 +155,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
      */
     if (isEmptyEditNode(editRef.current) && !findNodeWithTextNode(editRef.current)) {
       if (editRef.current.firstChild) {
-        dom.addTargetElement(editRef.current.firstChild as any, [base.createChunkTextElement(false)]);
+        dom.toTargetAddNodes(editRef.current.firstChild as any, [base.createChunkTextElement(false)]);
       }
     }
   };
