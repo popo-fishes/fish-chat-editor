@@ -2,8 +2,10 @@
  * @Date: 2024-10-09 09:43:04
  * @Description: Modify here please
  */
-import { elementAttributeData, getText } from ".";
-import type { EditorElement } from "../types";
+import { base, editor } from ".";
+import type { IEditorElement } from "../types";
+
+const { elementAttributeData } = base;
 
 /**
  * @name 返回DOM节点的主机窗口
@@ -32,13 +34,13 @@ export const isDOMText = (value: any) => {
  * @name 当前编辑器是否只有一个节点，且节点是一个空节点
  * @returns boolean
  */
-export const isEmptyEditNode = (editNode: EditorElement) => {
+export const isEmptyEditNode = (editNode: IEditorElement) => {
   if (!editNode || !editNode?.childNodes) return true;
   if (editNode?.childNodes && editNode?.childNodes.length > 1) {
     return false;
   }
 
-  if (!getText(editNode)) return true;
+  if (!editor.getText(editNode)) return true;
 
   return false;
 };
@@ -130,4 +132,12 @@ export const isDomOrNotTtxt = (nodes: HTMLElement[]): boolean => {
     }
   }
   return isFlag;
+};
+
+/** @name 判断一个节点是空文本节点 */
+export const isNodeNotTtxt = (node: HTMLElement): boolean => {
+  if (isDOMText(node) && node?.nodeValue == "") {
+    return true;
+  }
+  return false;
 };

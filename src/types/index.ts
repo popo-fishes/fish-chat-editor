@@ -4,7 +4,7 @@
  */
 import type { ReactNode } from "react";
 
-export type EditorElement = HTMLDivElement;
+export type IEditorElement = HTMLDivElement;
 
 export type IEmojiType = {
   url: string;

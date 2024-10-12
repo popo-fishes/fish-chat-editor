@@ -2,7 +2,7 @@
  * @Date: 2024-10-08 14:38:52
  * @Description: Modify here please
  */
-import { getRandomWord } from ".";
+import { helper } from ".";
 
 export const prefixNmae = "fb-e-";
 
@@ -58,7 +58,7 @@ export const getElementAttributeDatasetName = (name: string) => {
 /** @name 创建一个编辑器--行节点 */
 export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
-  const id = `${prefixNmae}element-` + getRandomWord(4);
+  const id = `${prefixNmae}element-` + helper.getRandomWord(4);
   const key = getElementAttributeKey("fishNode");
   dom_p.setAttribute(key, "element");
   dom_p.id = id;
@@ -72,7 +72,7 @@ export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
 /** @name 创建一个编辑器的行内--块节点 */
 export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
-  const id = `${prefixNmae}element-` + getRandomWord(4);
+  const id = `${prefixNmae}element-` + helper.getRandomWord(4);
   // 获取属性1
   const key = getElementAttributeKey("fishNode");
   dom_span.setAttribute(key, "element");
@@ -87,7 +87,7 @@ export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
 /** @name 创建一个编辑器的行内--文本节点 */
 export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
-  const id = `${prefixNmae}element-` + getRandomWord(4);
+  const id = `${prefixNmae}element-` + helper.getRandomWord(4);
   const elementAttribute = getElementAttributeKey("fishNode");
   dom_span.setAttribute(elementAttribute, "text");
   dom_span.id = id;

@@ -4,43 +4,30 @@
  * @Description: 富文本输入框事件处理
  */
 import isObject from "lodash/isObject";
-import {
-  addTargetElement,
-  removeNode,
-  createLineElement,
-  createChunkTextElement,
-  getElementAttributeKey,
-  getElementBelowTextNode,
-  findNodeOrParentExistTextNode,
-  amendRangePosition,
-  regContentImg,
-  duplicateTextNode,
-  getRandomWord,
-  labelRep,
-  prefixNmae,
-  createChunkSapnElement,
-  cloneNodes,
-  isDomOrNotTtxt,
-  isFishInline,
-  isEditTextNode,
-  isDOMText,
-  findNodetWithElement,
-  getRangeAroundNode,
-  getNodeParentElement,
-  getPlainText
-} from "../../utils";
 
-import { setRangeNode, setCursorNode, insertText, insertNode, amendRangeLastNode } from "../../utils/util";
+import { regContentImg, labelRep } from "../../utils";
 
-import { fileToBase64 } from "../../utils/file";
+import { dom, isNode, range, editor, helper, util, base } from "../../core";
 
-import type { EditorElement } from "../../types";
+import type { IEditorElement } from "../../types";
+
+const { setRangeNode, amendRangeLastNode, amendRangePosition } = range;
+
+const { isFishInline, isEditTextNode, isDOMText } = isNode;
+
+const { getPlainText, getNodeParentElement, findNodeOrParentExistTextNode, duplicateTextNode, findNodetWithElement } = util;
+
+const { createLineElement, createChunkTextElement, getElementAttributeKey, prefixNmae, createChunkSapnElement } = base;
+
+const { insertText, insertNode } = editor;
+
+const { fileToBase64, getRandomWord } = helper;
 
 // 是否正在处理粘贴内容
 let isPasteLock = false;
 
 /** @name 处理复制事件 */
-export const onCopyEvent = (event: React.ClipboardEvent<HTMLDivElement>) => {
+export const onCopy = (event: React.ClipboardEvent<HTMLDivElement>) => {
   // 阻止默认事件，防止复制真实发生
   event.preventDefault();
 
@@ -110,7 +97,7 @@ export const onCut = (event: React.ClipboardEvent<HTMLDivElement>) => {
  *  @name 处理输入框的值
  * 把输入的文字转换成图片
  */
-export const handleInputTransforms = (editNode: EditorElement, callBack: () => void) => {
+export const handleInputTransforms = (editNode: IEditorElement, callBack: () => void) => {
   // 获取当前文档中的选区
   const selection = window.getSelection();
 
@@ -178,7 +165,7 @@ export const handleInputTransforms = (editNode: EditorElement, callBack: () => v
 /**
  * @name 处理换行符
  */
-export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => void) => {
+export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) => {
   // 获取页面的选择区域
   const selection = window.getSelection();
 
@@ -199,16 +186,17 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
     amendRangePosition(editNode, (node) => {
       if (node) {
         // 在调用自己一次
-        handleAmendEmptyLine(editNode, callBack);
+        handleLineFeed(editNode, callBack);
       }
     });
     return;
   }
 
-  const [behindNodeList, nextNodeList] = getRangeAroundNode();
+  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode();
 
   if (behindNodeList) {
     console.log(behindNodeList, nextNodeList);
+    return;
   }
 
   /**
@@ -225,12 +213,12 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
   // console.log(textNode, topElementNode);
 
   if (!topElementNode) {
-    console.error("无编辑行节点，不可插入");
+    console.warn("无编辑行节点，不可插入");
     return;
   }
 
   // 把节点放到换行块节点的 文本节点中
-  const clNodes = cloneNodes(nextNodeList);
+  const clNodes = dom.cloneNodes(nextNodeList);
 
   if (clNodes.length) {
     // 标记顺序
@@ -301,7 +289,7 @@ export const handleAmendEmptyLine = (editNode: EditorElement, callBack?: () => v
  * @param editNode 编辑器节点
  * @param callBack 成功回调
  */
-export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNode: EditorElement, callBack?: () => void) => {
+export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNode: IEditorElement, callBack?: () => void) => {
   // 获取粘贴的内容
   const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
   const isFile = clp?.types?.includes("Files");
