@@ -95,6 +95,7 @@ export const onCut = (event: React.ClipboardEvent<HTMLDivElement>) => {
 
 /**
  *  @name 处理输入框的值
+ * @deprecated 废弃-不会使用了
  * 把输入的文字转换成图片
  */
 export const handleInputTransforms = (editNode: IEditorElement, callBack: () => void) => {
