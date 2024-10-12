@@ -25,7 +25,7 @@ export const findNodetWithElement = (node: any) => {
 
 /**
  *  @name 判断文本节点是否存在多个节点，且存在br标签，就删除br标签
- * @deprecated 废弃-改用deleteTextNodeAndBrNode
+ * @deprecated 废弃-改用deleteTextNodeOfBrNode
  */
 export const judgeEditRowNotNull = (node: HTMLElement): boolean => {
   if (!isEditElement(node)) return false;
@@ -159,7 +159,7 @@ export const rewriteEmbryoTextNode = (node: any) => {
 /**
  * @name 传入一个编辑器文本节点，获取它的子节点集合，判断存在空text标签，就删除text标签
  */
-export const deleteTextNodeAndEmpty = (node: HTMLElement): boolean => {
+export const deleteTextNodeOfEmptyNode = (node: HTMLElement): boolean => {
   if (!isEditTextNode(node)) return false;
   const nodes: any[] = Array.from(node.childNodes);
   if (!nodes || !nodes?.length) return false;
@@ -177,7 +177,7 @@ export const deleteTextNodeAndEmpty = (node: HTMLElement): boolean => {
 /**
  * @name 传入一个编辑器文本节点，获取它的子节点集合，判断存在br标签，就删除br标签
  *  */
-export const deleteTextNodeAndBrNode = (node: HTMLElement): boolean => {
+export const deleteTextNodeOfBrNode = (node: HTMLElement): boolean => {
   if (!isEditTextNode(node)) return false;
   const nodes: any[] = Array.from(node.childNodes);
   if (!nodes || !nodes?.length) return false;
