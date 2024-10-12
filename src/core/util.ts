@@ -25,7 +25,7 @@ export const findNodetWithElement = (node: any) => {
 
 /**
  *  @name 判断文本节点是否存在多个节点，且存在br标签，就删除br标签
- * @deprecated 废弃-改用deleteTextNodeOfBrNode
+ * @deprecated 废弃-改用deleteTargetNodeOfBrNode
  */
 export const judgeEditRowNotNull = (node: HTMLElement): boolean => {
   if (!isEditElement(node)) return false;
@@ -46,7 +46,7 @@ export const judgeEditRowNotNull = (node: HTMLElement): boolean => {
 
 /**
  * !!! 重要
- * @name 传入一个节点--获取它的编辑器文本属性节点，如果没有，找它的父级节点
+ * @name 传入一个节点--获取它的编辑器--文本属性节点，如果没有，找它的父级节点
  * @returns 如果是文本节点就返回，不是就返回空
  */
 export const getNodeOfEditorTextNode = (node: any): HTMLElement | null => {
@@ -63,7 +63,7 @@ export const getNodeOfEditorTextNode = (node: any): HTMLElement | null => {
 
 /**
  * !!! 重要
- * @name 传入一个节点--获取它的编辑器---行属性节点，如果没有，一直找父节点查询
+ * @name 传入一个节点--获取它的编辑器---行属性节点，如果没有，一直找父节点
  * @returns 找到了编辑节点块就返回，没找到就返回空
  */
 export const getNodeOfEditorRowNode = (node: any): HTMLElement | null => {
@@ -79,6 +79,22 @@ export const getNodeOfEditorRowNode = (node: any): HTMLElement | null => {
 };
 
 /**
+ * !!! 重要
+ * @name 传入一个节点--获取它的编辑器--文本属性节点，如果没有，一直找子节点
+ * @returns 如果是文本节点就返回，不是就返回空
+ */
+export const getNodeOfChildTextNode = (node: any): HTMLElement | null => {
+  if (!node) {
+    return null;
+  }
+
+  if (isEditTextNode(node)) return node;
+
+  // 否则继续查询子节点
+  return getNodeOfChildTextNode(node?.firstChild || null);
+};
+
+/**
  * @name 判断节点是否图片元素节点，如果不是，一直找子节点
  * @returns boolean
  */
@@ -91,21 +107,6 @@ export const findNodeWithImg = (node: any): boolean => {
 
   // 否则继续查询子节点
   return findNodeWithImg(node?.firstChild || null);
-};
-
-/**
- * @name 判断节点下面是否存在文本节点，如果没有，一直找子节点
- * @returns boolean
- */
-export const findNodeWithTextNode = (node: any): boolean => {
-  if (!node) {
-    return false;
-  }
-
-  if (isEditTextNode(node)) return true;
-
-  // 否则继续查询子节点
-  return findNodeWithTextNode(node?.firstChild || null);
 };
 
 /** @name 判断节点是否内联元素节点，，如果不是，一直找父节点 */
@@ -142,24 +143,27 @@ export const getElementBelowTextNode = (node: HTMLElement): HTMLElement | null =
  *  @name 传入节点--如果它不是一个文本节点，就把它的全部属性删除了，更新它的属性。
  *  @desc: 1.以此满足富文本的标签格式。
  */
-export const rewriteEmbryoTextNode = (node: any) => {
-  if (!node) return;
+export const rewriteEmbryoTextNode = (node: HTMLElement): HTMLElement | null => {
+  if (!node) return null;
   const isTextNode = getNodeOfEditorTextNode(node);
-  // !! 如果它不是一个文本节点 且 不是一个span标签 直接返回
-  if (!isTextNode && node.nodeName !== "SPAN") return;
-  // 重写
-  node.removeAttribute("style");
-  const id = `${prefixNmae}element-` + helper.getRandomWord();
-  const elementAttribute = getElementAttributeKey("fishNode");
-  node.setAttribute(elementAttribute, "text");
-  node.id = id;
-  return node;
+  // !! 如果它不是一个编辑器文本属性节点 且 是一个span标签 就需要更新属性
+  if (!isTextNode && node.nodeName == "SPAN") {
+    // 重写
+    node.removeAttribute("style");
+    const id = `${prefixNmae}element-` + helper.getRandomWord();
+    const elementAttribute = getElementAttributeKey("fishNode");
+    node.setAttribute(elementAttribute, "text");
+    node.id = id;
+    return node;
+  }
+  return null;
 };
 
 /**
  * @name 传入一个编辑器文本节点，获取它的子节点集合，判断存在空text标签，就删除text标签
  */
 export const deleteTextNodeOfEmptyNode = (node: HTMLElement): boolean => {
+  // 不是编辑器文本属性节点 直接返回
   if (!isEditTextNode(node)) return false;
   const nodes: any[] = Array.from(node.childNodes);
   if (!nodes || !nodes?.length) return false;
@@ -175,20 +179,24 @@ export const deleteTextNodeOfEmptyNode = (node: HTMLElement): boolean => {
 };
 
 /**
- * @name 传入一个编辑器文本节点，获取它的子节点集合，判断存在br标签，就删除br标签
- *  */
-export const deleteTextNodeOfBrNode = (node: HTMLElement): boolean => {
-  if (!isEditTextNode(node)) return false;
-  const nodes: any[] = Array.from(node.childNodes);
-  if (!nodes || !nodes?.length) return false;
+ * @name 传入一个编辑器文本节点or行块节点
+ * 获取它的子节点集合，判断存在br标签，就删除br标签
+ */
+export const deleteTargetNodeOfBrNode = (node: HTMLElement): boolean => {
+  // 是编辑器文本属性节点 or 行块节点
+  if (isEditTextNode(node) || isEditElement(node)) {
+    const nodes: any[] = Array.from(node.childNodes);
+    if (!nodes || !nodes?.length) return false;
 
-  let exist = false;
-  for (const cld of nodes) {
-    if ((cld as any)?.nodeName == "BR") {
-      (cld as any)?.remove();
-      exist = true;
-      break;
+    let exist = false;
+    for (const cld of nodes) {
+      if ((cld as any)?.nodeName == "BR") {
+        (cld as any)?.remove();
+        exist = true;
+        break;
+      }
     }
+    return exist;
   }
-  return exist;
+  return false;
 };

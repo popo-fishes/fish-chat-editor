@@ -7,15 +7,15 @@ import isObject from "lodash/isObject";
 
 import { regContentImg, labelRep } from "../../utils";
 
-import { dom, isNode, range, editor, helper, util, base, transforms } from "../../core";
+import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
 
 import type { IEditorElement } from "../../types";
 
-const { setRangeNode, amendRangeLastNode, amendRangePosition } = range;
+const { setRangeNode, setCursorNode, amendRangeLastNode, amendRangePosition } = fishRange;
 
 const { isFishInline, isEditTextNode, isDOMText } = isNode;
 
-const { getNodeOfEditorRowNode, getNodeOfEditorTextNode, rewriteEmbryoTextNode, findNodetWithElement } = util;
+const { getNodeOfEditorRowNode, getNodeOfEditorTextNode, getNodeOfChildTextNode, rewriteEmbryoTextNode, deleteTargetNodeOfBrNode, findNodetWithElement } = util;
 
 const { createLineElement, createChunkTextElement, getElementAttributeKey, prefixNmae, createChunkSapnElement } = base;
 
@@ -165,7 +165,7 @@ export const handleInputTransforms = (editNode: IEditorElement, callBack: () => 
 /**
  * @name 处理换行
  */
-export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) => {
+export const handleLineFeed = (editNode: IEditorElement, callBack?: (success?: boolean) => void) => {
   // 获取页面的选择区域
   const selection = window.getSelection();
 
@@ -173,15 +173,15 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
   const range = selection?.getRangeAt(0);
 
   // 必须存在光标
-  if ((selection && selection.rangeCount == 0) || !range) return;
+  if ((selection && selection.rangeCount == 0) || !range) return callBack(false);
 
   // 获取当前光标的开始容器节点
   const rangeStartContainer: any = range.startContainer;
 
   // 判断光标节点是否为一个文本节点
-  const rangeNode = getNodeOfEditorTextNode(rangeStartContainer);
-  // console.log(rangeNode, range);
-  if (!rangeNode) {
+  const targetNode = getNodeOfEditorTextNode(rangeStartContainer);
+  // console.log(targetNode, range);
+  if (!targetNode) {
     // 非常重要的逻辑--修正光标位置
     amendRangePosition(editNode, (node) => {
       if (node) {
@@ -189,12 +189,12 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
         handleLineFeed(editNode, callBack);
       }
     });
-    return;
+    return callBack(false);
   }
 
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode();
 
-  console.log(behindNodeList, nextNodeList);
+  // console.log(behindNodeList, nextNodeList);
 
   /**
    * 创建换行节点
@@ -202,26 +202,29 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
    */
   // 创建换行节点
   const lineDom = createLineElement(true);
-  // // 取出文本节点
-  // const textNode = getElementBelowTextNode(lineDom);
 
   // 当前光标的顶层编辑行节点
-  const rowElementNode = getNodeOfEditorRowNode(rangeNode);
-  console.log(rangeNode.childNodes);
+  const rowElementNode = getNodeOfEditorRowNode(targetNode);
+
+  // console.log("查看编辑文本节点的子节点情况: ",targetNode.childNodes);
 
   if (!rowElementNode) {
     console.warn("无编辑行节点，不可插入");
     return;
   }
 
-  // 把节点放到换行块节点的 文本节点中
+  /**
+   * 把后面的节点放到换行节点的 文本节点中
+   */
   const clNodes = dom.cloneNodes(nextNodeList);
 
+  // 存在换行元素时
   if (clNodes.length) {
     // 标记顺序
     const data: HTMLElement[][] = [];
     // 标记块节点的开始索引
     const blockindex = clNodes.findIndex((item) => isEditTextNode(item) || isFishInline(item));
+
     // 代表没有块节点，全部是个体
     if (blockindex == -1) {
       data.push(clNodes);
@@ -242,42 +245,50 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
     }
     // console.log(data);
     // 遍历
-    // for (let i = 0; i < data.length; i++) {
-    //   // 代表是个体
-    //   if (i == 0) {
-    //     const textNode = createChunkTextElement(true);
-    //     const nodes = data[i].map((item) => item);
-    //     toTargetAddNodes(textNode, nodes);
-    //     lineDom.appendChild(textNode);
-    //   } else {
-    //     // 代表是块
-    //     const nodes = data[i].map((item) => item);
-    //     if (nodes?.[0]) {
-    //       lineDom.appendChild(nodes?.[0]);
-    //     }
-    //   }
-    // }
+    for (let i = 0; i < data.length; i++) {
+      /**
+       * 如果二维数组里面存在块节点，代表是块。那么渲染的方式是不一样的。
+       * isChunk ? 块 ： 代表是个体(文本属性节点下面的元素，代表个体)
+       */
+      const isChunk = data[i].some((item) => isEditTextNode(item) || isFishInline(item));
+      if (isChunk) {
+        if (data[i]?.[0]) {
+          lineDom.appendChild(data[i]?.[0]);
+        }
+      } else {
+        // 代表是个体(文本属性节点下面的元素，代表个体)
+        const textNode = createChunkTextElement(true);
+        const nodes = data[i].map((item) => item);
+        dom.toTargetAddNodes(textNode, nodes);
+        lineDom.appendChild(textNode);
+      }
+    }
+
+    // 删除原始节点中的换行部分的节点
+    dom.removeNodes(nextNodeList);
+  } else {
+    // 不存在换行节点时，就把行添加一个编辑文本节点
+    const textNode = createChunkTextElement(false);
+    lineDom.appendChild(textNode);
   }
 
-  //console.log(lineDom);
+  // 如果前面的节点不存在，后面的接口存在； 代表换行后，前面的节点是没有内容的，需要进行添加一个编辑文本节点
+  if (behindNodeList.length == 0 && nextNodeList.length) {
+    const textNode = createChunkTextElement(false);
+    dom.toTargetAddNodes(rowElementNode, [textNode]);
+  }
 
-  // // 把当前换行节点插入在下一行
-  // rowElementNode.insertAdjacentElement("afterend", lineDom);
+  rowElementNode.insertAdjacentElement("afterend", lineDom);
 
-  // // 删除原始节点中的换行部分的节点
-  // removeNode(nextNodeList);
+  // 获取换行节点的第一个文本属性节点
+  const cursorNode = getNodeOfChildTextNode(lineDom);
+  // console.log(cursorNode, lineDom);
 
-  // // // 判断原始节点中是否还存在内容，如果不存在，就给元素节点中给一个br标签（占位）不然换行看不出来
-  // // const judgeOriginNotTtxt = isDomOrNotTtxt([...behindNodeList]);
+  // 设置光标为换行节点的开始位置
+  setCursorNode(cursorNode);
 
-  // // // 不满足条件
-  // // if (!judgeOriginNotTtxt) {
-  // //   topElementNode.innerHTML = "<br/>";
-  // // }
-  // // 设置光标为换行节点的开始位置
-  // setCursorNode(textNode);
-  // // 执行回调
-  // callBack?.();
+  // 执行回调
+  callBack?.(true);
 };
 
 /**
@@ -402,9 +413,18 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
 
 /**
  * @name 键盘按键被松开时发生
+ * !!! 非常重要的边角处理方法
  */
 export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
   const selection = window.getSelection();
+
+  // 是否父节点是一个span标签，且
+  const isParentOfsapn = (node) => {
+    if (node) {
+      return node?.parentNode && node?.parentNode.nodeName === "SPAN";
+    }
+    return false;
+  };
   /**
    * 获取当前光标的节点，查询是否存在不符合编辑节点格式的节点，然后修正它。
    * 这种情况常出现在： 按键 删除行-富文本自动合并行时，会主动创建一些自定义标签
@@ -415,15 +435,26 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const range = selection?.getRangeAt(0);
 
     /**
-     * 当前节点是文本节点。它的下一个兄弟节点，不是一个文本节点时，需要处理下 富文本的Dom格式
+     * 1: 当前节点是编辑器文本属性节点。它的下一个兄弟节点，不是一个文本节点时，需要处理下 富文本的Dom格式
      */
-    const textNode = getNodeOfEditorTextNode(range.startContainer);
-    if (textNode && textNode.nextSibling) {
+    const editorTextNode = getNodeOfEditorTextNode(range.startContainer);
+    // console.log(editorTextNode, range.startContainer);
+    if (editorTextNode && editorTextNode.nextSibling) {
       // 兄弟节点不是一个文本节点，且是一个span标签
-      const brotherNode = getNodeOfEditorTextNode(textNode.nextSibling);
-      if (!brotherNode && textNode.nextSibling.nodeName === "SPAN") {
-        rewriteEmbryoTextNode(textNode.nextSibling);
+      const brotherNode = getNodeOfEditorTextNode(editorTextNode.nextSibling);
+      if (!brotherNode && editorTextNode.nextSibling.nodeName === "SPAN") {
+        rewriteEmbryoTextNode(editorTextNode.nextSibling as HTMLElement);
       }
+    }
+    /**
+     * 2: 这种情况出现在上一行是一个空节点，然后下面一行往上合并时会出现BUG
+     * editorTextNode会不是一个文本节点。
+     */
+    if (!editorTextNode && isParentOfsapn(range.startContainer)) {
+      rewriteEmbryoTextNode(range.startContainer.parentNode as HTMLElement);
+      // 删除空文本节点，主要是因为上一行是一个空节点，然后下面一行往上合并时会出现BUG
+      const rowNode = getNodeOfEditorRowNode(range.startContainer);
+      deleteTargetNodeOfBrNode(rowNode as HTMLElement);
     }
   }
 };

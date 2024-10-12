@@ -111,29 +111,6 @@ export const isFishInline = (node: HTMLElement): boolean => {
   return false;
 };
 
-/**
- * @name 判断是否存在元素节点，或者是否文本节点不为空字符串
- * @returns boolean
- */
-export const isDomOrNotTtxt = (nodes: HTMLElement[]): boolean => {
-  if (!nodes || !nodes.length) return false;
-  let isFlag = false;
-  const tempNode = nodes.filter((item: any) => item?.nodeType);
-  for (let i = 0; i < tempNode.length; i++) {
-    const currentElement = tempNode[i];
-    // 如果是文本节点,存在值
-    if (isDOMText(currentElement) && currentElement.nodeValue) {
-      isFlag = true;
-      break;
-    }
-    if (isDOMElement(currentElement)) {
-      isFlag = true;
-      break;
-    }
-  }
-  return isFlag;
-};
-
 /** @name 判断一个节点是空文本节点 */
 export const isNodeNotTtxt = (node: HTMLElement): boolean => {
   if (isDOMText(node) && node?.nodeValue == "") {

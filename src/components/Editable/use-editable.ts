@@ -9,7 +9,7 @@ import { base, isNode, util, range, editor } from "../../core";
 
 const { createLineElement, getElementAttributeKey } = base;
 const { isEditElement, isEditTextNode } = isNode;
-const { deleteTextNodeOfEmptyNode, deleteTextNodeOfBrNode, getNodeOfEditorTextNode } = util;
+const { deleteTextNodeOfEmptyNode, deleteTargetNodeOfBrNode, getNodeOfEditorTextNode } = util;
 const { setRangeNode, amendRangePosition } = range;
 const { getText } = editor;
 
@@ -144,7 +144,7 @@ export default function useEditable(props: IEditableProps) {
     // 删除空文本节点，主要是因为splitText分割方法会创建一个空的文本节点
     deleteTextNodeOfEmptyNode(editorTextNode);
     // 判断是否存在br
-    deleteTextNodeOfBrNode(currentSelection.startContainer);
+    deleteTargetNodeOfBrNode(currentSelection.startContainer);
 
     // 视图滚动带完全显示出来
     node.scrollIntoView(false);

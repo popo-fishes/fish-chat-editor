@@ -94,7 +94,7 @@ export const toTargetAfterInsertNode = (targetElement: HTMLElement, childNodes: 
  * @returns
  */
 export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElement[], clear: boolean = true) => {
-  if (targetNode) {
+  if (isDOMElement(targetNode)) {
     if (childNodes && childNodes.length && clear) {
       targetNode.innerHTML = "";
     }
@@ -193,6 +193,7 @@ export const getRangeAroundNode = () => {
     const afterNode = anchorNode?.splitText(anchorOffset);
     /** 找出当前光标节点的前后兄弟节点 */
     const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode);
+
     behindNodeList = [...pNode];
 
     // 添加后面的节点

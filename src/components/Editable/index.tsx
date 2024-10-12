@@ -15,7 +15,7 @@ import { dom, isNode, range, editor, util, base, transforms } from "../../core";
 
 const { isEmptyEditNode, isDOMElement, isImgNode } = isNode;
 
-const { findNodeWithImg, findNodeWithInline, findNodeWithTextNode } = util;
+const { findNodeWithImg, findNodeWithInline, getNodeOfChildTextNode } = util;
 
 const { getText, setText } = editor;
 const { editTransformSpaceText } = transforms;
@@ -33,6 +33,9 @@ let isFlag = false;
  * 我们在onCompositionStart：是标记正在输入中，必须等onCompositionEnd结束后主动去触发onInput
  */
 let isLock = false;
+
+// 表示正在操作换行，需要等等结束
+let isLineFeedLock = false;
 
 /**
  * @name 富文本组件
@@ -153,7 +156,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
      * 判断是否只剩下一个节点，且不存在文本节点, 那就添加一个子节点
      * 主要解决删除内容把文本节点全部删完了
      */
-    if (isEmptyEditNode(editRef.current) && !findNodeWithTextNode(editRef.current)) {
+    if (isEmptyEditNode(editRef.current) && !getNodeOfChildTextNode(editRef.current)) {
       if (editRef.current.firstChild) {
         dom.toTargetAddNodes(editRef.current.firstChild as any, [base.createChunkTextElement(false)]);
       }
@@ -218,11 +221,20 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     if (event.ctrlKey && keyCode === 13) {
       event.preventDefault();
       event.stopPropagation();
+
+      if (isLineFeedLock) return;
+
+      isLineFeedLock = true;
+
       // 插入换行符
-      handleLineFeed(editRef.current, () => {
-        const isFlag = isEmptyEditNode(editRef.current);
-        setTipHolder(isFlag);
+      handleLineFeed(editRef.current, (success) => {
+        if (success) {
+          const isFlag = isEmptyEditNode(editRef.current);
+          setTipHolder(isFlag);
+        }
+        isLineFeedLock = false;
       });
+
       return;
     }
     if (keyCode === 13) {
