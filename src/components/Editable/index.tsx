@@ -11,11 +11,11 @@ import { onKeyUp, handlePasteTransforms, onCopy, onCut, handleLineFeed } from ".
 
 import useEditable from "./use-editable";
 
-import { dom, isNode, range, editor, util, base, transforms } from "../../core";
+import { isNode, range, editor, util, base, transforms } from "../../core";
 
 const { isEmptyEditNode, isDOMElement, isImgNode } = isNode;
 
-const { findNodeWithImg, findNodeWithInline, getNodeOfChildTextNode } = util;
+const { findNodeWithImg, findNodeWithInline } = util;
 
 const { getText, setText } = editor;
 const { editTransformSpaceText } = transforms;
@@ -151,16 +151,6 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     setTipHolder(val == "");
     // 暴露值
     restProps.onChange?.(editTransformSpaceText(val));
-
-    /**
-     * 判断是否只剩下一个节点，且不存在文本节点, 那就添加一个子节点
-     * 主要解决删除内容把文本节点全部删完了
-     */
-    if (isEmptyEditNode(editRef.current) && !getNodeOfChildTextNode(editRef.current)) {
-      if (editRef.current.firstChild) {
-        dom.toTargetAddNodes(editRef.current.firstChild as any, [base.createChunkTextElement(false)]);
-      }
-    }
   };
 
   /** @name 点击输入框事件（点击时） */
@@ -304,7 +294,9 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           onCopy={onCopy}
           onCut={onCut}
           onKeyDown={onEditorKeydown}
-          onKeyUp={onKeyUp}
+          onKeyUp={(e) => {
+            onKeyUp(e, editRef.current);
+          }}
           onCompositionStart={(e) => {
             // 标记正在输入中文
             isLock = true;

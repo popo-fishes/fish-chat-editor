@@ -13,7 +13,7 @@ import type { IEditorElement } from "../../types";
 
 const { setRangeNode, setCursorNode, amendRangeLastNode, amendRangePosition } = fishRange;
 
-const { isFishInline, isEditTextNode, isDOMText } = isNode;
+const { isFishInline, isEditTextNode, isDOMText, isEmptyEditNode } = isNode;
 
 const { getNodeOfEditorRowNode, getNodeOfEditorTextNode, getNodeOfChildTextNode, rewriteEmbryoTextNode, deleteTargetNodeOfBrNode, findNodetWithElement } = util;
 
@@ -415,7 +415,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
  * @name 键盘按键被松开时发生
  * !!! 非常重要的边角处理方法
  */
-export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
+export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IEditorElement) => {
   const selection = window.getSelection();
 
   // 是否父节点是一个span标签，且
@@ -426,6 +426,7 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
     return false;
   };
   /**
+   * bug1：
    * 获取当前光标的节点，查询是否存在不符合编辑节点格式的节点，然后修正它。
    * 这种情况常出现在： 按键 删除行-富文本自动合并行时，会主动创建一些自定义标签
    * 比如：<span style="background-color: transparent;">345</span>
@@ -455,6 +456,18 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
       // 删除空文本节点，主要是因为上一行是一个空节点，然后下面一行往上合并时会出现BUG
       const rowNode = getNodeOfEditorRowNode(range.startContainer);
       deleteTargetNodeOfBrNode(rowNode as HTMLElement);
+    }
+  }
+
+  /**
+   * bug2：
+   * 判断是否只剩下一个节点，且不存在文本节点, 那就添加一个子节点
+   * 主要解决删除内容把文本节点全部删完了
+   */
+  // console.log(isEmptyEditNode(editNode) && !getNodeOfChildTextNode(editNode));
+  if (isEmptyEditNode(editNode) && !getNodeOfChildTextNode(editNode)) {
+    if (editNode.firstChild) {
+      dom.toTargetAddNodes(editNode.firstChild as any, [base.createChunkTextElement(false)]);
     }
   }
 };
