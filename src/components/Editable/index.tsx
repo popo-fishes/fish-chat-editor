@@ -238,7 +238,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     // 按下删除按键
     if (event.keyCode === 8) {
       const selection = window.getSelection();
-      // 如果当前已经是一个空节点 就 阻止事件 不然会把我的空文本节点给删除了导致BUG
+      // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
       if (selection?.isCollapsed && isEmptyEditNode(editRef.current)) {
         event.preventDefault();
         return;

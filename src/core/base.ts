@@ -71,7 +71,7 @@ export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
 
 /** @name 创建一个编辑器的行内--块节点 */
 export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
-  const dom_span = document.createElement("sapn");
+  const dom_span = document.createElement("span");
   const id = `${prefixNmae}element-` + helper.getRandomWord();
   // 获取属性1
   const key = getElementAttributeKey("fishNode");
@@ -86,7 +86,7 @@ export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
 
 /** @name 创建一个编辑器的行内--文本节点 */
 export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
-  const dom_span = document.createElement("sapn");
+  const dom_span = document.createElement("span");
   const id = `${prefixNmae}element-` + helper.getRandomWord();
   const elementAttribute = getElementAttributeKey("fishNode");
   dom_span.setAttribute(elementAttribute, "text");

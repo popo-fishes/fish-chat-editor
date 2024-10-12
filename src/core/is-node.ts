@@ -82,7 +82,7 @@ export const isEditTextNode = (node: HTMLElement): boolean => {
 /** @name 判断是否为一个图片属性节点，不包含表情图 */
 export const isImgNode = (node: HTMLElement): boolean => {
   if (!node) return false;
-  if (!isDOMElement(node)) return false;
+  if (!isDOMElement(node) || node.nodeName !== "IMG") return false;
   const keys = elementAttributeData["imgNode"];
   const hasAttr = node.hasAttribute(keys["key"]);
   if (hasAttr) {
@@ -90,6 +90,20 @@ export const isImgNode = (node: HTMLElement): boolean => {
     if (elementAttrVal == "true") {
       return true;
     }
+    return false;
+  }
+  return false;
+};
+
+/** @name 判断是否为一个表情图节点 */
+export const isEmojiImgNode = (node: HTMLElement): boolean => {
+  if (!node) return false;
+  if (!isDOMElement(node) || node.nodeName !== "IMG") return false;
+  const keys = elementAttributeData["emojiNode"];
+  const hasAttr = node.hasAttribute(keys["key"]);
+  if (hasAttr) {
+    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
+    if (elementAttrVal) return true;
     return false;
   }
   return false;

@@ -15,7 +15,7 @@ const { getNodeOfEditorTextNode } = util;
  */
 const getDomPreviousOrnextSibling = (targetElement: HTMLElement): [][] => {
   if (!targetElement) return [[], []];
-  /** 以前的节点 */
+  /** 之前的节点 */
   const previousNodes: any = [];
   let currentElement = targetElement.previousSibling;
   while (currentElement) {
