@@ -15,7 +15,7 @@ const { setRangeNode, amendRangeLastNode, amendRangePosition } = range;
 
 const { isFishInline, isEditTextNode, isDOMText } = isNode;
 
-const { getNodeParentElement, findNodeOrParentExistTextNode, duplicateTextNode, findNodetWithElement } = util;
+const { getNodeOfEditorRowNode, getNodeOfEditorTextNode, rewriteEmbryoTextNode, findNodetWithElement } = util;
 
 const { createLineElement, createChunkTextElement, getElementAttributeKey, prefixNmae, createChunkSapnElement } = base;
 
@@ -124,7 +124,7 @@ export const handleInputTransforms = (editNode: IEditorElement, callBack: () => 
   const afterText = currNode.nodeValue.substring(end as any);
 
   // 把当前光标位置内容前面拼接 上 一个I 标签，有利于我们后面去定位光标位置。
-  const keyId = "editorFocusHack" + new Date().getTime() + getRandomWord(4);
+  const keyId = "editorFocusHack" + new Date().getTime() + getRandomWord();
   // 我们这里先给个唯一的ID字符串，等转义完毕我们在吧这个ID替换为I标签
   // 避免最开始就把我I标签转义为"&lt; i &lt;"
   beforeText += `id=${keyId}`;
@@ -163,7 +163,7 @@ export const handleInputTransforms = (editNode: IEditorElement, callBack: () => 
 };
 
 /**
- * @name 处理换行符
+ * @name 处理换行
  */
 export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) => {
   // 获取页面的选择区域
@@ -179,7 +179,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
   const rangeStartContainer: any = range.startContainer;
 
   // 判断光标节点是否为一个文本节点
-  const rangeNode = findNodeOrParentExistTextNode(rangeStartContainer);
+  const rangeNode = getNodeOfEditorTextNode(rangeStartContainer);
   // console.log(rangeNode, range);
   if (!rangeNode) {
     // 非常重要的逻辑--修正光标位置
@@ -194,11 +194,6 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
 
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode();
 
-  if (behindNodeList) {
-    console.log(behindNodeList, nextNodeList);
-    return;
-  }
-
   /**
    * 创建换行节点
    * @dec 把之前的节点放到需要换行的节点后面
@@ -209,7 +204,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: () => void) 
   // const textNode = getElementBelowTextNode(lineDom);
 
   // 当前光标的顶层编辑行节点
-  const topElementNode = getNodeParentElement(rangeNode);
+  const topElementNode = getNodeOfEditorRowNode(rangeNode);
   // console.log(textNode, topElementNode);
 
   if (!topElementNode) {
@@ -327,7 +322,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         datas.forEach((baseItem) => {
           // 创建一个图片容器节点
           const container = document.createElement("span");
-          container.id = `${prefixNmae}image-container-` + getRandomWord(4);
+          container.id = `${prefixNmae}image-container-` + getRandomWord();
           container.classList.add(`${prefixNmae}image-container`);
 
           const node = new Image();
@@ -420,12 +415,12 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
     /**
      * 当前节点是文本节点。它的下一个兄弟节点，不是一个文本节点时，需要处理下 富文本的Dom格式
      */
-    const textNode = findNodeOrParentExistTextNode(range.startContainer);
+    const textNode = getNodeOfEditorTextNode(range.startContainer);
     if (textNode && textNode.nextSibling) {
       // 兄弟节点不是一个文本节点，且是一个span标签
-      const brotherNode = findNodeOrParentExistTextNode(textNode.nextSibling);
+      const brotherNode = getNodeOfEditorTextNode(textNode.nextSibling);
       if (!brotherNode && textNode.nextSibling.nodeName === "SPAN") {
-        duplicateTextNode(textNode.nextSibling);
+        rewriteEmbryoTextNode(textNode.nextSibling);
       }
     }
   }

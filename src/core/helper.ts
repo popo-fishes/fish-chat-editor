@@ -6,7 +6,7 @@
  * @name 任意长度随机字母数字组合
  * min-长度
  */
-export const getRandomWord = (min: number) => {
+export const getRandomWord = (min = 5) => {
   let str = "";
   const range = min;
   const arr = [

@@ -5,7 +5,7 @@
 import { isNode, util } from ".";
 
 const { isDOMText, isDOMElement, isEditTextNode, isNodeNotTtxt } = isNode;
-const { findNodeOrParentExistTextNode } = util;
+const { getNodeOfEditorTextNode } = util;
 
 /**
  * @name 获取当前节点的 前面全部兄弟节点 和后面全部兄弟节点
@@ -62,11 +62,11 @@ export const getRangeAroundNode = () => {
   const targetNode: any = range.startContainer;
 
   // 目标节点的父节点
-  const editTextNode = findNodeOrParentExistTextNode(targetNode);
+  const editTextNode = getNodeOfEditorTextNode(targetNode);
 
   // 不是编辑器文本节点  直接返回
   if (!editTextNode) {
-    console.warn("不是一个编辑器文本节点");
+    console.warn("不是一个编辑器文本属性节点");
     return [behindNodeList, nextNodeList];
   }
 

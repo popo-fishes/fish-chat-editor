@@ -12,7 +12,7 @@ import type { IEditorElement } from "../types";
 const { createLineElement } = base;
 const { getRangeAroundNode, addTargetElement, removeNodes, cloneNodes, insertBeforeNode } = dom;
 const { isDOMElement, isDOMNode } = isNode;
-const { findNodetWithElement, judgeEditRowNotNull } = util;
+const { findNodetWithElement } = util;
 const { setRangeNode, amendRangeLastNode } = range;
 const { getNodeContent, handleEditNodeTransformsValue } = transforms;
 /**
@@ -159,7 +159,7 @@ export const insertText = (content: string, callBack?: () => void) => {
     const [behindNodeList, nextNodeList] = getRangeAroundNode();
 
     /** 给最后一个节点加入一个i标签方便我们插入内容后，设置光标的焦点位置 */
-    const keyId = "editorFocusHack" + new Date().getTime() + helper.getRandomWord(4);
+    const keyId = "editorFocusHack" + new Date().getTime() + helper.getRandomWord();
     const iElement = document.createElement("i");
     iElement.id = keyId;
 
@@ -218,7 +218,7 @@ export const insertText = (content: string, callBack?: () => void) => {
              * 如果我添加的节点本身没有内容，就需要先清空节点吧BR标签删除掉
              * 没有内容lastNode会只带一个 br标签子节点，如果不处理，会导致有2行的BUG视觉效果
              */
-            judgeEditRowNotNull(lastNode);
+            util.judgeEditRowNotNull(lastNode);
             // 删除原始节点中的换行部分的节点
             removeNodes(nextNodeList);
           }

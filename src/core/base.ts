@@ -10,7 +10,7 @@ export const prefixNmae = "fb-e-";
 export const elementAttributeData = {
   /**
    * 编辑器节点
-   * 如果属性值为：text 代表是文本节点是，如果为element 代表是行 | 行内块节点（它是不可以编辑的）
+   * 如果属性值为：text 代表是文本节点是，如果为element 代表是行 or 行内块节点（它是不可以编辑的）
    */
   fishNode: {
     key: "data-fish-node",
@@ -58,7 +58,7 @@ export const getElementAttributeDatasetName = (name: string) => {
 /** @name 创建一个编辑器--行节点 */
 export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
-  const id = `${prefixNmae}element-` + helper.getRandomWord(4);
+  const id = `${prefixNmae}element-` + helper.getRandomWord();
   const key = getElementAttributeKey("fishNode");
   dom_p.setAttribute(key, "element");
   dom_p.id = id;
@@ -72,7 +72,7 @@ export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
 /** @name 创建一个编辑器的行内--块节点 */
 export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
-  const id = `${prefixNmae}element-` + helper.getRandomWord(4);
+  const id = `${prefixNmae}element-` + helper.getRandomWord();
   // 获取属性1
   const key = getElementAttributeKey("fishNode");
   dom_span.setAttribute(key, "element");
@@ -87,7 +87,7 @@ export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
 /** @name 创建一个编辑器的行内--文本节点 */
 export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
   const dom_span = document.createElement("sapn");
-  const id = `${prefixNmae}element-` + helper.getRandomWord(4);
+  const id = `${prefixNmae}element-` + helper.getRandomWord();
   const elementAttribute = getElementAttributeKey("fishNode");
   dom_span.setAttribute(elementAttribute, "text");
   dom_span.id = id;

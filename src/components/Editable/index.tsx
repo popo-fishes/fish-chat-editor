@@ -8,13 +8,14 @@ import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { labelRep } from "../../utils";
 
 import { onKeyUp, handlePasteTransforms, onCopy, onCut, handleLineFeed } from "./event";
+
 import useEditable from "./use-editable";
 
 import { dom, isNode, range, editor, util, base, transforms } from "../../core";
 
 const { isEmptyEditNode, isDOMElement, isImgNode } = isNode;
 
-const { findNodeWithImg, findNodeWithInline, findNodeExistTextNode } = util;
+const { findNodeWithImg, findNodeWithInline, findNodeWithTextNode } = util;
 
 const { getText, setText } = editor;
 const { editTransformSpaceText } = transforms;
@@ -152,7 +153,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
      * 判断是否只剩下一个节点，且不存在文本节点, 那就添加一个子节点
      * 主要解决删除内容把文本节点全部删完了
      */
-    if (isEmptyEditNode(editRef.current) && !findNodeExistTextNode(editRef.current)) {
+    if (isEmptyEditNode(editRef.current) && !findNodeWithTextNode(editRef.current)) {
       if (editRef.current.firstChild) {
         dom.addTargetElement(editRef.current.firstChild as any, [base.createChunkTextElement(false)]);
       }

@@ -46,7 +46,7 @@ export const isEmptyEditNode = (editNode: IEditorElement) => {
 };
 
 /**
- * @name 判断节点是否一个块属性节点：element
+ * @name 判断节点是否一个编辑器块属性节点：element
  */
 export const isEditElement = (node: HTMLElement): boolean => {
   if (!node) return false;
@@ -63,7 +63,7 @@ export const isEditElement = (node: HTMLElement): boolean => {
   return false;
 };
 
-/** @name 判断是否为一个文本属性节点：text */
+/** @name 判断是否为一个编辑器文本属性节点：text */
 export const isEditTextNode = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;
@@ -95,7 +95,7 @@ export const isImgNode = (node: HTMLElement): boolean => {
   return false;
 };
 
-/** @name 判断是否为一个内联块属性节点*/
+/** @name 判断是否为一个编辑器行--内联块属性节点*/
 export const isFishInline = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;

@@ -9,7 +9,7 @@ import { base, isNode, util, range, editor } from "../../core";
 
 const { createLineElement, getElementAttributeKey } = base;
 const { isEditElement, isEditTextNode } = isNode;
-const { deleteTextNodeAndEmpty, deleteTextNodeAndBrNode, findNodeOrParentExistTextNode } = util;
+const { deleteTextNodeAndEmpty, deleteTextNodeAndBrNode, getNodeOfEditorTextNode } = util;
 const { setRangeNode, amendRangePosition } = range;
 const { getText } = editor;
 
@@ -92,7 +92,7 @@ export default function useEditable(props: IEditableProps) {
 
   /** @name 选择插入表情图片 */
   const insertEmoji = (item: IEmojiType) => {
-    const editorTextNode = findNodeOrParentExistTextNode(currentSelection.startContainer);
+    const editorTextNode = getNodeOfEditorTextNode(currentSelection.startContainer);
     // 非常重要的逻辑
     if (!editorTextNode) {
       // 修正光标位置
