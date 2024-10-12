@@ -18,7 +18,7 @@ export const elementAttributeData = {
   },
   /**
    * 行内块节点（编辑节点中的块，比如图片）
-   * 属性值: true 代表是行内块节点
+   * 属性值: true 代表是行内块节点1
    */
   fishInline: {
     key: "data-fish-inline",
