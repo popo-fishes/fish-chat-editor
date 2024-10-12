@@ -1,16 +1,13 @@
 /*
  * @Date: 2024-3-14 15:40:27
- * @LastEditors: Please set LastEditors
- * @Description: dom操作
+ * @LastEditors: 工具方法
  */
 
-import { helper, base, isNode, dom } from ".";
+import { helper, base, isNode } from ".";
 
-import type { IEditorElement } from "../types";
+const { getElementAttributeKey, prefixNmae } = base;
 
-const { getElementAttributeKey, getElementAttributeDatasetName, prefixNmae } = base;
-
-const { isDOMText, isNodeNotTtxt, isImgNode, isEditElement, isFishInline, isEditTextNode, isDOMElement } = isNode;
+const { isNodeNotTtxt, isImgNode, isEditElement, isFishInline, isEditTextNode } = isNode;
 
 /** @name 判断节点是否富文本元素节点，如果不是找它的父节点再查下去 */
 export const findNodetWithElement = (node: any) => {
@@ -70,79 +67,6 @@ export const findNodeWithInline = (node: any) => {
   if (isFishInline(node)) return node;
 
   return findNodeWithInline(node.parentNode); // 否则继续查询父节点的父节点
-};
-
-/** @name 复制富文本节点的文本值 */
-export const getPlainText = (domNode: any) => {
-  let text = "";
-
-  if (isDOMText(domNode) && domNode.nodeValue) {
-    return domNode.nodeValue;
-  }
-
-  if (isDOMElement(domNode)) {
-    for (const childNode of Array.from(domNode.childNodes)) {
-      text += getPlainText(childNode as Element);
-    }
-
-    const display = getComputedStyle(domNode).getPropertyValue("display");
-
-    const emojiNodeAttrKey = getElementAttributeKey("emojiNode");
-    const emojiNodeAttrName = getElementAttributeDatasetName("emojiNode");
-    // 是否是一个表情图片,如果是取出
-    const isEmojiVal = domNode?.dataset?.[emojiNodeAttrName] || "";
-    const isEmojiNode = domNode.nodeName == "IMG" && domNode.hasAttribute(emojiNodeAttrKey);
-
-    if (isEmojiNode && isEmojiVal) {
-      text += isEmojiVal;
-    }
-
-    if (display === "block" && domNode.nodeName !== "IMG") {
-      text += "\n";
-    }
-  }
-
-  return text;
-};
-
-/** @name 获取一个节点的内容 */
-export const getNodeContent = (node: any): string => {
-  let content = "";
-
-  if (isDOMText(node)) {
-    content += node.textContent;
-  }
-  if (isDOMElement(node)) {
-    for (let i = 0; i < node.childNodes.length; i++) {
-      content += getNodeContent(node.childNodes[i]);
-    }
-
-    const emojiNodeAttrKey = getElementAttributeKey("emojiNode");
-    const emojiNodeAttrName = getElementAttributeDatasetName("emojiNode");
-    // 是否是一个表情图片,如果是取出
-    const isEmojiVal = node?.dataset?.[emojiNodeAttrName] || "";
-    const isEmojiNode = node.nodeName == "IMG" && node.hasAttribute(emojiNodeAttrKey);
-
-    if (isEmojiNode && isEmojiVal) {
-      content += isEmojiVal;
-    }
-  }
-
-  return content;
-};
-
-/**
- * @name 把符文本dom转成一个数组值
- */
-export const handleEditNodeTransformsValue = (editNode: IEditorElement): string[] => {
-  const result: string[] = [];
-  if (!editNode || !editNode?.childNodes) return [];
-  const nodes: any = Array.from(dom.cloneNodes((editNode as any).childNodes));
-  for (const cld of Array.from(nodes)) {
-    const content = getNodeContent(cld as Element);
-    result.push(content);
-  }
-  return result;
 };
 
 /** @name 判断文本节点是否存在多个节点，且存在br标签，就删除br标签 */

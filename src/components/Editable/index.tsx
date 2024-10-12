@@ -10,13 +10,14 @@ import { labelRep } from "../../utils";
 import { onKeyUp, handlePasteTransforms, onCopy, onCut, handleLineFeed } from "./event";
 import useEditable from "./use-editable";
 
-import { dom, isNode, range, editor, util, base } from "../../core";
+import { dom, isNode, range, editor, util, base, transforms } from "../../core";
 
 const { isEmptyEditNode, isDOMElement, isImgNode } = isNode;
 
 const { findNodeWithImg, findNodeWithInline, findNodeExistTextNode } = util;
 
-const { editTransformSpaceText, getText, setText } = editor;
+const { getText, setText } = editor;
+const { editTransformSpaceText } = transforms;
 
 // 输入框值变化时，我需要对内容进行转换，必须等转换结束才可以在执行，用来判断的
 let isFlag = false;

@@ -7,7 +7,7 @@ import isObject from "lodash/isObject";
 
 import { regContentImg, labelRep } from "../../utils";
 
-import { dom, isNode, range, editor, helper, util, base } from "../../core";
+import { dom, isNode, range, editor, helper, util, base, transforms } from "../../core";
 
 import type { IEditorElement } from "../../types";
 
@@ -15,7 +15,7 @@ const { setRangeNode, amendRangeLastNode, amendRangePosition } = range;
 
 const { isFishInline, isEditTextNode, isDOMText } = isNode;
 
-const { getPlainText, getNodeParentElement, findNodeOrParentExistTextNode, duplicateTextNode, findNodetWithElement } = util;
+const { getNodeParentElement, findNodeOrParentExistTextNode, duplicateTextNode, findNodetWithElement } = util;
 
 const { createLineElement, createChunkTextElement, getElementAttributeKey, prefixNmae, createChunkSapnElement } = base;
 
@@ -52,7 +52,7 @@ export const onCopy = (event: React.ClipboardEvent<HTMLDivElement>) => {
   odiv.setAttribute("hidden", "true");
   contents.ownerDocument.body.appendChild(odiv);
 
-  const content = getPlainText(odiv);
+  const content = transforms.getPlainText(odiv);
 
   // event.clipboardData.setData("text/html", odiv.innerHTML);
   event.clipboardData?.setData("text/plain", content);
@@ -79,7 +79,7 @@ export const onCut = (event: React.ClipboardEvent<HTMLDivElement>) => {
     odiv.setAttribute("hidden", "true");
     contents.ownerDocument.body.appendChild(odiv);
 
-    const content = getPlainText(odiv);
+    const content = transforms.getPlainText(odiv);
 
     // event.clipboardData.setData("text/html", odiv.innerHTML);
     event.clipboardData?.setData("text/plain", content);

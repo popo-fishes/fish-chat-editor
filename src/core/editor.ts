@@ -5,16 +5,16 @@
  */
 import { regContentImg } from "../utils";
 
-import { helper, base, dom, isNode, util, range } from ".";
+import { helper, base, dom, isNode, util, range, transforms } from ".";
 
 import type { IEditorElement } from "../types";
 
 const { createLineElement } = base;
-const { getRangeAroundNode, addTargetElement, removeNode, cloneNodes, insertBeforeNode } = dom;
+const { getRangeAroundNode, addTargetElement, removeNodes, cloneNodes, insertBeforeNode } = dom;
 const { isDOMElement, isDOMNode } = isNode;
-const { getNodeContent, findNodetWithElement, handleEditNodeTransformsValue, judgeEditRowNotNull } = util;
-const { setRangeNode } = range;
-
+const { findNodetWithElement, judgeEditRowNotNull } = util;
+const { setRangeNode, amendRangeLastNode } = range;
+const { getNodeContent, handleEditNodeTransformsValue } = transforms;
 /**
  * @name 获取当前编辑器的纯文本内容
  * @param editNode 富文本节点
@@ -41,6 +41,15 @@ export const getText = (editNode: IEditorElement): string => {
   contents.ownerDocument.body.removeChild(odiv);
 
   return contentResult.join("\n");
+};
+
+/** @name 设置文本值 */
+export const setText = (editNode: IEditorElement, content: string, callBack?: () => void) => {
+  if (!content || !editNode) return callBack?.();
+  // 把光标设置在富文本内容的最后一行的最后一个位置
+  amendRangeLastNode(editNode, () => {
+    insertText(content, () => callBack?.());
+  });
 };
 
 /**
@@ -71,24 +80,6 @@ export const getHtml = (editNode: IEditorElement): string => {
 
   console.log(contentResult);
   return contentResult.join("\n");
-};
-
-/**
- * @name 除去字符串空格换后是否为一个空文本，如果是直接赋值为空，否则用原始的
- * 常用于获取富文本值后，判断是否全部是空格 和 换行，如果是就给字符串置空
- */
-export const editTransformSpaceText = (content: string) => {
-  // 删除所有换行
-  const cStr = content.replace(/\s/g, "");
-  // 去掉所有的换行
-  const lStr = cStr.replace(/\n/g, "");
-
-  // 删除全部的换行和空格，得到一个 空字符，直接用空字符串作为值
-  if (lStr == "") {
-    content = "";
-  }
-
-  return content;
 };
 
 /**
@@ -229,7 +220,7 @@ export const insertText = (content: string, callBack?: () => void) => {
              */
             judgeEditRowNotNull(lastNode);
             // 删除原始节点中的换行部分的节点
-            removeNode(nextNodeList);
+            removeNodes(nextNodeList);
           }
         }
       }
@@ -262,15 +253,6 @@ export const insertText = (content: string, callBack?: () => void) => {
   }
 
   console.timeEnd("editable插入内容耗时");
-};
-
-/** @name 设置文本值 */
-export const setText = (editNode: IEditorElement, content: string, callBack?: () => void) => {
-  if (!content || !editNode) return callBack?.();
-  // 把光标设置在富文本内容的最后一行的最后一个位置
-  amendRangeLastNode(editNode, () => {
-    insertText(content, () => callBack?.());
-  });
 };
 
 /** @name 在选区插入节点（目前是图片） */

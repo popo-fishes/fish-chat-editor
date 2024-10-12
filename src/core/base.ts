@@ -1,6 +1,6 @@
 /*
  * @Date: 2024-10-08 14:38:52
- * @Description: Modify here please
+ * @Description: create base dom。
  */
 import { helper } from ".";
 
@@ -18,7 +18,7 @@ export const elementAttributeData = {
   },
   /**
    * 行内块节点（编辑节点中的块，比如图片）
-   * 属性值: true 代表是行内块节点1
+   * 属性值: true 代表是行内块节点
    */
   fishInline: {
     key: "data-fish-inline",

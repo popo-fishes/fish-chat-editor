@@ -1,11 +1,41 @@
 /*
  * @Date: 2024-10-12 14:24:28
- * @Description: Modify here please
+ * @Description: dom
  */
 import { isNode, util } from ".";
 
 const { isDOMText, isDOMElement, isEditTextNode, isNodeNotTtxt } = isNode;
 const { findNodeOrParentExistTextNode } = util;
+
+/**
+ * @name 获取当前节点的 前面全部兄弟节点 和后面全部兄弟节点
+ * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/nextSibling
+ * @param targetElement
+ * @returns [previousNodes, nextNodes]
+ */
+const getDomPreviousOrnextSibling = (targetElement: HTMLElement): [][] => {
+  if (!targetElement) return [[], []];
+  /** 以前的节点 */
+  const previousNodes: any = [];
+  let currentElement = targetElement.previousSibling;
+  while (currentElement) {
+    if (currentElement.nodeType === Node.ELEMENT_NODE || currentElement.nodeType === Node.TEXT_NODE) {
+      previousNodes.push(currentElement);
+    }
+    currentElement = currentElement.previousSibling;
+  }
+  /** 之后的节点 */
+  const nextNodes: any = [];
+  currentElement = targetElement.nextSibling;
+  while (currentElement) {
+    if (currentElement.nodeType === Node.ELEMENT_NODE || currentElement.nodeType === Node.TEXT_NODE) {
+      nextNodes.push(currentElement);
+    }
+    currentElement = currentElement.nextSibling;
+  }
+  return [previousNodes, nextNodes];
+};
+
 /**
  * @name 获取节点的前面的节点和后面的节点
  * @desc: 默认当前光标位置节点作为目标
@@ -153,7 +183,7 @@ export const cloneNodes = (childNodes: HTMLElement[]) => {
  * @name 删除节点
  * @param childNodes
  */
-export const removeNode = (childNodes: HTMLElement[]) => {
+export const removeNodes = (childNodes: HTMLElement[]) => {
   // 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
   const nodes: HTMLElement[] = Array.from(childNodes);
   for (let i = 0; i < nodes.length; i++) {
@@ -200,33 +230,4 @@ export const addTargetElement = (targetNode: HTMLElement, childNodes: HTMLElemen
     }
   }
   return targetNode;
-};
-
-/**
- * @name 获取当前节点的 前面全部兄弟节点 和后面全部兄弟节点
- * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/nextSibling
- * @param targetElement
- * @returns [previousNodes, nextNodes]
- */
-export const getDomPreviousOrnextSibling = (targetElement: HTMLElement): [][] => {
-  if (!targetElement) return [[], []];
-  /** 以前的节点 */
-  const previousNodes: any = [];
-  let currentElement = targetElement.previousSibling;
-  while (currentElement) {
-    if (currentElement.nodeType === Node.ELEMENT_NODE || currentElement.nodeType === Node.TEXT_NODE) {
-      previousNodes.push(currentElement);
-    }
-    currentElement = currentElement.previousSibling;
-  }
-  /** 之后的节点 */
-  const nextNodes: any = [];
-  currentElement = targetElement.nextSibling;
-  while (currentElement) {
-    if (currentElement.nodeType === Node.ELEMENT_NODE || currentElement.nodeType === Node.TEXT_NODE) {
-      nextNodes.push(currentElement);
-    }
-    currentElement = currentElement.nextSibling;
-  }
-  return [previousNodes, nextNodes];
 };

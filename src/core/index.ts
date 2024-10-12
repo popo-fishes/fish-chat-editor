@@ -14,3 +14,5 @@ export * as range from "./range";
 export * as dom from "./dom";
 
 export * as editor from "./editor";
+
+export * as transforms from "./transforms";
