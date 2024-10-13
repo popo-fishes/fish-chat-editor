@@ -15,7 +15,7 @@ import { isNode, range, editor, util, base, transforms } from "../../core";
 
 const { isEmptyEditNode, isDOMElement, isImgNode } = isNode;
 
-const { findNodeWithImg, findNodeWithInline, getNodeOfEditorTextNode } = util;
+const { findNodeWithImg, getNodeOfEditorInlineNode, getNodeOfEditorTextNode } = util;
 
 const { getText, setText } = editor;
 const { editTransformSpaceText } = transforms;
@@ -187,7 +187,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     // 是一个DOM元素节点，并且存在图片节点
     // if (isDOMElement(target) && findNodeWithImg(target)) {
     //   // 必须是内联节点
-    //   const pnode = findNodeWithInline(target);
+    //   const pnode = getNodeOfEditorInlineNode(target);
 
     //   if (pnode) {
     //     // 用户选择的文本范围或光标的当前位置
@@ -249,16 +249,17 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     }
 
     /***
-     * 键盘按下时，如果当前光标节点不是一个文本节点，直接禁止输入
-     * 解决异常情况的BUG
-     * 兜底处理
+     * 键盘按下时，如果当前光标节点不是一个文本节点，需要处理
+     * 解决异常的BUG
      */
-    const rangeInfo = range.getRange();
-    if (rangeInfo && rangeInfo.startContainer && !getNodeOfEditorTextNode(rangeInfo.startContainer)) {
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
+    // const rangeInfo = range.getRange();
+    // if (rangeInfo && rangeInfo.startContainer && !getNodeOfEditorTextNode(rangeInfo.startContainer)) {
+    //   const edInlineNode = getNodeOfEditorInlineNode(rangeInfo?.startContainer as any);
+    //   console.log(edInlineNode);
+    //   event.preventDefault();
+    //   event.stopPropagation();
+    //   return;
+    // }
   };
 
   /**
@@ -280,7 +281,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e?.target as any;
     // 是一个DOM元素节点，且光标位置为1，并且存在图片节点, 那么就禁止获取焦点。
-    if (isDOMElement(target) && findNodeWithImg(target) && findNodeWithInline(target)) {
+    if (isDOMElement(target) && findNodeWithImg(target) && getNodeOfEditorInlineNode(target)) {
       e.preventDefault();
     }
     // 获取当前文档的选区

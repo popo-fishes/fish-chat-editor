@@ -95,6 +95,21 @@ export const getNodeOfChildTextNode = (node: any): HTMLElement | null => {
 };
 
 /**
+ * !!! 重要
+ * @name 判断节点是否内联块元素节点，如果不是，一直找父节点
+ * @returns 如果是内联块属性节点就返回，不是就返回空
+ */
+export const getNodeOfEditorInlineNode = (node: any): HTMLElement | null => {
+  if (!node || !node?.parentNode) {
+    return null; // 如果节点没有父节点，则返回 null
+  }
+
+  if (isFishInline(node)) return node;
+
+  return getNodeOfEditorInlineNode(node.parentNode); // 否则继续查询父节点的父节点
+};
+
+/**
  * @name 判断节点是否图片元素节点，如果不是，一直找子节点
  * @returns boolean
  */
@@ -107,17 +122,6 @@ export const findNodeWithImg = (node: any): boolean => {
 
   // 否则继续查询子节点
   return findNodeWithImg(node?.firstChild || null);
-};
-
-/** @name 判断节点是否内联元素节点，，如果不是，一直找父节点 */
-export const findNodeWithInline = (node: any) => {
-  if (!node || !node?.parentNode) {
-    return null; // 如果节点没有父节点，则返回 null
-  }
-
-  if (isFishInline(node)) return node;
-
-  return findNodeWithInline(node.parentNode); // 否则继续查询父节点的父节点
 };
 
 /**

@@ -15,7 +15,15 @@ const { setRangeNode, setCursorNode, amendRangeLastNode, amendRangePosition, get
 
 const { isFishInline, isEditTextNode, isEmojiImgNode, isDOMText, isEmptyEditNode, isEditElement } = isNode;
 
-const { getNodeOfEditorRowNode, getNodeOfEditorTextNode, getNodeOfChildTextNode, rewriteEmbryoTextNode, deleteTargetNodeOfBrNode, findNodetWithElement } = util;
+const {
+  getNodeOfEditorRowNode,
+  getNodeOfEditorInlineNode,
+  getNodeOfEditorTextNode,
+  getNodeOfChildTextNode,
+  rewriteEmbryoTextNode,
+  deleteTargetNodeOfBrNode,
+  findNodetWithElement
+} = util;
 
 const { createLineElement, createChunkTextElement, getElementAttributeKey, prefixNmae, createChunkSapnElement } = base;
 
@@ -445,10 +453,6 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
     }
   }
 
-  function hasZeroWidthNoBreakSpace(node) {
-    return /^\uFEFF$/.test(node.textContent);
-  }
-
   /**
    * !!重要
    * @name 当前编辑器节点下面具有非编辑器文本属性的节点
@@ -578,27 +582,24 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
   }
 
   /**
-   * BUG4：
-   * 解决当删除内容刚好删除到了图片节点，导致图片后面没有编辑文本节点了
+   * BUG4：如果光标是一个内联块节点，且后面没有文本节点直接添加一个文本节点。
+   * 主要节点 解决当删除内容刚好删除到了图片节点，导致图片后面没有编辑文本节点了
+   * 注意：添加完了还需要，光标设定上去后面的文本节点
    */
-  if (range && range?.startContainer) {
-    const editorTextNode = getNodeOfEditorTextNode(range?.startContainer);
-    console.log(range?.startContainer);
-    if (editorTextNode) {
-      // console.log(hasZeroWidthNoBreakSpace(range?.startContainer));
-      // 代表存在值
-      // if (editorTextNode.innerHTML && !hasZeroWidthNoBreakSpace(range?.startContainer)) {
-      //   // 使用正则表达式替换零宽度不换行空格为空字符串
-      //   const textContent = editorTextNode.innerHTML.replace(/\uFEFF/g, "");
-      //   // 更新节点的文本内容
-      //   editorTextNode.innerHTML = textContent;
-      // }
-      // // 代表没有值
-      // if (editorTextNode.innerHTML == "" && hasZeroWidthNoBreakSpace(range?.startContainer)) {
-      //   editorTextNode.innerHTML = "&#xFEFF;";
-      // }
-    }
-  }
+  // if (range && range?.startContainer) {
+  //   // 是一个内联块节点
+  //   const edInlineNode = getNodeOfEditorInlineNode(range?.startContainer as any);
+  //   if (edInlineNode) {
+  //     // 下一个兄弟节点不是一个文本节点
+  //     if (!isEditTextNode(edInlineNode.nextSibling as any)) {
+  //       const textNode = createChunkTextElement();
+  //       dom.toTargetAfterInsertNode(edInlineNode, [textNode]);
+  //       setRangeNode(edInlineNode.parentNode, "after");
+
+  //       console.log(getRange());
+  //     }
+  //   }
+  // }
 
   console.timeEnd("onKeyUp转换节点耗时");
 };
