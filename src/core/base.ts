@@ -99,3 +99,29 @@ export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
 
   return dom_span;
 };
+
+/**
+ * @name 创建一个编辑器的表情（emoji）块容器图片节点
+ * @param url 表情图片的路径
+ * @param width 表情图片的宽度
+ * @param height 表情图片的高度
+ * @param emijiName 表情的文本描述
+ * @returns 块容器图片节点
+ */
+export const createChunkEmojilement = (url: string, width: number, height: number, emijiName: string): HTMLSpanElement => {
+  // 创建一个图片容器节点
+  const container = document.createElement("span");
+  container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
+  container.classList.add(`${prefixNmae}emoji-container`);
+  container.setAttribute("style", `width: ${width}px;height:${height}px`);
+
+  const node = new Image();
+  node.src = url || null;
+  const emojiNodeKey = getElementAttributeKey("emojiNode");
+
+  node.setAttribute(emojiNodeKey, emijiName);
+
+  container.appendChild(node);
+
+  return container;
+};

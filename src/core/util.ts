@@ -124,8 +124,8 @@ export const findNodeWithInline = (node: any) => {
  *  @name 传入一个编辑行节点块--获取下面的第一个编辑器文本属性节点
  */
 export const getElementBelowTextNode = (node: HTMLElement): HTMLElement | null => {
-  // 1： 如果不是一个节点块，直接返回。 2： 是一个内联块属性节点，直接返回
-  if (!isEditElement(node) && isFishInline(node)) return null;
+  // 1： 如果不是一个节点块，直接返回
+  if (!isEditElement(node)) return null;
   const nodes: any = Array.from(node.childNodes);
   if (!nodes || !nodes?.length) return null;
   let dom: HTMLElement = null;

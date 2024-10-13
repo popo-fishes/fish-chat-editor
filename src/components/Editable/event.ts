@@ -11,7 +11,7 @@ import { dom, isNode, range as fishRange, editor, helper, util, base, transforms
 
 import type { IEditorElement } from "../../types";
 
-const { setRangeNode, setCursorNode, amendRangeLastNode, amendRangePosition } = fishRange;
+const { setRangeNode, setCursorNode, amendRangeLastNode, amendRangePosition, getRange } = fishRange;
 
 const { isFishInline, isEditTextNode, isEmojiImgNode, isDOMText, isEmptyEditNode, isEditElement } = isNode;
 
@@ -166,15 +166,10 @@ export const handleInputTransforms = (editNode: IEditorElement, callBack: () => 
 /**
  * @name 处理换行
  */
-export const handleLineFeed = (editNode: IEditorElement, callBack?: (success?: boolean) => void) => {
-  // 获取页面的选择区域
-  const selection = window.getSelection();
-
-  // 获取当前光标
-  const range = selection?.getRangeAt(0);
-
+export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: boolean) => void) => {
+  const range = getRange();
   // 必须存在光标
-  if ((selection && selection.rangeCount == 0) || !range) return callBack(false);
+  if (!range) return callBack(false);
 
   console.time("editable插入换行耗时");
 
@@ -195,7 +190,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success?: b
     return callBack(false);
   }
 
-  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode();
+  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
   // console.log(behindNodeList, nextNodeList);
 
@@ -224,50 +219,53 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success?: b
   // 存在换行元素时
   if (clNodes.length) {
     // 标记顺序
-    const data: HTMLElement[][] = [];
+    const markSortNodes: HTMLElement[][] = [];
     // 标记块节点的开始索引
     const blockindex = clNodes.findIndex((item) => isEditTextNode(item) || isFishInline(item));
 
     // 代表没有块节点，全部是个体
     if (blockindex == -1) {
-      data.push(clNodes);
+      markSortNodes.push(clNodes);
     } else {
       // 截取前面的个体, 组合为一个数组
       if (blockindex == 0) {
         const restArr = clNodes.slice(blockindex);
-        data.push(restArr);
+        // 变二维插入
+        for (const cld of restArr) {
+          markSortNodes.push([cld]);
+        }
       } else {
         const slicedArr = clNodes.slice(0, blockindex);
         const restArr = clNodes.slice(blockindex);
-        data.push(slicedArr);
+        markSortNodes.push(slicedArr);
         // 变二维插入
         for (const cld of restArr) {
-          data.push([cld]);
+          markSortNodes.push([cld]);
         }
       }
     }
-    // console.log(data);
+    // console.log(markSortNodes, clNodes);
     // 遍历
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < markSortNodes.length; i++) {
       /**
        * 如果二维数组里面存在块节点，代表是块。那么渲染的方式是不一样的。
        * isChunk ? 块 ： 代表是个体(文本属性节点下面的元素，代表个体)
        */
-      const isChunk = data[i].some((item) => isEditTextNode(item) || isFishInline(item));
+      const isChunk = markSortNodes[i].some((item) => isEditTextNode(item) || isFishInline(item));
       if (isChunk) {
-        if (data[i]?.[0]) {
-          lineDom.appendChild(data[i]?.[0]);
+        if (markSortNodes[i]?.[0]) {
+          lineDom.appendChild(markSortNodes[i]?.[0]);
         }
       } else {
         // 代表是个体(文本属性节点下面的元素，代表个体)
-        const textNode = createChunkTextElement(true);
-        const nodes = data[i].map((item) => item);
+        const textNode = createChunkTextElement();
+        const nodes = markSortNodes[i].map((item) => item);
         dom.toTargetAddNodes(textNode, nodes);
         lineDom.appendChild(textNode);
       }
     }
 
-    // 删除原始节点中的换行部分的节点
+    // !!! 删除原始节点中的换行部分的节点
     dom.removeNodes(nextNodeList);
   } else {
     // 不存在换行节点时，就把行添加一个编辑文本节点
@@ -277,9 +275,12 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success?: b
 
   // 如果前面的节点不存在，后面的接口存在； 代表换行后，前面的节点是没有内容的，需要进行添加一个编辑文本节点
   if (behindNodeList.length == 0 && nextNodeList.length) {
+    // 创建文本节点
     const textNode = createChunkTextElement(false);
     dom.toTargetAddNodes(rowElementNode, [textNode]);
   }
+
+  // console.log(dom.cloneNodes([lineDom])[0].childNodes);
 
   rowElementNode.insertAdjacentElement("afterend", lineDom);
 
@@ -418,23 +419,40 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
 
 /**
  * @name 键盘按键被松开时发生
- * !!! 非常重要的边角处理方法
+ * !!! 非常重要的边角异常-处理方法
  */
 export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IEditorElement) => {
-  const selection = window.getSelection();
+  const range = getRange();
   console.time("onKeyUp转换节点耗时");
 
   // 是否只有一个br节点
-  const isParentOnlyBr = (node) => {
+  function hasParentOnlyBr(node) {
     if (node) {
       if (node.childNodes && node.childNodes?.length == 1) {
         if (node.childNodes[0]?.nodeName == "BR") return true;
       }
     }
     return false;
-  };
+  }
 
-  // 当前编辑器节点下面具有非编辑器文本属性的节点
+  /** 处理节点带有style属性时，也需要标记 */
+  function hasTransparentBackgroundColor(node) {
+    try {
+      if (node.style && node.style?.backgroundColor) return true;
+      return false;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function hasZeroWidthNoBreakSpace(node) {
+    return /^\uFEFF$/.test(node.textContent);
+  }
+
+  /**
+   * !!重要
+   * @name 当前编辑器节点下面具有非编辑器文本属性的节点
+   */
   const isNodeWithNotTextNode = (node) => {
     if (!node) return false;
     if (!node.childNodes) return false;
@@ -442,17 +460,18 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
 
     // 只有一个文本节点，且是一个空的br，直接返回
     if (node.childNodes.length == 1) {
-      if (isParentOnlyBr(node)) return false;
+      if (hasParentOnlyBr(node)) return false;
     }
 
-    // 当前节点集合下面，如果有个节点 不属于文本节点and内联块属性节点就就标记
+    // 当前节点集合下面，如果有个节点 不属于文本节点and内联块属性节点就标记
     let exist = false;
     for (const cld of node.childNodes) {
-      if (!isEditTextNode(cld) && !isFishInline(cld)) {
+      if ((!isEditTextNode(cld) && !isFishInline(cld)) || hasTransparentBackgroundColor(cld)) {
         exist = true;
         break;
       }
     }
+
     return exist;
   };
 
@@ -462,10 +481,7 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
    * 这种情况常出现在： 按键 删除行-富文本自动合并行时，会主动创建一些自定义标签
    * 比如：<span style="background-color: transparent;">345</span>
    */
-  if (selection && selection.rangeCount > 0) {
-    // 获取当前光标
-    const range = selection?.getRangeAt(0);
-
+  if (range && range?.startContainer) {
     /**
      * 1: 当前节点是编辑器文本属性节点。它的下一个兄弟节点，不是一个文本节点时，需要处理下 富文本的Dom格式
      */
@@ -485,8 +501,15 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
         const node = nodes[i] as any;
 
         // 按键 删除行-富文本自动合并行时，会主动创建一些自定义标签
-        if (!isEditTextNode(node) && !isFishInline(node) && node.nodeName == "SPAN") {
+        const isFlag = !isEditTextNode(node) && !isFishInline(node) && node.nodeName == "SPAN";
+        if (isFlag) {
           rewriteEmbryoTextNode(node as HTMLElement);
+        }
+
+        // 删除编辑器行内节点的块样式
+        if (hasTransparentBackgroundColor(node)) {
+          // 重写
+          node.removeAttribute("style");
         }
 
         if (node.nodeName === "BR") {
@@ -496,23 +519,30 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
         if (isDOMText(node)) {
           node.remove();
         }
-        // 处理图片节点
-        // if (isEmojiImgNode(node)) {
-        //   /**
-        //    * 把图片插入到上一个兄弟节点的 文本属性节点里面
-        //    * 如果没有上一个兄弟节点，就插入到下一个兄弟节点里面
-        //    */
-        //   const isPreviousNode = isEditTextNode(node.previousSibling);
-        //   const isNextNode = isEditTextNode(node.nextSibling);
-        //   if (isPreviousNode) {
-        //     node.previousSibling.appendChild(node);
-        //   } else if (isNextNode) {
-        //     node.nextSibling.appendChild(node);
-        //   } else {
-        //     // 免留后患兜底处理，直接删除
-        //     node.remove();
-        //   }
-        // }
+        /**
+         * 处理表情图片节点
+         */
+        if (isEmojiImgNode(node)) {
+          /**
+           * 把图片插入到上一个兄弟节点的 文本属性节点里面
+           * 如果没有上一个兄弟节点，就插入到下一个兄弟节点里面
+           */
+          const isPreviousNode = isEditTextNode(node.previousSibling);
+          /**
+           * 有可能图片的下一个兄弟节点是一个文本，但是因为for循环
+           * 可能它还没转换rewriteEmbryoTextNode，导致isEditTextNode返回为false
+           * 比如：图片表情节点后面是一个文本节点。
+           */
+          const isNextNode = isEditTextNode(node.nextSibling);
+          if (isPreviousNode) {
+            //node.previousSibling.appendChild(node);
+          } else if (isNextNode) {
+            // node.nextSibling.appendChild(node);
+          } else {
+            // 免留后患兜底处理，直接删除
+            // node.remove();
+          }
+        }
       }
     }
   }
@@ -521,11 +551,17 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
    * bug2：
    * 判断editNode是否只剩下一个节点，且不存在文本节点, 那就添加一个子节点
    * 主要解决删除内容把文本节点全部删完了
+   * 兜底处理
    */
-  // console.log(isEmptyEditNode(editNode) && !getNodeOfChildTextNode(editNode));
   if (isEmptyEditNode(editNode) && !getNodeOfChildTextNode(editNode)) {
     if (editNode.firstChild) {
       dom.toTargetAddNodes(editNode.firstChild as any, [base.createChunkTextElement(false)]);
+    } else {
+      if (editNode.childNodes.length == 0) {
+        // 没有编辑行节点直接创建
+        const lineDom = createLineElement();
+        dom.toTargetAddNodes(editNode, [lineDom]);
+      }
     }
   }
 
@@ -534,13 +570,33 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
    * 判断光标的行编辑节点是否是一个空节点，且不存在文本节点, 那就添加一个子节点
    * 主要解决删除内容把文本节点全部删完了，然后导致行编辑节点 格式错乱
    */
-  if (selection && selection.rangeCount > 0) {
-    // 获取当前光标
-    const range = selection?.getRangeAt(0);
-    // console.log(range.startContainer);
-    // 是一个编辑器块属性节点 && 没有文本节点 && 只有一个子节点且还是一个br标签
-    if (isEditElement(range.startContainer as any) && !getNodeOfChildTextNode(range.startContainer) && isParentOnlyBr(range.startContainer)) {
+  if (range && range?.startContainer) {
+    // 是一个编辑器块属性节点 && 光标节点不是一个文本节点 && 只有一个子节点且还是一个br标签
+    if (isEditElement(range.startContainer as any) && !getNodeOfChildTextNode(range.startContainer) && hasParentOnlyBr(range.startContainer)) {
       dom.toTargetAddNodes(range.startContainer as any, [base.createChunkTextElement(false)]);
+    }
+  }
+
+  /**
+   * BUG4：
+   * 解决当删除内容刚好删除到了图片节点，导致图片后面没有编辑文本节点了
+   */
+  if (range && range?.startContainer) {
+    const editorTextNode = getNodeOfEditorTextNode(range?.startContainer);
+    console.log(range?.startContainer);
+    if (editorTextNode) {
+      // console.log(hasZeroWidthNoBreakSpace(range?.startContainer));
+      // 代表存在值
+      // if (editorTextNode.innerHTML && !hasZeroWidthNoBreakSpace(range?.startContainer)) {
+      //   // 使用正则表达式替换零宽度不换行空格为空字符串
+      //   const textContent = editorTextNode.innerHTML.replace(/\uFEFF/g, "");
+      //   // 更新节点的文本内容
+      //   editorTextNode.innerHTML = textContent;
+      // }
+      // // 代表没有值
+      // if (editorTextNode.innerHTML == "" && hasZeroWidthNoBreakSpace(range?.startContainer)) {
+      //   editorTextNode.innerHTML = "&#xFEFF;";
+      // }
     }
   }
 

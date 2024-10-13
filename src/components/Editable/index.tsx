@@ -15,7 +15,7 @@ import { isNode, range, editor, util, base, transforms } from "../../core";
 
 const { isEmptyEditNode, isDOMElement, isImgNode } = isNode;
 
-const { findNodeWithImg, findNodeWithInline } = util;
+const { findNodeWithImg, findNodeWithInline, getNodeOfEditorTextNode } = util;
 
 const { getText, setText } = editor;
 const { editTransformSpaceText } = transforms;
@@ -49,7 +49,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
 
     setTipHolder,
     setRangePosition,
-    backupRangePosition,
+
     clearEditor,
     init,
 
@@ -86,7 +86,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
         clear: () => {
           const curDom = clearEditor();
           // 设置光标位置
-          setRangePosition(curDom);
+          setRangePosition(curDom, 0, true);
           // 失去焦点
           editRef?.current?.blur();
           restProps.onChange?.("");
@@ -102,14 +102,15 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
 
   /** @name 失去焦点 */
   const onEditorBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    // 备份当前光标位置
-    backupRangePosition();
-    // 用户选择的文本范围或光标的当前位置
-    const selection = window.getSelection();
+    const rangeInfo = range.getRange();
+    if (rangeInfo) {
+      // 备份当前光标位置
+      setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
+    }
     // 如果有选中
-    if (!selection?.isCollapsed) {
+    if (range.isSelected()) {
       // 清除选定对象的所有光标对象
-      selection?.removeAllRanges();
+      range?.removeAllRanges();
     }
   };
 
@@ -165,12 +166,15 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       });
       return;
     }
+    // // 获取当前光标
+    // const range2 = selection?.getRangeAt(0);
+    // console.log(range2);
     // 点击图片节点，失去光标
     if (isImgNode(target)) {
       // 用户选择的文本范围或光标的当前位置
-      const selection = window.getSelection();
-      // 清除选定对象的所有光标对象
-      selection?.removeAllRanges();
+      // const selection = window.getSelection();
+      // // 清除选定对象的所有光标对象
+      // selection?.removeAllRanges();
       return;
     }
 
@@ -181,23 +185,23 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
      * 2：粘贴图片时，我们会在图片节点前面插入了一个文本输入节点。
      */
     // 是一个DOM元素节点，并且存在图片节点
-    if (isDOMElement(target) && findNodeWithImg(target)) {
-      // 必须是内联节点
-      const pnode = findNodeWithInline(target);
+    // if (isDOMElement(target) && findNodeWithImg(target)) {
+    //   // 必须是内联节点
+    //   const pnode = findNodeWithInline(target);
 
-      if (pnode) {
-        // 用户选择的文本范围或光标的当前位置
-        const selection = window.getSelection();
-        // 清除选定对象的所有光标对象
-        selection?.removeAllRanges();
+    //   if (pnode) {
+    //     // 用户选择的文本范围或光标的当前位置
+    //     const selection = window.getSelection();
+    //     // 清除选定对象的所有光标对象
+    //     selection?.removeAllRanges();
 
-        const textNode = base.createChunkTextElement();
+    //     const textNode = base.createChunkTextElement();
 
-        pnode.insertAdjacentElement("afterend", textNode);
+    //     pnode.insertAdjacentElement("afterend", textNode);
 
-        range.setRangeNode(textNode, "after", () => {});
-      }
-    }
+    //     range.setRangeNode(textNode, "after", () => {});
+    //   }
+    // }
   };
 
   /**
@@ -237,12 +241,23 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     }
     // 按下删除按键
     if (event.keyCode === 8) {
-      const selection = window.getSelection();
       // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
-      if (selection?.isCollapsed && isEmptyEditNode(editRef.current)) {
+      if (!range.isSelected() && isEmptyEditNode(editRef.current)) {
         event.preventDefault();
         return;
       }
+    }
+
+    /***
+     * 键盘按下时，如果当前光标节点不是一个文本节点，直接禁止输入
+     * 解决异常情况的BUG
+     * 兜底处理
+     */
+    const rangeInfo = range.getRange();
+    if (rangeInfo && rangeInfo.startContainer && !getNodeOfEditorTextNode(rangeInfo.startContainer)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
     }
   };
 
@@ -269,7 +284,6 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       e.preventDefault();
     }
     // 获取当前文档的选区
-    const selection = window.getSelection();
 
     // if (selection && selection.rangeCount > 0) {
     //   const range = selection.getRangeAt(0);

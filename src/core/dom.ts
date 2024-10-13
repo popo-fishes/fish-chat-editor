@@ -3,8 +3,8 @@
  * @Description: dom
  */
 import { isNode, util } from ".";
-
-const { isDOMText, isDOMElement, isEditTextNode, isNodeNotTtxt } = isNode;
+import type { IRange } from "./range";
+const { isDOMText, isDOMElement, isDOMNode, isEditTextNode, isNodeNotTtxt } = isNode;
 const { getNodeOfEditorTextNode } = util;
 
 /**
@@ -13,8 +13,8 @@ const { getNodeOfEditorTextNode } = util;
  * @param targetElement
  * @returns [previousNodes, nextNodes]
  */
-const getDomPreviousOrnextSibling = (targetElement: HTMLElement): [][] => {
-  if (!targetElement) return [[], []];
+const getDomPreviousOrnextSibling = (targetElement: Node): [][] => {
+  if (!isDOMNode(targetElement)) return [[], []];
   /** 之前的节点 */
   const previousNodes: any = [];
   let currentElement = targetElement.previousSibling;
@@ -83,7 +83,9 @@ export const toTargetAfterInsertNode = (targetElement: HTMLElement, childNodes: 
    * 在兄弟节点前面插入，
    * nextSibling 如果为 null，fragment 将被插入到parentNode的子节点列表末尾。
    */
-  parentNode.insertBefore(fragment, nextSibling);
+  if (parentNode) {
+    parentNode.insertBefore(fragment, nextSibling);
+  }
 };
 
 /**
@@ -109,24 +111,21 @@ export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElemen
  * !!! 重要方法
  * @name 获取节点的前面的节点和后面的节点
  * @desc: 默认当前光标位置节点作为目标
- * @return 返回的都是真实的dom节点
  * 返回的数组中都是从近到远的 排序，距离当前光标节点越近的排在第一个
  * [behindNodeList:[], nextNodeList: []]
+ * @param range光标对象
+ * @return 返回的都是真实的dom节点
  */
-export const getRangeAroundNode = () => {
+export const getRangeAroundNode = (range: IRange) => {
   /** 之后的节点, 这里面的都是真实dom节点 */
   let behindNodeList: any[] = [];
   /** 以前的节点, 这里面的都是真实dom节点 */
   let nextNodeList: any[] = [];
 
-  // 获取页面的选择区域
-  const selection: any = window.getSelection();
-
-  // 获取当前光标
-  const range = selection?.getRangeAt(0);
-
   // 必须存在光标
-  if ((selection && selection.rangeCount == 0) || !range) return [behindNodeList, nextNodeList];
+  if (!range || !range?.startContainer) return [behindNodeList, nextNodeList];
+
+  // console.log(range);
 
   // Range.startContainer 是只读属性，返回 Range 开始的节点
   const targetNode: any = range.startContainer;
@@ -136,14 +135,14 @@ export const getRangeAroundNode = () => {
 
   // 不是编辑器文本节点  直接返回
   if (!editTextNode) {
-    console.warn("不是一个编辑器文本属性节点");
+    console.warn("getRangeAroundNode:: 不是一个编辑器文本属性节点");
     return [behindNodeList, nextNodeList];
   }
 
   /** 处理节点类型 */
   if (isDOMElement(targetNode)) {
     //  只读属性返回选区开始位置所属的节点
-    const anchorNode = selection.anchorNode;
+    const anchorNode = range.anchorNode;
     /**
      * 不能使用selection.anchorOffset，Safari 浏览器会不准确
      */
@@ -172,7 +171,7 @@ export const getRangeAroundNode = () => {
      * 这种情况呢，需要再找出父节点的前后 兄弟节点
      */
     // console.log(behindNodeList, nextNodeList);
-    if (isEditTextNode(anchorNode)) {
+    if (isEditTextNode(anchorNode as HTMLElement)) {
       const [pNode, nNode] = getDomPreviousOrnextSibling(anchorNode);
       behindNodeList.push(...pNode);
       nextNodeList.push(...nNode);
@@ -182,7 +181,7 @@ export const getRangeAroundNode = () => {
   /** 处理文本类型 */
   if (isDOMText(targetNode)) {
     //  只读属性返回选区开始位置所属的节点
-    const anchorNode = selection.anchorNode;
+    const anchorNode = range.anchorNode;
     /**
      * 不能使用selection.anchorOffset，Safari 浏览器会不准确
      */
@@ -190,14 +189,14 @@ export const getRangeAroundNode = () => {
     const anchorOffset = range.startOffset;
 
     // 拆分文本节点--返回的是一个偏移量之后的文本
-    const afterNode = anchorNode?.splitText(anchorOffset);
+    const afterNode = (anchorNode as any)?.splitText?.(anchorOffset) || null;
     /** 找出当前光标节点的前后兄弟节点 */
     const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode);
 
     behindNodeList = [...pNode];
 
     // 添加后面的节点
-    nextNodeList = [afterNode, ...nNode];
+    nextNodeList = afterNode ? [afterNode, ...nNode] : [...nNode];
 
     // console.log(behindNodeList, nextNodeList, afterNode);
     /**

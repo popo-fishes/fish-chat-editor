@@ -5,24 +5,16 @@
 import { useRef, useState } from "react";
 import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
-import { base, isNode, util, range, editor } from "../../core";
+import { base, isNode, util, range, editor, IRange } from "../../core";
 
-const { createLineElement, getElementAttributeKey } = base;
+const { createLineElement, getElementAttributeKey, createChunkSapnElement, createChunkEmojilement } = base;
 const { isEditElement, isEditTextNode } = isNode;
 const { deleteTextNodeOfEmptyNode, deleteTargetNodeOfBrNode, getNodeOfEditorTextNode } = util;
-const { setRangeNode, amendRangePosition } = range;
+const { setRangeNode, amendRangePosition, getRange } = range;
 const { getText } = editor;
 
 // 备份当前的光标位置
-let currentSelection: {
-  /** Range起始节点 */
-  startContainer?: HTMLElement;
-  /** range.startOffset 是一个只读属性，用于返回一个表示 Range 在 startContainer 中的起始位置的数字 */
-  startOffset: number;
-} = {
-  startContainer: null,
-  startOffset: 0
-};
+let currentRange: IRange = null;
 
 export default function useEditable(props: IEditableProps) {
   const { ...restProps } = props;
@@ -40,7 +32,7 @@ export default function useEditable(props: IEditableProps) {
     // 清空内容
     const curDom = clearEditor();
     // 设置目标
-    setRangePosition(curDom);
+    setRangePosition(curDom, 0, true);
   };
 
   /** @name 清空输入框的值 */
@@ -54,110 +46,87 @@ export default function useEditable(props: IEditableProps) {
     return node;
   };
 
-  /** @name 设置光标的开始位置 */
-  const setRangePosition = (curDom: HTMLElement, startOffset?: number) => {
+  /** @name 设置光标的位置 */
+  const setRangePosition = (curDom: HTMLElement, startOffset: number, isReset?: boolean) => {
     let dom = curDom;
-    if (isEditElement(curDom) && isEditTextNode((curDom as any).firstChild)) {
+    if (isEditElement(curDom) && isEditTextNode((curDom as any).firstChild) && isReset) {
       dom = (curDom as any).firstChild;
     }
     // 光标位置为开头
-    currentSelection = {
+    currentRange = {
       startContainer: dom,
-      startOffset: startOffset || 0
+      startOffset: startOffset || 0,
+      endContainer: dom,
+      endOffset: 0,
+      anchorNode: dom
     };
-  };
-
-  /** @name 备份当前光标位置 */
-  const backupRangePosition = () => {
-    // 用户选择的文本范围或光标的当前位置
-    const selection = window.getSelection();
-    // window.getSelection() 方法返回一个 Selection 对象，表示当前选中的文本范围。如果当前没有选中文本，那么 Selection 对象的 rangeCount 属性将为 0。
-    if (selection && selection.rangeCount > 0) {
-      // 获取当前光标
-      try {
-        // 获取了第一个选区
-        const range = selection?.getRangeAt(0);
-        /**
-         * Range起始节点
-         *    startContainer: range.startContainer as HTMLElement,
-         * range.startOffset 是一个只读属性，用于返回一个表示 Range 在 startContainer 中的起始位置的数字。
-         *    startOffset: range.startOffset
-         */
-        setRangePosition(range.startContainer as HTMLElement, range.startOffset);
-      } catch (err) {
-        console.log(err);
-      }
-    }
   };
 
   /** @name 选择插入表情图片 */
   const insertEmoji = (item: IEmojiType) => {
-    const editorTextNode = getNodeOfEditorTextNode(currentSelection.startContainer);
+    const editorTextNode = getNodeOfEditorTextNode(currentRange.startContainer);
     // 非常重要的逻辑
     if (!editorTextNode) {
       // 修正光标位置
       amendRangePosition(editRef.current, (node) => {
         if (node) {
           // 设置当前光标节点
-          setRangePosition(node);
+          setRangePosition(node, 0);
           insertEmoji(item);
         }
       });
       return;
     }
     // 创建
-    const node = new Image();
-    node.src = item.url;
-    node.setAttribute("style", `width: ${18}px;height:${18}px`);
-    // 插入表情的时候，加上唯一标识。然后再复制（onCopy事件）的时候处理图片。
-    const emojiNodeKey = getElementAttributeKey("emojiNode");
-    node.setAttribute(emojiNodeKey, item.name);
+    const node = createChunkEmojilement(item.url, 18, 18, item.name);
+    const container = createChunkSapnElement(node);
+    editor.insertNode([container], currentRange);
 
-    if (currentSelection.startContainer?.nodeType == 3) {
-      /**
-       * 如果是文本节点，拆分节点
-       * https://developer.mozilla.org/en-US/docs/Web/API/Text/splitText
-       * */
-      if (currentSelection.startContainer instanceof Text) {
-        const afterNode = currentSelection.startContainer?.splitText(currentSelection.startOffset);
-        // 设置光标开始节点为拆分之后节点的父级节点
-        currentSelection.startContainer = afterNode.parentNode as HTMLElement;
-        // 在拆分后的节点之前插入图片
-        currentSelection.startContainer.insertBefore(node, afterNode);
-      } else {
-        console.warn("Start container is not a text node.");
-      }
-    } else {
-      // 非文本节点
-      if (currentSelection.startContainer?.childNodes.length) {
-        // 如果光标开始节点下有子级，获取到光标位置的节点
-        const beforeNode = currentSelection.startContainer.childNodes[currentSelection.startOffset];
-        // 插入
-        currentSelection.startContainer.insertBefore(node, beforeNode);
-      } else {
-        // 如果光标开始节点下没有子级，直接插入
-        currentSelection.startContainer?.appendChild(node);
-      }
-    }
+    // if (currentSelection.startContainer?.nodeType == 3) {
+    //   /**
+    //    * 如果是文本节点，拆分节点
+    //    * https://developer.mozilla.org/en-US/docs/Web/API/Text/splitText
+    //    * */
+    //   if (currentSelection.startContainer instanceof Text) {
+    //     const afterNode = currentSelection.startContainer?.splitText(currentSelection.startOffset);
+    //     // 设置光标开始节点为拆分之后节点的父级节点
+    //     currentSelection.startContainer = afterNode.parentNode as HTMLElement;
+    //     // 在拆分后的节点之前插入图片
+    //     currentSelection.startContainer.insertBefore(node, afterNode);
+    //   } else {
+    //     console.warn("Start container is not a text node.");
+    //   }
+    // } else {
+    //   // 非文本节点
+    //   if (currentSelection.startContainer?.childNodes.length) {
+    //     // 如果光标开始节点下有子级，获取到光标位置的节点
+    //     const beforeNode = currentSelection.startContainer.childNodes[currentSelection.startOffset];
+    //     // 插入
+    //     currentSelection.startContainer.insertBefore(node, beforeNode);
+    //   } else {
+    //     // 如果光标开始节点下没有子级，直接插入
+    //     currentSelection.startContainer?.appendChild(node);
+    //   }
+    // }
 
-    // console.log(editorTextNode.childNodes);
-    // 删除空文本节点，主要是因为splitText分割方法会创建一个空的文本节点
-    deleteTextNodeOfEmptyNode(editorTextNode);
-    // 判断是否存在br
-    deleteTargetNodeOfBrNode(currentSelection.startContainer);
+    // // console.log(editorTextNode.childNodes);
+    // // 删除空文本节点，主要是因为splitText分割方法会创建一个空的文本节点
+    // deleteTextNodeOfEmptyNode(editorTextNode);
+    // // 判断是否存在br
+    // deleteTargetNodeOfBrNode(currentSelection.startContainer);
 
-    // 视图滚动带完全显示出来
-    node.scrollIntoView(false);
-    // 设置焦点
-    setRangeNode(node, "after", async () => {
-      // 重新聚焦输入框
-      editRef?.current?.focus();
-      // 主动触发输入框值变化
-      const val = getText(editRef.current);
-      // 控制提示
-      setTipHolder(val == "");
-      restProps.onChange?.(val);
-    });
+    // // 视图滚动带完全显示出来
+    // node.scrollIntoView(false);
+    // // 设置焦点
+    // setRangeNode(node, "after", async () => {
+    //   // 重新聚焦输入框
+    //   editRef?.current?.focus();
+    //   // 主动触发输入框值变化
+    //   const val = getText(editRef.current);
+    //   // 控制提示
+    //   setTipHolder(val == "");
+    //   restProps.onChange?.(val);
+    // });
   };
 
   return {
@@ -166,7 +135,7 @@ export default function useEditable(props: IEditableProps) {
 
     setTipHolder,
     setRangePosition,
-    backupRangePosition,
+
     clearEditor,
     init,
 
