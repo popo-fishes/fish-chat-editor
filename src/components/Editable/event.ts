@@ -586,20 +586,27 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
    * 主要节点 解决当删除内容刚好删除到了图片节点，导致图片后面没有编辑文本节点了
    * 注意：添加完了还需要，光标设定上去后面的文本节点
    */
-  // if (range && range?.startContainer) {
-  //   // 是一个内联块节点
-  //   const edInlineNode = getNodeOfEditorInlineNode(range?.startContainer as any);
-  //   if (edInlineNode) {
-  //     // 下一个兄弟节点不是一个文本节点
-  //     if (!isEditTextNode(edInlineNode.nextSibling as any)) {
-  //       const textNode = createChunkTextElement();
-  //       dom.toTargetAfterInsertNode(edInlineNode, [textNode]);
-  //       setRangeNode(edInlineNode.parentNode, "after");
-
-  //       console.log(getRange());
-  //     }
-  //   }
-  // }
+  if (range && range?.startContainer) {
+    // 是一个内联块节点
+    const edInlineNode = getNodeOfEditorInlineNode(range?.startContainer as any);
+    if (edInlineNode) {
+      // 下一个兄弟节点不是一个文本节点
+      if (!isEditTextNode(edInlineNode.nextSibling as any)) {
+        // const textNode = createChunkTextElement();
+        // dom.toTargetAfterInsertNode(edInlineNode, [textNode]);
+        // // setRangeNode(edInlineNode.parentNode, "after");
+        // requestAnimationFrame(() => {
+        //   // 主流浏览器
+        //   let selection = window.getSelection();
+        //   let range2 = document.createRange();
+        //   range2.setStart(textNode, 1);
+        //   range2.collapse(true);
+        //   selection.removeAllRanges();
+        //   selection.addRange(range2);
+        //});
+      }
+    }
+  }
 
   console.timeEnd("onKeyUp转换节点耗时");
 };
