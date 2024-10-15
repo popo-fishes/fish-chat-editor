@@ -6,6 +6,9 @@ import { helper } from ".";
 
 export const prefixNmae = "fb-e-";
 
+/** 零宽度非换行空格 */
+export const zeroWidthNoBreakSpace = "\uFEFF";
+
 /** 编辑器标签扩展属性配置表 */
 export const elementAttributeData = {
   /**
@@ -66,10 +69,11 @@ export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
   if (!isEmpty) {
     dom_p.appendChild(createChunkTextElement(false));
   }
+
   return dom_p;
 };
 
-/** @name 创建一个编辑器的行内--块节点 */
+/** @name 创建一个编辑器的行内--块节点，它是不可以编辑的 */
 export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
   const dom_span = document.createElement("span");
   const id = `${prefixNmae}element-` + helper.getRandomWord();
@@ -79,6 +83,9 @@ export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
   // 获取属性2
   const inlineAttribute = getElementAttributeKey("fishInline");
   dom_span.setAttribute(inlineAttribute, "true");
+
+  dom_span.setAttribute("contenteditable", "false");
+
   dom_span.id = id;
   dom_span.appendChild(node);
   return dom_span;
@@ -91,8 +98,9 @@ export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
   const elementAttribute = getElementAttributeKey("fishNode");
   dom_span.setAttribute(elementAttribute, "text");
   dom_span.id = id;
+  // 空文本
   if (isEmpty) {
-    dom_span.innerHTML = "&#xFEFF;";
+    dom_span.innerHTML = zeroWidthNoBreakSpace;
   } else {
     dom_span.innerHTML = "<br>";
   }
@@ -114,7 +122,7 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
   container.classList.add(`${prefixNmae}emoji-container`);
   container.setAttribute("style", `width: ${width}px;height:${height}px`);
-
+  container.setAttribute("contenteditable", "true");
   const node = new Image();
   node.src = url || null;
   const emojiNodeKey = getElementAttributeKey("emojiNode");

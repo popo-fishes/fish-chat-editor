@@ -7,7 +7,7 @@ import React, { useEffect, forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { labelRep } from "../../utils";
 
-import { onKeyUp, handlePasteTransforms, onCopy, onCut, handleLineFeed } from "./event";
+import { onKeyUp, handleInputTransforms, handlePasteTransforms, onCopy, onCut, handleLineFeed } from "./event";
 
 import useEditable from "./use-editable";
 
@@ -123,36 +123,19 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
 
   /** @name 输入框值变化onChange事件 */
   const onEditorInputChange = (e: React.CompositionEvent<HTMLDivElement>) => {
-    // 表示正在输入中文，还没输入完毕，不能执行下面逻辑  ||  必须等到转换完成，才继续执行
-
-    /***
-     * 在谷歌浏览器，输入遇见输入框先清除焦点然后调用focus方法，重新修正光标的位置，会导致，下次输入中文时 onCompositionEnd事件不会触发，导致
-     * isLock变量状态有问题，这里先注释掉，不判断了，直接变化值，就去暴露值
-     */
-    if (isLock || isFlag) return;
-
     // 标记正在输入转换，必须等到转换完成，才继续开启状态
-    // isFlag = true;
-    /**
-     * 有些电脑输入框卡，可能原因就在这里，v2版本先注释掉转换的方法
-       // 转换输入框的内容，比如[爱心]转为表情图片
-      handleInputTransforms(editRef.current, async () => {
-        // 获取输入框的值，主动触发输入框值变化
-        const val = getText(editRef.current);
-        // 控制提示
-        setTipHolder(val == "");
-        // 暴露值
-        restProps.onChange?.(editTransformSpaceText(val));
-        // 必须等到转换完成，才继续开启状态
-        isFlag = false;
-      });
-     */
-    // 获取输入框的值，主动触发输入框值变化
-    const val = getText(editRef.current);
-    // 控制提示
-    setTipHolder(val == "");
-    // 暴露值
-    restProps.onChange?.(editTransformSpaceText(val));
+    isFlag = true;
+    // 转换输入框的内容，比如[爱心]转为表情图片
+    handleInputTransforms(editRef.current, () => {
+      // 获取输入框的值，主动触发输入框值变化
+      const val = getText(editRef.current);
+      // 控制提示
+      setTipHolder(val == "");
+      // 暴露值
+      restProps.onChange?.(editTransformSpaceText(val));
+      // 必须等到转换完成，才继续开启状态
+      isFlag = false;
+    });
   };
 
   /** @name 点击输入框事件（点击时） */
@@ -250,13 +233,18 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     }
 
     /***
+     * bug6：
      * 键盘按下时，如果当前光标节点不是一个文本节点，需要处理
+     * 这种情况往往出现先当前是一个内联块编辑时，已经是最后一个节点了。
      * 解决异常的BUG
      */
-    // const rangeInfo = range.getRange();
-    // if (rangeInfo && rangeInfo.startContainer && !getNodeOfEditorTextNode(rangeInfo.startContainer)) {
-    //   const edInlineNode = getNodeOfEditorInlineNode(rangeInfo?.startContainer as any);
-    //   console.log(edInlineNode);
+    const rangeInfo = range.getRange();
+    console.log(rangeInfo);
+    // 当前节点不是一个文本节点, 按下的键不是删除。就执行
+    // if (rangeInfo && !getNodeOfEditorTextNode(rangeInfo.startContainer) && event.keyCode !== 8) {
+    //   // 在当前光标位置创建一个文本属性节点、
+    //   const edTextNode = base.createChunkTextElement();
+    //   console.log(edTextNode);
     //   event.preventDefault();
     //   event.stopPropagation();
     //   return;

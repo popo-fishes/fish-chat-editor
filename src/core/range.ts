@@ -1,3 +1,4 @@
+import isNumber from "lodash/isNumber";
 import { isNode, util } from ".";
 
 import type { IEditorElement } from "../types";
@@ -15,23 +16,46 @@ export interface IRange {
   anchorNode: Node | null;
 }
 
-/** @name 把光标指向元素节点, 并把位置设置为0，0 */
-export const setCursorNode = (node: HTMLElement) => {
-  if (!node) return;
+/**
+ * @name 设置光标位置
+ * @param referenceNode 参考的节点
+ * @param type 把光标设置在参考节点的前面还是后面
+ * @param startOffset 开始位置算起的偏移量
+ * @param endOffset 结束位置算起的偏移量
+ */
+export const setCursorPosition = (referenceNode: Node, type?: "before" | "after", startOffset?: number, endOffset?: number): Range | null => {
+  if (!isNode.isDOMNode(referenceNode)) return null;
+  // 都不传递直接返回
+  if (!type && !isNumber(startOffset) && !isNumber(endOffset)) return null;
+
   const selection = window.getSelection();
   const range = document.createRange();
-  // 清空当前文档中的选区
+
+  // 适用于文本
+  if (isNumber(startOffset) || isNumber(endOffset)) {
+    // 设置 Range
+    isNumber(startOffset) && range.setStart(referenceNode, startOffset);
+    isNumber(endOffset) && range.setEnd(referenceNode, endOffset);
+  } else {
+    if (type == "after") {
+      range.setStartAfter(referenceNode);
+    }
+    if (type == "before") {
+      range.setStartBefore(referenceNode);
+    }
+  }
+
   selection?.removeAllRanges();
 
-  node?.scrollIntoView(true);
-  // 设置光标位置
-  range.setStart(node, 0);
-  range.setEnd(node, 0);
-  // 添加新光标
   selection?.addRange(range);
+
+  return range;
 };
 
-/** @name 设置当前光标在某个节点的位置 */
+/**
+ * @name 设置当前光标在某个节点的位置
+ * @deprecated 废弃-不会使用了
+ */
 export const setRangeNode = (node: HTMLElement, type: "before" | "after", callBack?: () => void) => {
   if (!node) return callBack?.();
   const selection = getSelection();

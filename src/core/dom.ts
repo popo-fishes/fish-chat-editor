@@ -71,7 +71,9 @@ export const toTargetAfterInsertNode = (targetElement: HTMLElement, childNodes: 
   if (!targetElement || !childNodes || !childNodes?.length) return;
   const fragment = new DocumentFragment();
   for (let i = 0; i < childNodes.length; i++) {
-    fragment.appendChild(childNodes[i]);
+    if (childNodes[i]) {
+      fragment.appendChild(childNodes[i]);
+    }
   }
   const parentNode = targetElement.parentNode;
   /**

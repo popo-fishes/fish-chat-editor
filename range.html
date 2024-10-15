@@ -1,0 +1,126 @@
+<!--
+ * @Date: 2024-10-14 10:02:56
+ * @Description: Modify here please
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Range范围选区的理解</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+          "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        font-variant: tabular-nums;
+      }
+      .edit {
+        width: 100%;
+        min-height: 210px;
+        overflow-x: hidden;
+        border: none;
+        outline: none;
+        background-color: transparent;
+        color: #333;
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      p {
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <p style="margin-bottom: 20px"><a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Range/toString" target="_blank">Range文档</a></p>
+    <div class="edit" contenteditable="true" spellcheck="true" id="edit">
+      <p><span>123456789</span><span style="color: red">高亮啦</span><span>abcde</span></p>
+    </div>
+
+    <script>
+      // Range 接口表示一个包含节点与文本节点的一部分的文档片段
+      var range = document.createRange();
+      // Selection 对象表示用户选择的文本范围或插入符号的当前位置。它代表页面中的文本选区，可能横跨多个元素。文本选区由用户拖拽鼠标经过文字而产生。
+      var s = window.getSelection();
+
+      var editRef = document.getElementById("edit");
+
+      var spanNode1 = document.getElementsByTagName("span").item(0);
+
+      var spanNode2 = document.getElementsByTagName("span").item(1);
+
+      var spanNode3 = document.getElementsByTagName("span").item(2);
+
+      /**
+       * 1： 以其它节点为基准，来设置 Range 的起始点或者终点---  Api
+       */
+      /**
+       * range.setStartBefore(referenceNode)方法用于将一个范围（range）的起始位置设置在指定的参考节点（referenceNode）之前。
+       * 理解为：用于将某个节点的起点位置设置为range对象的起点位置。
+       */
+      // range.setStartBefore(spanNode1);
+
+      /**
+       * range.setStartAfter(referenceNode)方法用于将一个范围（range）的起始点设置在指定的参考节点（referenceNode）之后。
+       * 理解为：用于将某个节点的终点位置设置为range对象的起点位置。
+       */
+      // range.setStartAfter(spanNode1);
+
+      /**
+       * range.setEndBefore(referenceNode)方法用于将一个范围（range）的结束位置设置在指定的参考节点（referenceNode）之前。
+       * 理解为：用于将某个节点的起点位置设置为range对象的终点位置。
+       */
+      // range.setEndBefore(spanNode1);
+
+      /**
+       * range.setEndAfter(referenceNode)方法用于将一个范围（range）的结束位置设置在指定的参考节点（referenceNode）之后
+       * 理解为：表示用于将某个节点的终点位置设置为range对象的终点位置。
+       */
+      // range.setEndAfter(spanNode1);
+
+      /**
+       * 2. 选中节点, 把range的开始和结束
+       */
+      /**
+       * 2.1 此操作将会选中spanNode1节点
+       */
+      // range.setStartBefore(spanNode1);
+      // range.setEndAfter(spanNode1);
+
+      /**
+       * 2.2 此操作将会选中spanNode2节点
+       */
+      // range.setStartAfter(spanNode1);
+      // range.setEndBefore(spanNode3);
+
+      /**
+       * 3. 选中某个节点, 把光标设置为节点的开始或结束位置
+       */
+      // 选中某个节点
+      // range.selectNode(spanNode1);
+      /**
+       * ‌range.collapse()方法可以将某一区域或所选内容折叠到起始位置或结束位置。‌ 折叠后，起始位置和结束位置会相同。
+       * 一个布尔值： true 折叠到 Range 的 start 节点，false 折叠到 end 节点。如果省略，则默认为 false
+       * 要确定 Range 是否已折叠，使用Range.collapsed 属性
+       */
+      // range.collapse(true);
+
+      /**
+       * 4. Range.setStart(startNode, startOffset)方法用于设置一个范围（Range）的起始位置。
+          参数说明：
+          startNode：指定范围起始位置所在的节点，可以是一个元素节点、文本节点等。
+          startOffset：一个整数，表示在startNode中的字符偏移量。如果startNode是一个元素节点，偏移量表示子节点的索引；如果startNode是一个文本节点，偏移量表示字符位置。
+      */
+      // range.setStart(spanNode1.firstChild, 0);
+      // range.setEnd(spanNode1.firstChild, 3);
+      console.log(range);
+
+      s.addRange(range);
+    </script>
+  </body>
+</html>

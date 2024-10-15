@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
-import { base, isNode, util, range, editor, IRange } from "../../core";
+import { base, isNode, util, range, editor, IRange, dom } from "../../core";
 
 const { createLineElement, getElementAttributeKey, createChunkSapnElement, createChunkEmojilement } = base;
 const { isEditElement, isEditTextNode } = isNode;
@@ -40,7 +40,7 @@ export default function useEditable(props: IEditableProps) {
     const node = createLineElement();
     if (!editRef.current) return null;
     editRef.current.innerHTML = ""; // 清空所有子节点
-    editRef.current?.appendChild(node);
+    dom.toTargetAddNodes(editRef.current, [node]);
     // 设置提示
     setTipHolder(true);
     return node;
