@@ -290,9 +290,9 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
 
   /** 处理内容 */
   {
-    // 如果当前光标位置的后面没有节点，那就直接在当前光标文本节点后面新加节点
-    if (nextNodeList.length == 0) {
-      toTargetAfterInsertNodes(rowElementNode, nodes);
+    // 当前行编辑节点没有节点
+    if (behindNodeList.length == 0 && nextNodeList.length == 0) {
+      dom.toTargetAddNodes(rowElementNode, nodes);
     }
 
     // 获取焦点节点文本是空文本

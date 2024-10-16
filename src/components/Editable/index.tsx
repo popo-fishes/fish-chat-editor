@@ -185,7 +185,6 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
    */
   const onEditorKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const keyCode = event.keyCode;
-    const rangeInfo = range.getRange();
 
     // ctrl + Enter换行
     if (event.ctrlKey && keyCode === 13) {
@@ -273,7 +272,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           onCut={onCut}
           onKeyDown={onEditorKeydown}
           onKeyUp={(e) => {
-            // onKeyUp(e, editRef.current);
+            onKeyUp(e, editRef.current);
           }}
           onCompositionStart={(e) => {
             // 标记正在输入中文

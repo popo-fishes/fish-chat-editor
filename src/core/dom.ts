@@ -4,7 +4,7 @@
  */
 import { isNode, util } from ".";
 import type { IRange } from "./range";
-const { isDOMText, isDOMElement, isDOMNode, isEditTextNode, isNodeNotTtxt } = isNode;
+const { isDOMText, isDOMElement, isDOMNode, isEditElement, isNodeNotTtxt } = isNode;
 
 /**
  * @name 获取当前节点的 前面全部兄弟节点 和后面全部兄弟节点
@@ -126,8 +126,6 @@ export const getRangeAroundNode = (range: IRange) => {
   // 必须存在光标
   if (!range || !range?.startContainer) return [behindNodeList, nextNodeList];
 
-  // console.log(range);
-
   // Range.startContainer 是只读属性，返回 Range 开始的节点
   const targetNode: any = range.startContainer;
 
@@ -168,11 +166,11 @@ export const getRangeAroundNode = (range: IRange) => {
       }
     }
     /**
-     * 如果当前光标节点是一个编辑文本节点
+     * 如果当前光标节点是一个编辑块节点
      * 这种情况呢，需要再找出父节点的前后 兄弟节点
      */
     // console.log(behindNodeList, nextNodeList);
-    if (isEditTextNode(anchorNode as HTMLElement)) {
+    if (!isEditElement(anchorNode as HTMLElement)) {
       const [pNode, nNode] = getDomPreviousOrnextSibling(anchorNode);
       behindNodeList.push(...pNode);
       nextNodeList.push(...nNode);
@@ -206,7 +204,7 @@ export const getRangeAroundNode = (range: IRange) => {
      */
     const parentElement = targetNode.parentNode;
 
-    if (isEditTextNode(parentElement)) {
+    if (!isEditElement(parentElement)) {
       const [pNode, nNode] = getDomPreviousOrnextSibling(parentElement);
       behindNodeList.push(...pNode);
       nextNodeList.push(...nNode);

@@ -83,7 +83,7 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   const container = document.createElement("span");
   container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
   container.classList.add(`${prefixNmae}emoji-container`);
-  container.setAttribute("style", `width: ${width}px;height:${height}px`);
+  container.setAttribute("style", `width:${width}px;height:${height}px`);
 
   container.setAttribute("contenteditable", "false");
 

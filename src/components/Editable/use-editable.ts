@@ -65,7 +65,6 @@ export default function useEditable(props: IEditableProps) {
   /** @name 选择插入表情图片 */
   const insertEmoji = (item: IEmojiType) => {
     const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
-    // 非常重要的逻辑
     if (!editorElementNode) {
       // 修正光标位置
       amendRangePosition(editRef.current, (node) => {
