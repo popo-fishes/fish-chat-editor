@@ -176,7 +176,6 @@ export const deleteTextNodeOfEmptyNode = (node: HTMLElement): boolean => {
 
   for (const cld of nodes) {
     if (isNodeNotTtxt(cld)) {
-      console.log(cld);
       (cld as any)?.remove();
       num++;
     }

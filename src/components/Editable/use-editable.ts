@@ -81,52 +81,6 @@ export default function useEditable(props: IEditableProps) {
     const node = createChunkEmojilement(item.url, 18, 18, item.name);
     const container = createChunkSapnElement(node);
     editor.insertNode([container], currentRange);
-
-    // if (currentSelection.startContainer?.nodeType == 3) {
-    //   /**
-    //    * 如果是文本节点，拆分节点
-    //    * https://developer.mozilla.org/en-US/docs/Web/API/Text/splitText
-    //    * */
-    //   if (currentSelection.startContainer instanceof Text) {
-    //     const afterNode = currentSelection.startContainer?.splitText(currentSelection.startOffset);
-    //     // 设置光标开始节点为拆分之后节点的父级节点
-    //     currentSelection.startContainer = afterNode.parentNode as HTMLElement;
-    //     // 在拆分后的节点之前插入图片
-    //     currentSelection.startContainer.insertBefore(node, afterNode);
-    //   } else {
-    //     console.warn("Start container is not a text node.");
-    //   }
-    // } else {
-    //   // 非文本节点
-    //   if (currentSelection.startContainer?.childNodes.length) {
-    //     // 如果光标开始节点下有子级，获取到光标位置的节点
-    //     const beforeNode = currentSelection.startContainer.childNodes[currentSelection.startOffset];
-    //     // 插入
-    //     currentSelection.startContainer.insertBefore(node, beforeNode);
-    //   } else {
-    //     // 如果光标开始节点下没有子级，直接插入
-    //     currentSelection.startContainer?.appendChild(node);
-    //   }
-    // }
-
-    // // console.log(editorTextNode.childNodes);
-    // // 删除空文本节点，主要是因为splitText分割方法会创建一个空的文本节点
-    // deleteTextNodeOfEmptyNode(editorTextNode);
-    // // 判断是否存在br
-    // deleteTargetNodeOfBrNode(currentSelection.startContainer);
-
-    // // 视图滚动带完全显示出来
-    // node.scrollIntoView(false);
-    // // 设置焦点
-    // setRangeNode(node, "after", async () => {
-    //   // 重新聚焦输入框
-    //   editRef?.current?.focus();
-    //   // 主动触发输入框值变化
-    //   const val = getText(editRef.current);
-    //   // 控制提示
-    //   setTipHolder(val == "");
-    //   restProps.onChange?.(val);
-    // });
   };
 
   return {

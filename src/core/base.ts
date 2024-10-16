@@ -58,15 +58,21 @@ export const getElementAttributeDatasetName = (name: string) => {
   return elementAttributeData[name]?.value || "";
 };
 
-/** @name 创建一个编辑器--行节点 */
-export const createLineElement = (isEmpty = false): HTMLParagraphElement => {
+/**
+ * @name 创建一个编辑器--行节点
+ * @param isNullNode 默认为false, true代表不需要子节点，直接返回一个空的p标签
+ * @returns
+ */
+export const createLineElement = (isNullNode = false): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
   const id = `${prefixNmae}element-` + helper.getRandomWord();
   const key = getElementAttributeKey("fishNode");
   dom_p.setAttribute(key, "element");
   dom_p.id = id;
-  // 创建一个空的p标签
-  if (!isEmpty) {
+  /**
+   * 是否需要创建子节点，代表创建一个换行文本标签
+   */
+  if (!isNullNode) {
     dom_p.appendChild(createChunkTextElement(false));
   }
 
@@ -122,7 +128,7 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
   container.classList.add(`${prefixNmae}emoji-container`);
   container.setAttribute("style", `width: ${width}px;height:${height}px`);
-  container.setAttribute("contenteditable", "true");
+
   const node = new Image();
   node.src = url || null;
   const emojiNodeKey = getElementAttributeKey("emojiNode");

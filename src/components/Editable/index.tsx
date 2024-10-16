@@ -7,18 +7,15 @@ import React, { useEffect, forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { labelRep } from "../../utils";
 
-import { onKeyUp, handleInputTransforms, handlePasteTransforms, onCopy, onCut, handleLineFeed } from "./event";
+import { onKeyUp, handlePasteTransforms, onCopy, onCut, handleLineFeed } from "./event";
 
 import useEditable from "./use-editable";
 
-import { isNode, range, editor, util, base, transforms } from "../../core";
+import { isNode, range, editor, util, base, transforms, setCursorPosition } from "../../core";
 
-const { isEmptyEditNode, isDOMElement, isImgNode } = isNode;
+const { isEmptyEditNode, isDOMElement, isImgNode, isEditElement, isEditTextNode } = isNode;
 
 const { findNodeWithImg, getNodeOfEditorInlineNode, getNodeOfEditorTextNode } = util;
-
-const { getText, setText } = editor;
-const { editTransformSpaceText } = transforms;
 
 // 输入框值变化时，我需要对内容进行转换，必须等转换结束才可以在执行，用来判断的
 let isFlag = false;
@@ -67,20 +64,20 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       ({
         insertEmoji: (item: IEmojiType) => insertEmoji(item),
         getValue: () => {
-          const editValue = getText(editRef.current);
+          const editValue = editor.getText(editRef.current);
           // 返回输入框信息
-          return editTransformSpaceText(editValue);
+          return transforms.editTransformSpaceText(editValue);
         },
         setValue: (val) => {
           if (!val || !editRef.current) return;
           // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 当前光标的节点元素的值
           const repContent = labelRep(val);
-          setText(editRef.current, repContent, () => {
-            const val = getText(editRef.current);
+          editor.setText(editRef.current, repContent, () => {
+            const val = editor.getText(editRef.current);
             // 控制提示
             setTipHolder(val == "");
             // 返回输入框信息
-            restProps.onChange?.(editTransformSpaceText(val));
+            restProps.onChange?.(transforms.editTransformSpaceText(val));
           });
         },
         clear: () => {
@@ -123,19 +120,12 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
 
   /** @name 输入框值变化onChange事件 */
   const onEditorInputChange = (e: React.CompositionEvent<HTMLDivElement>) => {
-    // 标记正在输入转换，必须等到转换完成，才继续开启状态
-    isFlag = true;
-    // 转换输入框的内容，比如[爱心]转为表情图片
-    handleInputTransforms(editRef.current, () => {
-      // 获取输入框的值，主动触发输入框值变化
-      const val = getText(editRef.current);
-      // 控制提示
-      setTipHolder(val == "");
-      // 暴露值
-      restProps.onChange?.(editTransformSpaceText(val));
-      // 必须等到转换完成，才继续开启状态
-      isFlag = false;
-    });
+    // 获取输入框的值，主动触发输入框值变化
+    const val = editor.getText(editRef.current);
+    // 控制提示
+    setTipHolder(val == "");
+    // 暴露值
+    restProps.onChange?.(transforms.editTransformSpaceText(val));
   };
 
   /** @name 点击输入框事件（点击时） */
@@ -232,23 +222,29 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       }
     }
 
-    /***
-     * bug6：
-     * 键盘按下时，如果当前光标节点不是一个文本节点，需要处理
-     * 这种情况往往出现先当前是一个内联块编辑时，已经是最后一个节点了。
-     * 解决异常的BUG
+    /**
+     * bug6:
+     * 键盘按下时，应该判断当前光标节点是否为行编辑节点，如果是就在光标节点位置插入一个文本节点
+     * 步骤，先选中带有内联节点和文本节点，然后输入值，会导致出现图2
      */
     const rangeInfo = range.getRange();
-    console.log(rangeInfo);
-    // 当前节点不是一个文本节点, 按下的键不是删除。就执行
-    // if (rangeInfo && !getNodeOfEditorTextNode(rangeInfo.startContainer) && event.keyCode !== 8) {
-    //   // 在当前光标位置创建一个文本属性节点、
-    //   const edTextNode = base.createChunkTextElement();
-    //   console.log(edTextNode);
-    //   event.preventDefault();
-    //   event.stopPropagation();
-    //   return;
-    // }
+    console.log(rangeInfo.startContainer);
+    // 当前光标是一个行编辑节点
+    if (isEditElement(rangeInfo.startContainer as any)) {
+      const parentNode = rangeInfo.startContainer;
+      // 第一个节点不是一个文本节点才去添加
+      if (!isEditTextNode(parentNode.firstChild as any)) {
+        // 直接在开始位置插入一个文本节点
+        if (rangeInfo.startOffset == 0 && rangeInfo.endOffset == 0) {
+          const parentNode = rangeInfo.startContainer;
+          const textNode = base.createChunkTextElement();
+          // 在父节点的开始位置插入新节点
+          parentNode.insertBefore(textNode, parentNode.firstChild);
+          // 这里添加改变光标，会导致输入拼音问题
+          // range.setCursorPosition(textNode.firstChild, "after");
+        }
+      }
+    }
   };
 
   /**
@@ -258,11 +254,11 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     e.preventDefault();
     handlePasteTransforms(e, editRef.current, () => {
       // 获取输入框的值，主动触发输入框值变化
-      const val = getText(editRef.current);
+      const val = editor.getText(editRef.current);
       // 控制提示
       setTipHolder(val == "");
       // 暴露值
-      restProps.onChange?.(editTransformSpaceText(val));
+      restProps.onChange?.(transforms.editTransformSpaceText(val));
     });
   };
 

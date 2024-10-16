@@ -78,7 +78,6 @@ export const getHtml = (editNode: IEditorElement): string => {
 
   contents.ownerDocument.body.removeChild(odiv);
 
-  console.log(contentResult);
   return contentResult.join("\n");
 };
 
@@ -281,7 +280,7 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
 
   console.time("editable插入节点耗时");
 
-  console.log(range);
+  // console.log(range);
 
   // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
   const [behindNodeList, nextNodeList] = getRangeAroundNode(range);
