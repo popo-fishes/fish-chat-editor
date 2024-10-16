@@ -377,7 +377,7 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
   const range = getRange();
   console.time("onKeyUp转换节点耗时");
 
-  // 是否只有一个br节点
+  // 子节点是否只有一个br节点
   function hasParentOnlyBr(node) {
     if (node) {
       if (node.childNodes && node.childNodes?.length == 1) {
@@ -474,11 +474,12 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
 
   /**
    * bug2:
-   * 判断editNode是否只剩下一个节点，且不存在文本节点, 那就添加一个子节点
-   * 主要解决删除内容把文本节点全部删完了
-   * 兜底处理
+   * 判断editNode的第一个子节点是否是行编辑节点，如果不是, 那就添加行编辑节点
+   * 主要解决骚操作删除内容时，把editNode下面的全部行编辑节点删完了
+   * 兜底处理,防止骚操作
    */
   if (!isEditElement(editNode.firstChild as any)) {
+    // 创建一个编辑器--行节点
     const lineDom = base.createLineElement(false);
     dom.toTargetAddNodes(editNode as any, [base.createLineElement(false)]);
     // 设置光标
@@ -489,8 +490,8 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
 
   /**
    * bug3:
-   * 判断光标的行编辑节点是否是一个空节点，且不存在文本节点, 那就添加一个子节点
-   * 主要解决删除内容把行编辑节点删完了，然后导致行编辑节点没有文本节点
+   * 主要解决删除行编辑节点时，把行编辑内容删完了，然后导致行编辑节点没有文本节点
+   * 1：这种情况通常出现在换行后，比如对第二行输入值了，然后删除,当删除到了第一个节点没内容了就会被搞一个空节点。
    */
   if (range && range?.startContainer) {
     // 光标节点不是一个文本节点 && 是一个编辑器块属性节点  && 只有一个子节点且还是一个br标签
@@ -540,8 +541,8 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
    * 那么需要再内联节点前面插入一个文本节点。
    */
   if (range && range?.startContainer) {
-    // 当前光标是一个行编辑节点
-    if (isEditElement(range.startContainer as any)) {
+    // 当前光标是一个行编辑节点, 并且退格键不做处理，因为退格键它要执行删除，不能去拦截它的默认行为。
+    if (isEditElement(range.startContainer as any) && event.key !== "Backspace") {
       const allEditNodes = range.startContainer.childNodes;
       if (allEditNodes.length > 0) {
         // 获取当前光标位置之前的节点

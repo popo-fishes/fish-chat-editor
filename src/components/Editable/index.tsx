@@ -185,6 +185,8 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
    */
   const onEditorKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const keyCode = event.keyCode;
+    const rangeInfo = range.getRange();
+
     // ctrl + Enter换行
     if (event.ctrlKey && keyCode === 13) {
       event.preventDefault();
@@ -221,18 +223,48 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
         return;
       }
     }
-
     /**
      * bug6:
      * 键盘按下时，应该判断当前光标节点是否为行编辑节点，如果是就在光标节点位置插入一个文本节点
      * 步骤，先选中带有内联节点和文本节点，然后输入值，会导致出现图2
+     * 1: 它的出现通常在先选中带有内联节点和文本节点，然后输入值
+     * 2：这种情况通常当前光标是在一个文本节点节点。他需要插入文本节点。
      */
-    const rangeInfo = range.getRange();
-    console.log(rangeInfo.startContainer);
+    console.log(rangeInfo.startContainer, rangeInfo.startContainer.parentNode.parentNode, "-------");
+    // 当前光标是一个行编辑节点
+    // if (isEditElement(rangeInfo.startContainer as any)) {
+    //   const parentNode = rangeInfo.startContainer;
+    //   /**
+    //    * 第一个节点不是一个文本节点才去添加
+    //    * 防止已经插入了还可以继续插入
+    //    */
+    //   if (!isEditTextNode(parentNode.firstChild as any)) {
+    //     // 直接在开始位置插入一个文本节点
+    //     if (rangeInfo.startOffset == 0 && rangeInfo.endOffset == 0) {
+    //       const parentNode = rangeInfo.startContainer;
+    //       const textNode = base.createChunkTextElement();
+    //       // 在父节点的开始位置插入新节点
+    //       parentNode.insertBefore(textNode, parentNode.firstChild);
+    //       // 这里添加改变光标，会导致输入拼音问题
+    //       // range.setCursorPosition(textNode.firstChild, "after");
+    //     }
+    //   }
+    // }
+
+    /**
+     * bug7:
+     * 键盘按下时，应该判断当前光标节点是否为行编辑节点，如果是就在光标节点位置插入一个文本节点
+     * 保证输入值一定在一个文本节点里面
+     * 1: 这种情况通常当前光标是在一个行编辑节点。他需要插入文本节点。
+     * 2：它和bug6是不一样的场景
+     */
     // 当前光标是一个行编辑节点
     if (isEditElement(rangeInfo.startContainer as any)) {
       const parentNode = rangeInfo.startContainer;
-      // 第一个节点不是一个文本节点才去添加
+      /**
+       * 第一个节点不是一个文本节点才去添加
+       * 防止已经插入了还可以继续插入
+       */
       if (!isEditTextNode(parentNode.firstChild as any)) {
         // 直接在开始位置插入一个文本节点
         if (rangeInfo.startOffset == 0 && rangeInfo.endOffset == 0) {
