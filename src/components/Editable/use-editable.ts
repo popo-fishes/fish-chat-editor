@@ -7,9 +7,9 @@ import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
 import { base, isNode, util, range, editor, IRange, dom } from "../../core";
 
-const { createLineElement, getElementAttributeKey, createChunkSapnElement, createChunkEmojilement } = base;
+const { createLineElement, getElementAttributeKey, createChunkEmojilement } = base;
 const { isEditElement, isEditTextNode } = isNode;
-const { deleteTextNodeOfEmptyNode, deleteTargetNodeOfBrNode, getNodeOfEditorTextNode } = util;
+const { deleteTextNodeOfEmptyNode, deleteTargetNodeOfBrNode } = util;
 const { setRangeNode, amendRangePosition, getRange } = range;
 const { getText } = editor;
 
@@ -49,7 +49,7 @@ export default function useEditable(props: IEditableProps) {
   /** @name 设置光标的位置 */
   const setRangePosition = (curDom: HTMLElement, startOffset: number, isReset?: boolean) => {
     let dom = curDom;
-    if (isEditElement(curDom) && isEditTextNode((curDom as any).firstChild) && isReset) {
+    if (isNode.isEditElement(curDom) && isReset) {
       dom = (curDom as any).firstChild;
     }
     // 光标位置为开头
@@ -64,9 +64,9 @@ export default function useEditable(props: IEditableProps) {
 
   /** @name 选择插入表情图片 */
   const insertEmoji = (item: IEmojiType) => {
-    const editorTextNode = getNodeOfEditorTextNode(currentRange.startContainer);
+    const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
     // 非常重要的逻辑
-    if (!editorTextNode) {
+    if (!editorElementNode) {
       // 修正光标位置
       amendRangePosition(editRef.current, (node) => {
         if (node) {
@@ -78,9 +78,8 @@ export default function useEditable(props: IEditableProps) {
       return;
     }
     // 创建
-    const node = createChunkEmojilement(item.url, 18, 18, item.name);
-    const container = createChunkSapnElement(node);
-    editor.insertNode([container], currentRange);
+    const node = base.createChunkEmojilement(item.url, 18, 18, item.name);
+    editor.insertNode([node], currentRange);
   };
 
   return {

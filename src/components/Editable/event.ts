@@ -16,7 +16,7 @@ const { setRangeNode, setCursorPosition, amendRangeLastNode, amendRangePosition,
 const { isFishInline, isEditTextNode, isEmojiImgNode, isDOMText, isEmptyEditNode, isEditElement } = isNode;
 
 const {
-  getNodeOfEditorRowNode,
+  getNodeOfEditorElementNode,
   getNodeOfEditorInlineNode,
   getNodeOfEditorTextNode,
   getNodeOfChildTextNode,
@@ -130,7 +130,6 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
   console.time("editable插入换行耗时");
-  console.log(behindNodeList, nextNodeList);
 
   /**
    * 创建换行节点
@@ -151,88 +150,25 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
 
   // 存在换行元素时
   if (clNodes.length) {
-    // 标记顺序
-    const markSortNodes: HTMLElement[][] = [];
-    // 标记块节点的开始索引
-    const blockindex = clNodes.findIndex((item) => isEditTextNode(item) || isFishInline(item));
+    dom.toTargetAddNodes(lineDom, clNodes, false);
 
-    // 代表没有块节点，全部是个体
-    if (blockindex == -1) {
-      markSortNodes.push(clNodes);
-    } else {
-      // 截取前面的个体, 组合为一个数组
-      if (blockindex == 0) {
-        const restArr = clNodes.slice(blockindex);
-        // 变二维插入
-        for (const cld of restArr) {
-          markSortNodes.push([cld]);
-        }
-      } else {
-        const slicedArr = clNodes.slice(0, blockindex);
-        const restArr = clNodes.slice(blockindex);
-        markSortNodes.push(slicedArr);
-        // 变二维插入
-        for (const cld of restArr) {
-          markSortNodes.push([cld]);
-        }
-      }
-    }
-    // console.log(markSortNodes, clNodes);1
-    // 遍历
-    for (let i = 0; i < markSortNodes.length; i++) {
-      /**
-       * 如果二维数组里面存在块节点，代表是块。那么渲染的方式是不一样的。
-       * isChunk ? 块 ： 代表是个体(文本属性节点下面的元素，代表个体)
-       */
-      const isChunk = markSortNodes[i].some((item) => isEditTextNode(item) || isFishInline(item));
-      const isInlineChunk = markSortNodes[i].some((item) => isFishInline(item));
-
-      // 如果第一个节点就是一个内联块节点，那么就在插入节点之前先插入一个文本节点
-      if (i == 0 && isInlineChunk) {
-        // 不是一个文本节点，这种情况出现在换行时，是从一个内联节点开始的。
-        // 创建一个文本节点
-        const textNode = createChunkTextElement();
-        dom.toTargetAddNodes(lineDom, [textNode], false);
-      }
-
-      if (isChunk) {
-        if (markSortNodes[i]?.[0]) {
-          dom.toTargetAddNodes(lineDom, [markSortNodes[i]?.[0]], false);
-        }
-      } else {
-        // 代表是个体(文本属性节点下面的元素，代表个体)
-        const textNode = createChunkTextElement();
-        const nodes = markSortNodes[i].map((item) => item);
-        dom.toTargetAddNodes(textNode, nodes);
-        dom.toTargetAddNodes(lineDom, [textNode], false);
-      }
-    }
-
-    // !!! 删除原始节点中的换行部分的节点
     dom.removeNodes(nextNodeList);
   } else {
-    // 不存在换行节点时，就把行添加一个编辑文本节点
-    const textNode = createChunkTextElement(false);
-    dom.toTargetAddNodes(lineDom, [textNode]);
+    const br = document.createElement("br");
+    dom.toTargetAddNodes(lineDom, [br]);
   }
 
-  // 如果前面的节点不存在，后面的接口存在； 代表换行后，前面的节点是没有内容的，需要进行添加一个编辑文本节点
+  // 如果前面的节点不存在，后面的节点存在； 代表换行后，前面的节点是没有内容的
   if (behindNodeList.length == 0 && nextNodeList.length) {
-    // 创建文本节点
-    const textNode = createChunkTextElement(false);
-    dom.toTargetAddNodes(rowElementNode, [textNode]);
+    const br = document.createElement("br");
+    dom.toTargetAddNodes(rowElementNode, [br]);
   }
 
-  // console.log(dom.cloneNodes([lineDom])[0].childNodes);
-
-  dom.toTargetAfterInsertNode(rowElementNode, [lineDom]);
-
-  // 获取换行节点的第一个文本属性节点
-  const cursorNode = getNodeOfChildTextNode(lineDom);
+  dom.toTargetAfterInsertNodes(rowElementNode, [lineDom]);
 
   // 第一个节点是一个文本节点
-  if (isEditTextNode(cursorNode)) {
-    setCursorPosition(cursorNode.firstChild, "before");
+  if (lineDom.firstChild) {
+    setCursorPosition(lineDom.firstChild, "before");
     lineDom?.scrollIntoView(true);
 
     console.timeEnd("editable插入换行耗时");
@@ -241,6 +177,8 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
     callBack?.(true);
     return;
   }
+
+  console.timeEnd("editable插入换行耗时");
 
   callBack?.(false);
 };
@@ -428,7 +366,7 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
    */
   if (range && range?.startContainer) {
     // 获取行编辑节点
-    const editorRowNode = getNodeOfEditorRowNode(range.startContainer);
+    const editorRowNode = util.getNodeOfEditorElementNode(range.startContainer);
 
     if (editorRowNode && isNodeWithNotTextNode(editorRowNode)) {
       // console.log(editorRowNode.childNodes);

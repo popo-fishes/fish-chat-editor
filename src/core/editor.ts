@@ -270,40 +270,20 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
     return;
   }
 
-  const targetNode: any = getNodeOfEditorTextNode(range.startContainer);
+  const rowElementNode: any = util.getNodeOfEditorElementNode(range.startContainer);
 
-  if (!targetNode) {
-    console.warn("insertNode： range没有文本属性节点");
+  if (!rowElementNode) {
+    console.warn("无编辑行节点，不可插入");
     callBack?.(false);
     return;
   }
 
   console.time("editable插入节点耗时");
 
-  // console.log(range);
-
   // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
   const [behindNodeList, nextNodeList] = getRangeAroundNode(range);
 
-  /**
-   * 组装节点
-   * 遍历，如果节点是行内块属性节点，还需要在每个块节点后面添加一个文本节点（来满足后续文本输入）
-   */
-  const result = [];
-  {
-    const copyNodes: HTMLElement[] = Array.from(nodes);
-    for (let i = 0; i < copyNodes.length; i++) {
-      const node = copyNodes[i];
-      // 如果是内联块属性节点
-      if (isFishInline(node)) {
-        // 还需要在每个块节点后面添加一个文本节点（来满足后续文本输入）
-        const textNode = createChunkTextElement();
-        result.push(...[node, textNode]);
-      }
-    }
-  }
-
-  if (result.length == 0) {
+  if (nodes.length == 0) {
     callBack(false);
     return;
   }
@@ -312,7 +292,7 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
   {
     // 如果当前光标位置的后面没有节点，那就直接在当前光标文本节点后面新加节点
     if (nextNodeList.length == 0) {
-      toTargetAfterInsertNodes(targetNode, result);
+      toTargetAfterInsertNodes(rowElementNode, nodes);
     }
 
     // 获取焦点节点文本是空文本

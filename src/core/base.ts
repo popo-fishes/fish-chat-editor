@@ -85,6 +85,8 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   container.classList.add(`${prefixNmae}emoji-container`);
   container.setAttribute("style", `width: ${width}px;height:${height}px`);
 
+  container.setAttribute("contenteditable", "false");
+
   const node = new Image();
   node.src = url || null;
   const emojiNodeKey = getElementAttributeKey("emojiNode");

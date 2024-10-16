@@ -128,10 +128,6 @@ export const isFishInline = (node: HTMLElement): boolean => {
 /** @name 判断一个节点是空文本节点 */
 export const isNodeNotTtxt = (node: HTMLElement): boolean => {
   if (isDOMText(node)) {
-    // 这种情况主要是编辑器自主创建节点时会存在创建一个零宽度非换行空格。
-    // const tranText = node.nodeValue.replace(new RegExp(zeroWidthNoBreakSpace, "g"), "");
-
-    // if (node?.nodeValue == "" || tranText == "") {
     if (node?.nodeValue == "") {
       return true;
     }

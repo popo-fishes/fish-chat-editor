@@ -230,8 +230,5 @@ export const getRangeAroundNode = (range: IRange) => {
     return node.nodeName !== "BR" && !isNodeNotTtxt(node);
   });
 
-  // console.log("原始编辑器文本节点中的子节点：", editTextNode?.childNodes)
-  // console.log(tempPrev, tempNext);
-
   return [tempPrev, tempNext];
 };
