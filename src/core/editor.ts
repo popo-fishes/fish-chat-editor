@@ -10,7 +10,7 @@ import type { IRange } from "./range";
 import type { IEditorElement } from "../types";
 
 const { createLineElement, createChunkTextElement } = base;
-const { getRangeAroundNode, toTargetAddNodes, removeNodes, cloneNodes, toTargetAfterInsertNode } = dom;
+const { getRangeAroundNode, toTargetAddNodes, removeNodes, cloneNodes, toTargetAfterInsertNodes } = dom;
 const { isDOMElement, isDOMNode, isFishInline } = isNode;
 const { findNodetWithElement, getNodeOfEditorTextNode } = util;
 const { setRangeNode, amendRangeLastNode } = range;
@@ -188,7 +188,7 @@ export const insertText = (content: string, callBack?: () => void) => {
         if (firstContent !== "\n" && firstContent !== "") {
           const prevLast = behindNodeList[0];
           if (prevLast) {
-            toTargetAfterInsertNode(prevLast, cloneNodes(firstNode.childNodes));
+            toTargetAfterInsertNodes(prevLast, cloneNodes(firstNode.childNodes));
           } else {
             /**
              * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后插入节点
@@ -312,7 +312,7 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
   {
     // 如果当前光标位置的后面没有节点，那就直接在当前光标文本节点后面新加节点
     if (nextNodeList.length == 0) {
-      toTargetAfterInsertNode(targetNode, result);
+      toTargetAfterInsertNodes(targetNode, result);
     }
 
     // 获取焦点节点文本是空文本
@@ -327,7 +327,7 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
     //   // 1. 在当前光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
     //   const prevLast = behindNodeList[0];
     //   if (prevLast) {
-    //     toTargetAfterInsertNode(prevLast, nodes);
+    //     toTargetAfterInsertNodes(prevLast, nodes);
     //   } else {
     //     /**
     //      * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后在它的前面插入节点

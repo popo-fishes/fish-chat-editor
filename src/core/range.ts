@@ -1,5 +1,5 @@
 import isNumber from "lodash/isNumber";
-import { isNode, util } from ".";
+import { isNode } from ".";
 
 import type { IEditorElement } from "../types";
 
@@ -82,38 +82,6 @@ export const setRangeNode = (node: HTMLElement, type: "before" | "after", callBa
   }
 };
 
-/** @name 修正光标的位置，把光标指向到富文本节点的最后一个字符上 */
-export const amendRangeLastNode = (editNode: IEditorElement, callBack?: (node?: HTMLElement) => void) => {
-  // 获取页面的选择区域
-  const selection: any = window.getSelection();
-  if (!editNode || !editNode.childNodes) return callBack?.();
-
-  let lastElement = null;
-
-  if (selection && selection.rangeCount >= 0) {
-    lastElement = editNode.childNodes[editNode.childNodes.length - 1];
-
-    if (!lastElement) {
-      console.warn("富文本不存在节点，请排查问题");
-      callBack?.();
-      return;
-    }
-
-    // 创建 Range 对象
-    const range = document.createRange();
-
-    // 将 Range 对象的起始位置和结束位置都设置为节点的尾部
-    range.selectNodeContents(lastElement);
-    // 参数一个布尔值： true 折叠到 Range 的 start 节点，false 折叠到 end 节点。如果省略，则默认为 false
-    range.collapse(false);
-
-    // 将 Range 对象添加到 Selection 中
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-  return callBack?.(lastElement);
-};
-
 /**
  * @name 修正光标的位置
  */
@@ -130,21 +98,21 @@ export const amendRangePosition = (editNode: IEditorElement, callBack?: (node?: 
   }
   // 是一个节点块
   if (isNode.isEditElement(lastElement as HTMLElement)) {
-    const dom = util.getElementBelowTextNode(lastElement as HTMLElement);
+    const referenceElement = lastElement.firstChild;
 
-    if (dom) {
+    if (referenceElement) {
       // 创建 Range 对象
       const range = document.createRange();
       // 将 Range 对象的起始位置和结束位置都设置为节点的尾部
-      range.selectNodeContents(dom);
+      range.selectNodeContents(referenceElement);
       // 参数一个布尔值： true 折叠到 Range 的 start 节点，false 折叠到 end 节点。如果省略，则默认为 false
       range.collapse(false);
 
       // 将 Range 对象添加到 Selection 中
       selection.removeAllRanges();
-      selection.addRange(range);
+      selection.addRange(referenceElement);
 
-      callBack?.(dom);
+      callBack?.(referenceElement as HTMLElement);
       return;
     }
   }

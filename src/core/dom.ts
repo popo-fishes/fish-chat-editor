@@ -5,7 +5,6 @@
 import { isNode, util } from ".";
 import type { IRange } from "./range";
 const { isDOMText, isDOMElement, isDOMNode, isEditTextNode, isNodeNotTtxt } = isNode;
-const { getNodeOfEditorTextNode } = util;
 
 /**
  * @name 获取当前节点的 前面全部兄弟节点 和后面全部兄弟节点
@@ -67,7 +66,7 @@ export const removeNodes = (childNodes: HTMLElement[]) => {
  * @name 传入目标节点，在目标节点之后插入多个节点
  * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
  */
-export const toTargetAfterInsertNode = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
+export const toTargetAfterInsertNodes = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
   if (!targetElement || !childNodes || !childNodes?.length) return;
   const fragment = new DocumentFragment();
   for (let i = 0; i < childNodes.length; i++) {
@@ -91,7 +90,7 @@ export const toTargetAfterInsertNode = (targetElement: HTMLElement, childNodes: 
 };
 
 /**
- * @name 给目标节点，添加子节点集合
+ * @name 传入目标节点，给目标添加多个子节点
  * @param targetNode 目标节点
  * @param childNodes 节点集合
  * @param clear 是否需要清空内容，在添加节点
@@ -133,11 +132,11 @@ export const getRangeAroundNode = (range: IRange) => {
   const targetNode: any = range.startContainer;
 
   // 目标节点的父节点
-  const editTextNode = getNodeOfEditorTextNode(targetNode);
+  const editTextNode = util.getNodeOfEditorElementNode(targetNode);
 
-  // 不是编辑器文本节点  直接返回
+  // 不是行属性节点  直接返回
   if (!editTextNode) {
-    console.warn("getRangeAroundNode:: 不是一个编辑器文本属性节点");
+    console.warn("getRangeAroundNode:: 不是一个编辑器行属性节点");
     return [behindNodeList, nextNodeList];
   }
 

@@ -46,67 +46,18 @@ export const judgeEditRowNotNull = (node: HTMLElement): boolean => {
 
 /**
  * !!! 重要
- * @name 传入一个节点--获取它的编辑器--文本属性节点，如果没有，找它的父级节点
- * @returns 如果是文本节点就返回，不是就返回空
+ * @name 传入一个节点--获取它的编辑器--行属性节点，如果没有，一直找父节点
+ * @returns 如果是行属性节点就返回，不是就返回空
  */
-export const getNodeOfEditorTextNode = (node: any): HTMLElement | null => {
+export const getNodeOfEditorElementNode = (node: any): HTMLElement | null => {
   if (!node) {
     return null;
   }
 
-  if (isEditTextNode(node)) return node;
-
-  if (isEditTextNode(node?.parentNode)) return node.parentNode;
-
-  return null;
-};
-
-/**
- * !!! 重要
- * @name 传入一个节点--获取它的编辑器---行属性节点，如果没有，一直找父节点
- * @returns 找到了编辑节点块就返回，没找到就返回空
- */
-export const getNodeOfEditorRowNode = (node: any): HTMLElement | null => {
-  // 如果节点没有父节点，则返回 null
-  if (!node || !node?.parentNode) {
-    return null;
-  }
-  // 1： 是一个节点块， 2： 不是一个内联块属性节点
-  if (isEditElement(node) && !isFishInline(node)) return node;
+  if (isEditElement(node)) return node;
 
   // 否则继续查询父节点的父节点
-  return getNodeOfEditorRowNode(node.parentNode);
-};
-
-/**
- * !!! 重要
- * @name 传入一个节点--获取它的编辑器--文本属性节点，如果没有，一直找子节点
- * @returns 如果是文本节点就返回，不是就返回空
- */
-export const getNodeOfChildTextNode = (node: any): HTMLElement | null => {
-  if (!node) {
-    return null;
-  }
-
-  if (isEditTextNode(node)) return node;
-
-  // 否则继续查询子节点
-  return getNodeOfChildTextNode(node?.firstChild || null);
-};
-
-/**
- * !!! 重要
- * @name 判断节点是否内联块元素节点，如果不是，一直找父节点
- * @returns 如果是内联块属性节点就返回，不是就返回空
- */
-export const getNodeOfEditorInlineNode = (node: any): HTMLElement | null => {
-  if (!node || !node?.parentNode) {
-    return null; // 如果节点没有父节点，则返回 null
-  }
-
-  if (isFishInline(node)) return node;
-
-  return getNodeOfEditorInlineNode(node.parentNode); // 否则继续查询父节点的父节点
+  return getNodeOfEditorElementNode(node.parentNode);
 };
 
 /**

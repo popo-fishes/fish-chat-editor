@@ -20,14 +20,6 @@ export const elementAttributeData = {
     value: "fishNode"
   },
   /**
-   * 行内块节点（编辑节点中的块，比如图片）
-   * 属性值: true 代表是行内块节点
-   */
-  fishInline: {
-    key: "data-fish-inline",
-    value: "fishInline"
-  },
-
   /**
    * 表情节点
    * 属性值：value 代表是表情
@@ -38,7 +30,6 @@ export const elementAttributeData = {
   },
 
   /**
-   * todo
    * 图片节点
    * 属性值：true 代表是图片节点
    */
@@ -73,45 +64,10 @@ export const createLineElement = (isNullNode = false): HTMLParagraphElement => {
    * 是否需要创建子节点，代表创建一个换行文本标签
    */
   if (!isNullNode) {
-    dom_p.appendChild(createChunkTextElement(false));
+    dom_p.innerHTML = "<br/>";
   }
 
   return dom_p;
-};
-
-/** @name 创建一个编辑器的行内--块节点，它是不可以编辑的 */
-export const createChunkSapnElement = (node: HTMLElement): HTMLSpanElement => {
-  const dom_span = document.createElement("span");
-  const id = `${prefixNmae}element-` + helper.getRandomWord();
-  // 获取属性1
-  const key = getElementAttributeKey("fishNode");
-  dom_span.setAttribute(key, "element");
-  // 获取属性2
-  const inlineAttribute = getElementAttributeKey("fishInline");
-  dom_span.setAttribute(inlineAttribute, "true");
-
-  dom_span.setAttribute("contenteditable", "false");
-
-  dom_span.id = id;
-  dom_span.appendChild(node);
-  return dom_span;
-};
-
-/** @name 创建一个编辑器的行内--文本节点 */
-export const createChunkTextElement = (isEmpty = true): HTMLSpanElement => {
-  const dom_span = document.createElement("span");
-  const id = `${prefixNmae}element-` + helper.getRandomWord();
-  const elementAttribute = getElementAttributeKey("fishNode");
-  dom_span.setAttribute(elementAttribute, "text");
-  dom_span.id = id;
-  // 空文本
-  if (isEmpty) {
-    dom_span.innerHTML = zeroWidthNoBreakSpace;
-  } else {
-    dom_span.innerHTML = "<br>";
-  }
-
-  return dom_span;
 };
 
 /**

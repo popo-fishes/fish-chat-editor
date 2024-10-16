@@ -110,13 +110,13 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
   // 必须存在光标
   if (!range) return callBack(false);
 
-  // 获取当前光标的开始容器节点
+  // 获取当前光标的节点
   const rangeStartContainer: any = range.startContainer;
 
-  // 判断光标节点是否为一个文本节点
-  const targetNode = getNodeOfEditorTextNode(rangeStartContainer);
+  // 行属性节点
+  const rowElementNode = util.getNodeOfEditorElementNode(rangeStartContainer);
 
-  if (!targetNode) {
+  if (!rowElementNode) {
     // 非常重要的逻辑--修正光标位置
     amendRangePosition(editNode, (node) => {
       if (node) {
@@ -130,7 +130,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
   console.time("editable插入换行耗时");
-  // console.log(behindNodeList, nextNodeList);
+  console.log(behindNodeList, nextNodeList);
 
   /**
    * 创建换行节点
@@ -139,12 +139,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
   // 创建换行节点
   const lineDom = createLineElement(true);
 
-  // 当前光标的顶层编辑行节点
-  const rowElementNode = getNodeOfEditorRowNode(targetNode);
-
-  // console.log("查看编辑文本节点的子节点情况: ",targetNode.childNodes);
-
-  if (!rowElementNode) {
+  if (!isEditElement(rowElementNode as HTMLElement)) {
     console.warn("无编辑行节点，不可插入");
     return callBack(false);
   }
@@ -467,7 +462,7 @@ export const onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>, editNode: IE
         if (isDOMText(node)) {
           // const textNode = base.createChunkTextElement();
           // dom.toTargetAddNodes(textNode)
-          node.remove();
+          // node.remove();
         }
       }
     }
