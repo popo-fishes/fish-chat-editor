@@ -230,7 +230,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
      * 1: 它的出现通常在先选中带有内联节点和文本节点，然后输入值
      * 2：这种情况通常当前光标是在一个文本节点节点。他需要插入文本节点。
      */
-    console.log(rangeInfo.startContainer, rangeInfo.startContainer.parentNode.parentNode, "-------");
+    //  console.log(rangeInfo.startContainer, rangeInfo.startContainer.parentNode.parentNode, "-------");
     // 当前光标是一个行编辑节点
     // if (isEditElement(rangeInfo.startContainer as any)) {
     //   const parentNode = rangeInfo.startContainer;

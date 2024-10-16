@@ -190,9 +190,10 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
        * isChunk ? 块 ： 代表是个体(文本属性节点下面的元素，代表个体)
        */
       const isChunk = markSortNodes[i].some((item) => isEditTextNode(item) || isFishInline(item));
+      const isInlineChunk = markSortNodes[i].some((item) => isFishInline(item));
 
-      // 如果第一个节点就是一个块节点，那么就在插入节点之前先插入一个文本节点
-      if (i == 0 && isChunk) {
+      // 如果第一个节点就是一个内联块节点，那么就在插入节点之前先插入一个文本节点
+      if (i == 0 && isInlineChunk) {
         // 不是一个文本节点，这种情况出现在换行时，是从一个内联节点开始的。
         // 创建一个文本节点
         const textNode = createChunkTextElement();
