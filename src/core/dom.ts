@@ -90,6 +90,25 @@ export const toTargetAfterInsertNodes = (targetElement: HTMLElement, childNodes:
 };
 
 /**
+ * @name 传入目标节点，在目标节点之前插入多个节点
+ * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
+ */
+export const toTargetBeforeInsertNodes = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
+  if (!targetElement || !childNodes || !childNodes?.length) return;
+  const fragment = new DocumentFragment();
+  for (let i = 0; i < childNodes.length; i++) {
+    if (childNodes[i]) {
+      fragment.appendChild(childNodes[i]);
+    }
+  }
+  const parentNode = targetElement.parentNode;
+
+  if (parentNode) {
+    parentNode.insertBefore(fragment, targetElement);
+  }
+};
+
+/**
  * @name 传入目标节点，给目标添加多个子节点
  * @param targetNode 目标节点
  * @param childNodes 节点集合

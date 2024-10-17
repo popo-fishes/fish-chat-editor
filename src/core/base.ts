@@ -10,25 +10,23 @@ export const prefixNmae = "fb-e-";
 export const zeroWidthNoBreakSpace = "\uFEFF";
 
 /** 编辑器标签扩展属性配置表 */
-export const elementAttributeData = {
+const elementAttributeData = {
   /**
    * 编辑器节点
-   * 如果属性值为：text 代表是文本节点是，如果为element 代表是行 or 行内块节点（它是不可以编辑的）
+   * 属性值：element 代表是行节点
    */
   fishNode: {
     key: "data-fish-node",
     value: "fishNode"
   },
   /**
-  /**
-   * 表情节点
-   * 属性值：value 代表是表情
+   * 内联节点
+   * 属性值为：true 代表是内联节点
    */
-  emojiNode: {
-    key: "data-fish-emoji-name",
-    value: "fishEmojiName"
+  fishInline: {
+    key: "data-fish-inline",
+    value: "fishInline"
   },
-
   /**
    * 图片节点
    * 属性值：true 代表是图片节点
@@ -36,16 +34,25 @@ export const elementAttributeData = {
   imgNode: {
     key: "data-fish-is-img",
     value: "fishIsImg"
+  },
+  /**
+  /**
+   * 表情节点
+   * 属性值：value 代表是表情的名称
+   */
+  emojiNode: {
+    key: "data-fish-emoji-name",
+    value: "fishEmojiName"
   }
 };
 
 /** @name 获取编辑器节点属性key */
-export const getElementAttributeKey = (name: string) => {
+export const getElementAttributeKey = (name: keyof typeof elementAttributeData) => {
   return elementAttributeData[name]?.key || "";
 };
 
 /** @name 获取编辑器节点属性datasetName */
-export const getElementAttributeDatasetName = (name: string) => {
+export const getElementAttributeDatasetName = (name: keyof typeof elementAttributeData) => {
   return elementAttributeData[name]?.value || "";
 };
 
@@ -84,15 +91,19 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
   container.classList.add(`${prefixNmae}emoji-container`);
   container.setAttribute("style", `width:${width}px;height:${height}px`);
-
+  // 不可编辑
   container.setAttribute("contenteditable", "false");
+  // 标记内联节点
+  const fishInlineKey = getElementAttributeKey("fishInline");
+  container.setAttribute(fishInlineKey, "true");
 
+  // 表情name值
+  const emojiNodeKey = getElementAttributeKey("emojiNode");
+  container.setAttribute(emojiNodeKey, emijiName);
+
+  // 添加图片
   const node = new Image();
   node.src = url || null;
-  const emojiNodeKey = getElementAttributeKey("emojiNode");
-
-  node.setAttribute(emojiNodeKey, emijiName);
-
   container.appendChild(node);
 
   return container;

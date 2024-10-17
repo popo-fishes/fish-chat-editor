@@ -5,56 +5,34 @@
 
 import { isNode } from ".";
 
-const { isNodeNotTtxt, isImgNode, isEditElement } = isNode;
+const { isNodeNotTtxt, isImgNode, isEmojiImgNode, isEditInline, isEditElement } = isNode;
 
 /**
- * @name 判断节点是否富文本元素节点，如果不是找它的父节点再查下去
- * @deprecated 废弃-不会使用了
- */
-export const findNodetWithElement = (node: any) => {
-  if (!node || !node?.parentNode) {
-    return null; // 如果节点没有父节点，则返回 null
-  }
-
-  if (isEditElement(node)) return node;
-
-  return findNodetWithElement(node.parentNode); // 否则继续查询父节点的父节点
-};
-
-/**
- *  @name 判断文本节点是否存在多个节点，且存在br标签，就删除br标签
- * @deprecated 废弃-改用deleteTargetNodeOfBrNode
- */
-export const judgeEditRowNotNull = (node: HTMLElement): boolean => {
-  if (!isEditElement(node)) return false;
-  const nodes: any[] = Array.from(node.childNodes);
-  if (!nodes || !nodes?.length) return false;
-
-  let exist = false;
-  for (const cld of nodes) {
-    if ((cld as any)?.nodeName == "BR") {
-      (cld as any)?.remove();
-      exist = true;
-      break;
-    }
-  }
-  return exist;
-};
-
-/**
- * !!! 重要
- * @name 传入一个节点--获取它的编辑器--行属性节点，如果没有，一直找父节点
+ * @name 传入一个节点--获取它的编辑器--行属性节点，如果没有，最多找5级父节点
  * @returns 如果是行属性节点就返回，不是就返回空
  */
-export const getNodeOfEditorElementNode = (node: any): HTMLElement | null => {
-  if (!node) {
+export const getNodeOfEditorElementNode = (node: any, level = 0): HTMLElement | null => {
+  if (!node || level >= 5) {
     return null;
   }
 
   if (isEditElement(node)) return node;
 
-  // 否则继续查询父节点的父节点
-  return getNodeOfEditorElementNode(node.parentNode);
+  return getNodeOfEditorElementNode(node.parentNode, level + 1);
+};
+
+/**
+ * @name 传入一个节点--获取表情属性节点，如果没有，最多找3级父节点
+ * @returns 如果是表情属性节点就返回，不是就返回空
+ */
+export const getNodeOfEditorEmojiNode = (node: any, level = 0): HTMLElement | null => {
+  if (!node || level >= 3) {
+    return null;
+  }
+
+  if (isEmojiImgNode(node) && isEditInline(node)) return node;
+
+  return getNodeOfEditorEmojiNode(node.parentNode, level + 1);
 };
 
 /**

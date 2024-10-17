@@ -5,8 +5,6 @@
 import { base, editor } from ".";
 import type { IEditorElement } from "../types";
 
-const { elementAttributeData } = base;
-
 /**
  * @name 返回DOM节点的主机窗口
  */
@@ -52,10 +50,11 @@ export const isEmptyEditNode = (editNode: IEditorElement) => {
 export const isEditElement = (node: HTMLElement): boolean => {
   if (!node) return false;
   if (!isDOMElement(node)) return false;
-  const keys = elementAttributeData["fishNode"];
-  const hasAttr = node.hasAttribute(keys["key"]);
+  const key = base.getElementAttributeKey("fishNode");
+  const attrName = base.getElementAttributeDatasetName("fishNode");
+  const hasAttr = node.hasAttribute(key);
   if (hasAttr) {
-    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
+    const elementAttrVal = node?.dataset?.[attrName] || "";
     if (elementAttrVal == "element") {
       return true;
     }
@@ -64,14 +63,31 @@ export const isEditElement = (node: HTMLElement): boolean => {
   return false;
 };
 
+/**
+ * @name 判断节点是否一个编辑器行--内联属性节点
+ */
+export const isEditInline = (node: HTMLElement): boolean => {
+  if (!node) return false;
+  const key = base.getElementAttributeKey("fishInline");
+  const attrName = base.getElementAttributeDatasetName("fishInline");
+  const hasAttr = node.hasAttribute(key);
+  if (hasAttr) {
+    const elementAttrVal = node?.dataset?.[attrName] || "";
+    if (elementAttrVal == "true") {
+      return true;
+    }
+    return false;
+  }
+};
+
 /** @name 判断是否为一个图片属性节点，不包含表情图 */
 export const isImgNode = (node: HTMLElement): boolean => {
   if (!node) return false;
-  if (!isDOMElement(node) || node.nodeName !== "IMG") return false;
-  const keys = elementAttributeData["imgNode"];
-  const hasAttr = node.hasAttribute(keys["key"]);
+  const key = base.getElementAttributeKey("imgNode");
+  const attrName = base.getElementAttributeDatasetName("imgNode");
+  const hasAttr = node.hasAttribute(key);
   if (hasAttr) {
-    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
+    const elementAttrVal = node?.dataset?.[attrName] || "";
     if (elementAttrVal == "true") {
       return true;
     }
@@ -83,11 +99,11 @@ export const isImgNode = (node: HTMLElement): boolean => {
 /** @name 判断是否为一个表情图节点 */
 export const isEmojiImgNode = (node: HTMLElement): boolean => {
   if (!node) return false;
-  if (!isDOMElement(node) || node.nodeName !== "IMG") return false;
-  const keys = elementAttributeData["emojiNode"];
-  const hasAttr = node.hasAttribute(keys["key"]);
+  const key = base.getElementAttributeKey("emojiNode");
+  const attrName = base.getElementAttributeDatasetName("emojiNode");
+  const hasAttr = node.hasAttribute(key);
   if (hasAttr) {
-    const elementAttrVal = node?.dataset?.[keys["value"]] || "";
+    const elementAttrVal = node?.dataset?.[attrName] || "";
     if (elementAttrVal) return true;
     return false;
   }

@@ -11,14 +11,9 @@ import { onKeyUp, handlePasteTransforms, onCopy, onCut, handleLineFeed } from ".
 
 import useEditable from "./use-editable";
 
-import { isNode, range, editor, util, base, transforms, setCursorPosition } from "../../core";
+import { isNode, range, editor, util, base, transforms } from "../../core";
 
-const { isEmptyEditNode, isDOMElement, isImgNode, isEditElement, isEditTextNode } = isNode;
-
-const { findNodeWithImg, getNodeOfEditorInlineNode, getNodeOfEditorTextNode } = util;
-
-// 输入框值变化时，我需要对内容进行转换，必须等转换结束才可以在执行，用来判断的
-let isFlag = false;
+const { isEmptyEditNode, isImgNode } = isNode;
 
 /**
  * https://blog.csdn.net/weixin_45936690/article/details/121654517
@@ -130,26 +125,12 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
 
   /** @name 点击输入框事件（点击时） */
   const onEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // 点击时，如果点击到的是表情图片需要吧当前光标变为点击图片的前面
     const target = e?.target as any;
-    // 不包含是图片节点
-    if (target?.nodeName == "IMG" && !isImgNode(target)) {
-      range.setRangeNode(target, "before", () => {
-        // 重新聚焦输入框
-        editRef?.current?.focus();
-      });
-      return;
-    }
-    // // 获取当前光标
-    // const range2 = selection?.getRangeAt(0);
-    // console.log(range2);
-    // 点击图片节点，失去光标
-    if (isImgNode(target)) {
-      // 用户选择的文本范围或光标的当前位置
-      // const selection = window.getSelection();
-      // // 清除选定对象的所有光标对象
-      // selection?.removeAllRanges();
-      return;
+    // 如果是表情节点
+    const emojiNode = util.getNodeOfEditorEmojiNode(target);
+    if (emojiNode) {
+      // 选中它
+      range.selectNode(emojiNode);
     }
 
     /**
@@ -243,9 +224,9 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e?.target as any;
     // 是一个DOM元素节点，且光标位置为1，并且存在图片节点, 那么就禁止获取焦点。
-    if (isDOMElement(target) && findNodeWithImg(target) && getNodeOfEditorInlineNode(target)) {
-      e.preventDefault();
-    }
+    // if (isDOMElement(target) && findNodeWithImg(target) && getNodeOfEditorInlineNode(target)) {
+    //   e.preventDefault();
+    // }
     // 获取当前文档的选区
 
     // if (selection && selection.rangeCount > 0) {

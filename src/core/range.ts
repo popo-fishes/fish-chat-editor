@@ -27,29 +27,32 @@ export const setCursorPosition = (referenceNode: Node, type?: "before" | "after"
   if (!isNode.isDOMNode(referenceNode)) return null;
   // 都不传递直接返回
   if (!type && !isNumber(startOffset) && !isNumber(endOffset)) return null;
-
-  const selection = window.getSelection();
-  const range = document.createRange();
-
-  // 适用于文本
-  if (isNumber(startOffset) || isNumber(endOffset)) {
-    // 设置 Range
-    isNumber(startOffset) && range.setStart(referenceNode, startOffset);
-    isNumber(endOffset) && range.setEnd(referenceNode, endOffset);
-  } else {
-    if (type == "after") {
-      range.setStartAfter(referenceNode);
+  try {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    // 适用于文本
+    if (isNumber(startOffset) || isNumber(endOffset)) {
+      // 设置 Range
+      isNumber(startOffset) && range.setStart(referenceNode, startOffset);
+      isNumber(endOffset) && range.setEnd(referenceNode, endOffset);
+    } else {
+      if (type == "after") {
+        range.setStartAfter(referenceNode);
+      }
+      if (type == "before") {
+        range.setStartBefore(referenceNode);
+      }
     }
-    if (type == "before") {
-      range.setStartBefore(referenceNode);
-    }
+
+    selection?.removeAllRanges();
+
+    selection?.addRange(range);
+
+    return range;
+  } catch (err) {
+    console.error(err);
+    return null;
   }
-
-  selection?.removeAllRanges();
-
-  selection?.addRange(range);
-
-  return range;
 };
 
 /**
@@ -141,4 +144,19 @@ export const removeAllRanges = () => {
   const selection = getSelection();
   // 清除选定对象的所有光标对象
   selection?.removeAllRanges?.();
+};
+
+/**
+ * @name 选中一个节点
+ */
+export const selectNode = (node: Node) => {
+  const range = document.createRange();
+  if (node) {
+    range.selectNode(node);
+  }
+
+  const selection = getSelection();
+  selection?.removeAllRanges();
+
+  selection.addRange(range);
 };

@@ -6,10 +6,6 @@ import { base, isNode, dom } from ".";
 
 import type { IEditorElement } from "../types";
 
-const { getElementAttributeKey, getElementAttributeDatasetName } = base;
-
-const { isDOMText, isDOMElement } = isNode;
-
 /**
  * @name 除去字符串空格换后是否为一个空文本，如果是直接赋值为空，否则用原始的
  * 常用于获取富文本值后，判断是否全部是空格 和 换行，如果是就给字符串置空
@@ -32,19 +28,19 @@ export const editTransformSpaceText = (content: string) => {
 export const getPlainText = (domNode: any) => {
   let text = "";
 
-  if (isDOMText(domNode) && domNode.nodeValue) {
+  if (isNode.isDOMText(domNode) && domNode.nodeValue) {
     return domNode.nodeValue;
   }
 
-  if (isDOMElement(domNode)) {
+  if (isNode.isDOMElement(domNode)) {
     for (const childNode of Array.from(domNode.childNodes)) {
       text += getPlainText(childNode as Element);
     }
 
     const display = getComputedStyle(domNode).getPropertyValue("display");
 
-    const emojiNodeAttrKey = getElementAttributeKey("emojiNode");
-    const emojiNodeAttrName = getElementAttributeDatasetName("emojiNode");
+    const emojiNodeAttrKey = base.getElementAttributeKey("emojiNode");
+    const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
     // 是否是一个表情图片,如果是取出
     const isEmojiVal = domNode?.dataset?.[emojiNodeAttrName] || "";
     const isEmojiNode = domNode.nodeName == "IMG" && domNode.hasAttribute(emojiNodeAttrKey);
@@ -65,16 +61,16 @@ export const getPlainText = (domNode: any) => {
 export const getNodeContent = (node: any): string => {
   let content = "";
 
-  if (isDOMText(node)) {
+  if (isNode.isDOMText(node)) {
     content += node.textContent;
   }
-  if (isDOMElement(node)) {
+  if (isNode.isDOMElement(node)) {
     for (let i = 0; i < node.childNodes.length; i++) {
       content += getNodeContent(node.childNodes[i]);
     }
 
-    const emojiNodeAttrKey = getElementAttributeKey("emojiNode");
-    const emojiNodeAttrName = getElementAttributeDatasetName("emojiNode");
+    const emojiNodeAttrKey = base.getElementAttributeKey("emojiNode");
+    const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
     // 是否是一个表情图片,如果是取出
     const isEmojiVal = node?.dataset?.[emojiNodeAttrName] || "";
     const isEmojiNode = node.nodeName == "IMG" && node.hasAttribute(emojiNodeAttrKey);
