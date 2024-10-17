@@ -220,6 +220,7 @@ export default function useEdit(props: IEditableProps) {
      * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
      * 兜底处理,防止骚操作
      */
+    console.log(rangeInfo.startContainer);
     if (rangeInfo && rangeInfo.startContainer) {
       // 不是行编辑节点，直接禁止操作
       const elementRowNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
