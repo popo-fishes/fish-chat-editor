@@ -7,27 +7,11 @@ import React, { useEffect, forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { labelRep } from "../../utils";
 
-import { onKeyUp, handlePasteTransforms, onCopy, onCut, handleLineFeed } from "./event";
+import { onCopy, onCut } from "./event";
 
-import useEditable from "./use-editable";
+import useEdit from "./useEdit";
 
-import { isNode, range, editor, util, base, transforms } from "../../core";
-
-const { isEmptyEditNode, isImgNode } = isNode;
-
-/**
- * https://blog.csdn.net/weixin_45936690/article/details/121654517
- * @contentEditable输入框，遇见的问题：
- * 1.有些输入法输入中文 || 输入特殊字符时我还在输入拼音时，输入还没结束；会不停的触发onInput事件。导致onInput事件方法里面出现bug
- * 2. 而有些输入框中文时不会触发onInput：如搜狗输入法
- * 3. 我们需要做个判断 1.onCompositionStart： 启动新的合成会话时，会触发该事件。 例如，可以在用户开始使用拼音IME 输入中文字符后触发此事件
- * 4. 2. onCompositionEnd 完成或取消当前合成会话时，将触发该事件。例如，可以在用户使用拼音IME 完成输入中文字符后触发此事件
- * 我们在onCompositionStart：是标记正在输入中，必须等onCompositionEnd结束后主动去触发onInput
- */
-let isLock = false;
-
-// 表示正在操作换行，需要等等结束
-let isLineFeedLock = false;
+import { editor, transforms } from "../../core";
 
 /**
  * @name 富文本组件
@@ -45,8 +29,18 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     clearEditor,
     init,
 
-    insertEmoji
-  } = useEditable(props);
+    insertEmoji,
+
+    onEditorKeyUp,
+    onEditorChange,
+    onEditorBlur,
+    onEditorFocus,
+    onEditorClick,
+    onEditorKeydown,
+    onEditorPaste,
+    onCompositionStart,
+    onCompositionEnd
+  } = useEdit(props);
 
   // 初始化
   useEffect(() => {
@@ -92,134 +86,6 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       }) as IEditableRef
   );
 
-  /** @name 失去焦点 */
-  const onEditorBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    const rangeInfo = range.getRange();
-    if (rangeInfo) {
-      console.log(rangeInfo);
-      // 备份当前光标位置
-      setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
-    }
-    // 如果有选中
-    if (range.isSelected()) {
-      // 清除选定对象的所有光标对象
-      range?.removeAllRanges();
-    }
-  };
-
-  /** @name 获取焦点 */
-  const onEditorFocus = (event: React.FocusEvent<HTMLDivElement>) => {
-    // const focusedElement = document.activeElement;
-    // console.log(event, document.activeElement);
-  };
-
-  /** @name 输入框值变化onChange事件 */
-  const onEditorInputChange = (e: React.CompositionEvent<HTMLDivElement>) => {
-    // 获取输入框的值，主动触发输入框值变化
-    const val = editor.getText(editRef.current);
-    // 控制提示
-    setTipHolder(val == "");
-    // 暴露值
-    restProps.onChange?.(transforms.editTransformSpaceText(val));
-  };
-
-  /** @name 点击输入框事件（点击时） */
-  const onEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e?.target as any;
-    // 如果是表情节点
-    const emojiNode = util.getNodeOfEditorEmojiNode(target);
-    if (emojiNode) {
-      // 选中它
-      range.selectNode(emojiNode);
-    }
-
-    /**
-     * 如果存在光标
-     * 点击了输入框后，如果当前光标位置节点是一个 块节点，且是一个图片节点，就把当前光标移动到它的前面的一个兄弟节点身上。
-     * 1：要保证图片的块节点不可以输入内容
-     * 2：粘贴图片时，我们会在图片节点前面插入了一个文本输入节点。
-     */
-    // 是一个DOM元素节点，并且存在图片节点
-    // if (isDOMElement(target) && findNodeWithImg(target)) {
-    //   // 必须是内联节点
-    //   const pnode = getNodeOfEditorInlineNode(target);
-
-    //   if (pnode) {
-    //     // 用户选择的文本范围或光标的当前位置
-    //     const selection = window.getSelection();
-    //     // 清除选定对象的所有光标对象
-    //     selection?.removeAllRanges();
-
-    //     const textNode = base.createChunkTextElement();
-
-    //     pnode.insertAdjacentElement("afterend", textNode);
-
-    //     range.setRangeNode(textNode, "after", () => {});
-    //   }
-    // }
-  };
-
-  /**
-   * @name 输入框键盘按下事件
-   * @param event
-   * @returns
-   */
-  const onEditorKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const keyCode = event.keyCode;
-
-    // ctrl + Enter换行
-    if (event.ctrlKey && keyCode === 13) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (isLineFeedLock) return;
-
-      isLineFeedLock = true;
-
-      // 插入换行符
-      handleLineFeed(editRef.current, (success) => {
-        if (success) {
-          const isFlag = isEmptyEditNode(editRef.current);
-          setTipHolder(isFlag);
-        }
-        isLineFeedLock = false;
-      });
-
-      return;
-    }
-    if (keyCode === 13) {
-      // Enter发生消息
-      event.preventDefault();
-      event.stopPropagation();
-      // 执行回车事件给父组件
-      restProps.onEnterDown?.();
-      return;
-    }
-    // 按下删除按键
-    if (event.keyCode === 8) {
-      // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
-      if (!range.isSelected() && isEmptyEditNode(editRef.current)) {
-        event.preventDefault();
-        return;
-      }
-    }
-  };
-
-  /**
-   * @name 输入框的粘贴事件
-   */
-  const onPasteChange = (e: React.ClipboardEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    handlePasteTransforms(e, editRef.current, () => {
-      // 获取输入框的值，主动触发输入框值变化
-      const val = editor.getText(editRef.current);
-      // 控制提示
-      setTipHolder(val == "");
-      // 暴露值
-      restProps.onChange?.(transforms.editTransformSpaceText(val));
-    });
-  };
-
   /** @name 鼠标按下时 */
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e?.target as any;
@@ -245,27 +111,17 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           contentEditable
           data-fish-editor
           spellCheck
-          onPaste={onPasteChange}
+          onPaste={onEditorPaste}
           onBlur={onEditorBlur}
           onFocus={onEditorFocus}
-          onInput={onEditorInputChange}
+          onInput={onEditorChange}
           onCopy={onCopy}
           onCut={onCut}
           onKeyDown={onEditorKeydown}
-          onKeyUp={(e) => {
-            onKeyUp(e, editRef.current);
-          }}
-          onCompositionStart={(e) => {
-            // 标记正在输入中文
-            isLock = true;
-          }}
+          onKeyUp={onEditorKeyUp}
+          onCompositionStart={onCompositionStart}
           onMouseDown={onMouseDown}
-          onCompositionEnd={(e) => {
-            // 标记正在输入中文, 结束以后再去触发onInput
-            isLock = false;
-            // 在调用
-            onEditorInputChange(e);
-          }}
+          onCompositionEnd={onCompositionEnd}
           onClick={(e) => {
             e.preventDefault();
             onEditorClick(e);

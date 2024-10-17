@@ -11,7 +11,7 @@ export * as base from "./base";
 
 export * as helper from "./helper";
 
-export * as isNode from "./is-node";
+export * as isNode from "./isNode";
 
 export * as util from "./util";
 
