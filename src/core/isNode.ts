@@ -64,7 +64,7 @@ export const isEditElement = (node: HTMLElement): boolean => {
 };
 
 /**
- * @name 判断节点是否一个编辑器行--内联属性节点
+ * @name 判断节点是否一个编辑器行--内联块属性节点
  */
 export const isEditInline = (node: HTMLElement): boolean => {
   if (!node || !isDOMElement(node)) return false;

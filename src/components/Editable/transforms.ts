@@ -37,7 +37,7 @@ function hasNotSatisfiedNode(node: HTMLElement) {
 
   let exist = false;
   for (const cld of node.childNodes) {
-    // 节点不是内联节点 || 节点有背景色属性
+    // 节点不是内联块属性节点 || 节点有背景色属性
     if ((!isEditInline(cld as any) && node.nodeName == "SPAN") || hasTransparentBackgroundColor(cld as any)) {
       exist = true;
       break;
@@ -48,6 +48,7 @@ function hasNotSatisfiedNode(node: HTMLElement) {
 
 export const transformsEditNodes = (editNode: IEditorElement) => {
   const range = fishRange.getRange();
+  console.log(range);
   console.time("transforms转换节点耗时");
 
   /**
@@ -61,7 +62,6 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
     const editorRowNode = util.getNodeOfEditorElementNode(range.startContainer);
 
     if (editorRowNode && hasNotSatisfiedNode(editorRowNode)) {
-      console.log(editorRowNode.childNodes);
       /**
        * 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
        * 遍历行节点集合
@@ -80,15 +80,15 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
           node.parentNode?.replaceChild(textNode, node);
         }
 
-        // 删除行属性节点的子内联属性节点的样式
+        // 删除行属性节点的子块属性节点的样式
         if (hasTransparentBackgroundColor(node) && isEditInline(node)) {
           node.style.removeProperty("background-color");
         }
 
         // 有其它节点就删除br
-        // if (node.nodeName === "BR" && nodes.length > 1) {
-        //   node.remove();
-        // }
+        if (node.nodeName === "BR" && nodes.length > 1) {
+          node.remove();
+        }
       }
     }
   }
@@ -108,6 +108,23 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
       fishRange.setCursorPosition(lineDom.firstChild, "after");
     }
   }
+
+  /**
+   * bug3:
+   * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
+   * 兜底处理,防止骚操作
+   */
+  // if (!util.getNodeOfEditorElementNode(range.startContainer as any)) {
+  //   // 删除编辑器里面的非行节点
+  //   if (editNode.childNodes?.length) {
+  //     const nodes: any[] = Array.from(editNode.childNodes);
+  //     for (let i = 0; i < nodes.length; i++) {
+  //       if (!isEditElement(nodes[i])) {
+  //         nodes[i]?.remove();
+  //       }
+  //     }
+  //   }
+  // }
 
   console.timeEnd("transforms转换节点耗时");
 };

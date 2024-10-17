@@ -20,8 +20,8 @@ const elementAttributeData = {
     value: "fishNode"
   },
   /**
-   * 内联节点
-   * 属性值为：true 代表是内联节点
+   * 内联块节点
+   * 属性值为：true 代表是内联块
    */
   fishInline: {
     key: "data-fish-inline",
@@ -93,7 +93,7 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   container.setAttribute("style", `width:${width}px;height:${height}px`);
   // 不可编辑
   container.setAttribute("contenteditable", "false");
-  // 标记为内联节点
+  // 标记为内联块节点
   const fishInlineKey = getElementAttributeKey("fishInline");
   container.setAttribute(fishInlineKey, "true");
 

@@ -146,7 +146,7 @@ export default function useEdit(props: IEditableProps) {
      */
     // 是一个DOM元素节点，并且存在图片节点
     // if (isDOMElement(target) && findNodeWithImg(target)) {
-    //   // 必须是内联节点
+
     //   const pnode = getNodeOfEditorInlineNode(target);
 
     //   if (pnode) {
@@ -171,7 +171,6 @@ export default function useEdit(props: IEditableProps) {
    */
   const onEditorKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const keyCode = event.keyCode;
-
     // ctrl + Enter换行
     if (event.ctrlKey && keyCode === 13) {
       event.preventDefault();
