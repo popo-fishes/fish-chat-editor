@@ -95,12 +95,12 @@ export default function useEdit(props: IEditableProps) {
     // 创建
     const node = base.createChunkEmojilement(item.url, 18, 18, item.name);
     editor.insertNode([node], currentRange, () => {
-      range.setCursorPosition(node, "after");
+      range.setCursorPosition(node as any, "after");
       // 主动触发输入框值变化
       const val = editor.getText(editRef.current);
       // 控制提示
       setTipHolder(val == "");
-      restProps?.onChange?.(val);
+      props?.onChange?.(val);
     });
   };
 
@@ -178,6 +178,7 @@ export default function useEdit(props: IEditableProps) {
    */
   const onEditorKeydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const keyCode = event.keyCode;
+    const rangeInfo = range.getRange();
     // ctrl + Enter换行
     if (event.ctrlKey && keyCode === 13) {
       event.preventDefault();
@@ -210,6 +211,19 @@ export default function useEdit(props: IEditableProps) {
     if (event.keyCode === 8) {
       // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
       if (!range.isSelected() && isNode.isEmptyEditNode(editRef.current)) {
+        event.preventDefault();
+        return;
+      }
+    }
+    /**
+     * bug3:
+     * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
+     * 兜底处理,防止骚操作
+     */
+    if (rangeInfo && rangeInfo.startContainer) {
+      // 不是行编辑节点，直接禁止操作
+      const elementRowNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
+      if (!elementRowNode) {
         event.preventDefault();
         return;
       }

@@ -48,7 +48,7 @@ function hasNotSatisfiedNode(node: HTMLElement) {
 
 export const transformsEditNodes = (editNode: IEditorElement) => {
   const range = fishRange.getRange();
-  console.log(range);
+
   console.time("transforms转换节点耗时");
 
   /**
@@ -62,6 +62,7 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
     const editorRowNode = util.getNodeOfEditorElementNode(range.startContainer);
 
     if (editorRowNode && hasNotSatisfiedNode(editorRowNode)) {
+      console.log(editorRowNode.childNodes);
       /**
        * 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
        * 遍历行节点集合
@@ -114,17 +115,30 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
    * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
    * 兜底处理,防止骚操作
    */
-  // if (!util.getNodeOfEditorElementNode(range.startContainer as any)) {
-  //   // 删除编辑器里面的非行节点
-  //   if (editNode.childNodes?.length) {
-  //     const nodes: any[] = Array.from(editNode.childNodes);
-  //     for (let i = 0; i < nodes.length; i++) {
-  //       if (!isEditElement(nodes[i])) {
-  //         nodes[i]?.remove();
-  //       }
-  //     }
-  //   }
-  // }
+  if (!util.getNodeOfEditorElementNode(range.startContainer as any)) {
+    // 编辑器存在节点大于1
+    if (editNode.childNodes?.length > 1) {
+      const nodes: any[] = Array.from(editNode.childNodes);
+      // 直接吧br标签替换为行节点
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i] as any;
+
+        if (!isEditElement(node) && node.nodeName !== "BR") {
+          node?.remove();
+        }
+        if (node.nodeName == "BR") {
+          // 创建一个编辑器--行节点
+          const lineDom = base.createLineElement();
+          node.parentNode?.replaceChild(lineDom, node);
+          // 设置光标为目标行的字节节点
+          const targetRowNode = editNode.childNodes[range.startOffset];
+          if (targetRowNode?.firstChild) {
+            fishRange.setCursorPosition(targetRowNode.firstChild, "before");
+          }
+        }
+      }
+    }
+  }
 
   console.timeEnd("transforms转换节点耗时");
 };
