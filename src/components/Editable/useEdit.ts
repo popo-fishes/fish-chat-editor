@@ -7,14 +7,8 @@ import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
 import { base, isNode, util, range, editor, IRange, dom, transforms } from "../../core";
 
-const { createLineElement, getElementAttributeKey, createChunkEmojilement } = base;
-const { isEditElement, isEmptyEditNode } = isNode;
-const { deleteTextNodeOfEmptyNode, deleteTargetNodeOfBrNode } = util;
-const { amendRangePosition, getRange } = range;
-const { getText } = editor;
-
 import { transformsEditNodes } from "./transforms";
-import { handlePasteTransforms, handleLineFeed } from "./event";
+import { handlePasteTransforms, handleLineFeed } from "./core";
 
 // 备份当前的光标位置
 let currentRange: IRange = null;
@@ -59,7 +53,7 @@ export default function useEdit(props: IEditableProps) {
 
   /** @name 清空输入框的值 */
   const clearEditor = (): HTMLParagraphElement | null => {
-    const node = createLineElement();
+    const node = base.createLineElement();
     if (!editRef.current) return null;
     editRef.current.innerHTML = ""; // 清空所有子节点
     dom.toTargetAddNodes(editRef.current, [node]);
@@ -89,7 +83,7 @@ export default function useEdit(props: IEditableProps) {
     const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
     if (!editorElementNode) {
       // 修正光标位置
-      amendRangePosition(editRef.current, (node) => {
+      range.amendRangePosition(editRef.current, (node) => {
         if (node) {
           // 设置当前光标节点
           setRangePosition(node, 0);
@@ -190,7 +184,7 @@ export default function useEdit(props: IEditableProps) {
       // 插入换行符
       handleLineFeed(editRef.current, (success) => {
         if (success) {
-          const isFlag = isEmptyEditNode(editRef.current);
+          const isFlag = isNode.isEmptyEditNode(editRef.current);
           setTipHolder(isFlag);
         }
         isLineFeedLock = false;
@@ -209,7 +203,7 @@ export default function useEdit(props: IEditableProps) {
     // 按下删除按键
     if (event.keyCode === 8) {
       // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
-      if (!range.isSelected() && isEmptyEditNode(editRef.current)) {
+      if (!range.isSelected() && isNode.isEmptyEditNode(editRef.current)) {
         event.preventDefault();
         return;
       }

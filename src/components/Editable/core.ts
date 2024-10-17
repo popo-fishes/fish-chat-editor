@@ -1,8 +1,3 @@
-/*
- * @Date: 2024-09-30 15:40:27
- * @LastEditors: Please set LastEditors
- * @Description: 富文本输入框事件处理
- */
 import isObject from "lodash/isObject";
 
 import { regContentImg, labelRep } from "../../utils";
@@ -11,27 +6,13 @@ import { dom, isNode, range as fishRange, editor, helper, util, base, transforms
 
 import type { IEditorElement } from "../../types";
 
-const { isFishInline, isEditTextNode, isEmojiImgNode, isDOMText, isEmptyEditNode, isEditElement } = isNode;
+const { isEditElement } = isNode;
 
-const {
-  getNodeOfEditorElementNode,
-  getNodeOfEditorInlineNode,
-  getNodeOfEditorTextNode,
-  getNodeOfChildTextNode,
-  rewriteEmbryoTextNode,
-  deleteTargetNodeOfBrNode,
-  deleteTextNodeOfEmptyNode,
-  findNodetWithElement
-} = util;
-
-const { createLineElement, createChunkTextElement, getElementAttributeKey, prefixNmae, zeroWidthNoBreakSpace, createChunkSapnElement } = base;
+const { createLineElement, getElementAttributeKey, prefixNmae } = base;
 
 const { insertText, insertNode } = editor;
 
 const { fileToBase64, getRandomWord } = helper;
-
-// 是否正在处理粘贴内容
-let isPasteLock = false;
 
 /** @name 处理复制事件 */
 export const onCopy = (event: React.ClipboardEvent<HTMLDivElement>) => {

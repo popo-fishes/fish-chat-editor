@@ -6,7 +6,7 @@ import { forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { labelRep } from "../../utils";
 
-import { onCopy, onCut } from "./event";
+import { onCopy, onCut } from "./core";
 
 import useEdit from "./useEdit";
 
