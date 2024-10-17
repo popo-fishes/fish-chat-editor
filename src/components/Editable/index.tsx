@@ -4,13 +4,12 @@
  */
 import { forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
+import { editor, transforms } from "../../core";
 import { labelRep } from "../../utils";
 
 import { onCopy, onCut } from "./core";
 
 import useEdit from "./useEdit";
-
-import { editor, transforms } from "../../core";
 
 const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   const { placeholder, ...restProps } = props;

@@ -1,77 +1,54 @@
-import isObject from "lodash/isObject";
-
-import { regContentImg, labelRep } from "../../utils";
-
 import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
 
 import type { IEditorElement } from "../../types";
 
-const { isFishInline, isEditTextNode, isEmojiImgNode, isDOMText, isEmptyEditNode, isEditElement } = isNode;
+const { isEditInline, isEditElement } = isNode;
 
-const {
-  getNodeOfEditorElementNode,
-  getNodeOfEditorInlineNode,
-  getNodeOfEditorTextNode,
-  getNodeOfChildTextNode,
-  rewriteEmbryoTextNode,
-  deleteTargetNodeOfBrNode,
-  deleteTextNodeOfEmptyNode,
-  findNodetWithElement
-} = util;
+// 子节点是否只有一个br节点
+function hasParentOnlyBr(node: HTMLElement) {
+  if (node) {
+    if (node.childNodes && node.childNodes?.length == 1) {
+      if (node.childNodes[0]?.nodeName == "BR") return true;
+    }
+  }
+  return false;
+}
 
-const { createLineElement, createChunkTextElement, getElementAttributeKey, prefixNmae, zeroWidthNoBreakSpace, createChunkSapnElement } = base;
+/** 处理节点带有style属性时，也需要标记 */
+function hasTransparentBackgroundColor(node: HTMLElement) {
+  try {
+    if (node.style && node.style?.backgroundColor) return true;
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
 
-const { insertText, insertNode } = editor;
+/**
+ * @name 当前行节点下面是否具有异常的节点
+ */
+function hasNotSatisfiedNode(node: HTMLElement) {
+  if (!node) return false;
+  if (!node.childNodes) return false;
+  if (!node.childNodes.length) return false;
+  if (node.childNodes.length == 1) {
+    if (hasParentOnlyBr(node)) return false;
+  }
 
-const { fileToBase64, getRandomWord } = helper;
+  let exist = false;
+  for (const cld of node.childNodes) {
+    // 节点不是内联节点 || 节点有背景色属性
+    if ((!isEditInline(cld as any) && node.nodeName == "SPAN") || hasTransparentBackgroundColor(cld as any)) {
+      exist = true;
+      break;
+    }
+  }
+  return exist;
+}
 
 export const transformsEditNodes = (editNode: IEditorElement) => {
   const range = fishRange.getRange();
   console.time("transforms转换节点耗时");
-
-  // 子节点是否只有一个br节点
-  function hasParentOnlyBr(node) {
-    if (node) {
-      if (node.childNodes && node.childNodes?.length == 1) {
-        if (node.childNodes[0]?.nodeName == "BR") return true;
-      }
-    }
-    return false;
-  }
-
-  /** 处理节点带有style属性时，也需要标记 */
-  function hasTransparentBackgroundColor(node) {
-    try {
-      if (node.style && node.style?.backgroundColor) return true;
-      return false;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  /**
-   * !!重要
-   * @name 当前编辑器节点下面具有非编辑器文本属性的节点
-   */
-  const isNodeWithNotTextNode = (node) => {
-    if (!node) return false;
-    if (!node.childNodes) return false;
-    if (!node.childNodes.length) return false;
-
-    if (node.childNodes.length == 1) {
-      if (hasParentOnlyBr(node)) return false;
-    }
-
-    let exist = false;
-    for (const cld of node.childNodes) {
-      if (hasTransparentBackgroundColor(cld)) {
-        exist = true;
-        break;
-      }
-    }
-
-    return exist;
-  };
 
   /**
    * bug1:
@@ -83,8 +60,8 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
     // 获取行编辑节点
     const editorRowNode = util.getNodeOfEditorElementNode(range.startContainer);
 
-    if (editorRowNode && isNodeWithNotTextNode(editorRowNode)) {
-      // console.log(editorRowNode.childNodes);
+    if (editorRowNode && hasNotSatisfiedNode(editorRowNode)) {
+      console.log(editorRowNode.childNodes);
       /**
        * 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
        * 遍历行节点集合
@@ -94,20 +71,24 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
         const node = nodes[i] as any;
 
         // 按键合并行时，会主动创建一些自定义span标签
-        const isFlag = !isEditTextNode(node) && !isFishInline(node) && node.nodeName == "SPAN";
+        const isFlag = !isEditInline(node) && node.nodeName == "SPAN";
         if (isFlag) {
-          rewriteEmbryoTextNode(node as HTMLElement);
+          // 把编辑行内的span元素转为文本节点
+          // 创建文本节点
+          const textNode = document.createTextNode(node.textContent || "");
+          // 替换 <span> 元素
+          node.parentNode?.replaceChild(textNode, node);
         }
 
-        // 删除编辑器行内节点的样式
-        if (hasTransparentBackgroundColor(node) && node.nodeName == "SPAN") {
+        // 删除行属性节点的子内联属性节点的样式
+        if (hasTransparentBackgroundColor(node) && isEditInline(node)) {
           node.style.removeProperty("background-color");
         }
 
         // 有其它节点就删除br
-        if (node.nodeName === "BR" && nodes.length > 1) {
-          node.remove();
-        }
+        // if (node.nodeName === "BR" && nodes.length > 1) {
+        //   node.remove();
+        // }
       }
     }
   }
@@ -120,30 +101,13 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
    */
   if (!isEditElement(editNode.firstChild as any)) {
     // 创建一个编辑器--行节点
-    const lineDom = base.createLineElement(false);
-    dom.toTargetAddNodes(editNode as any, [base.createLineElement(false)]);
+    const lineDom = base.createLineElement();
+    dom.toTargetAddNodes(editNode as any, [lineDom]);
     // 设置光标
     if (lineDom.firstChild) {
       fishRange.setCursorPosition(lineDom.firstChild, "after");
     }
   }
-
-  /**
-   * bug3:
-   * 主要解决删除行编辑节点时，把行编辑内容删完了，然后导致行编辑节点没有文本节点
-   * 1：这种情况通常出现在换行后，比如对第二行输入值了，然后删除,当删除到了第一个节点没内容了就会被搞一个空节点。
-   */
-  // if (range && range?.startContainer) {
-  //   // 光标节点不是一个文本节点 && 是一个编辑器块属性节点  && 只有一个子节点且还是一个br标签
-  //   if (!getNodeOfChildTextNode(range.startContainer) && isEditElement(range.startContainer as any) && hasParentOnlyBr(range.startContainer)) {
-  //     const textNode = base.createChunkTextElement(false);
-  //     dom.toTargetAddNodes(range.startContainer as any, [textNode]);
-  //     // 设置光标
-  //     if (textNode.firstChild) {
-  //       setCursorPosition(textNode.firstChild, "after");
-  //     }
-  //   }
-  // }
 
   console.timeEnd("transforms转换节点耗时");
 };
