@@ -11,7 +11,7 @@ import type { IEditorElement } from "../types";
 const { getRangeAroundNode, toTargetAddNodes, removeNodes, cloneNodes, toTargetAfterInsertNodes } = dom;
 const { isDOMElement, isDOMNode } = isNode;
 
-const { getNodeContent, handleEditNodeTransformsValue } = transforms;
+const { getEditElementContent, handleEditNodeTransformsValue } = transforms;
 /**
  * @name 获取当前编辑器的纯文本内容
  * @param editNode 富文本节点
@@ -169,7 +169,7 @@ export const insertText = (content: string, callBack?: () => void) => {
     /** 处理原始光标行位置节点的内容 */
     {
       // 获取焦点节点文本是空文本
-      const content = getNodeContent(topElementNode);
+      const content = getEditElementContent(topElementNode);
 
       if (content == "\n" || content == "") {
         if (isDOMElement(firstNode)) {
@@ -180,7 +180,7 @@ export const insertText = (content: string, callBack?: () => void) => {
         // 不是空
 
         // 1. 在当前光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
-        const firstContent = getNodeContent(firstNode);
+        const firstContent = getEditElementContent(firstNode);
 
         if (firstContent !== "\n" && firstContent !== "") {
           const prevLast = behindNodeList[0];

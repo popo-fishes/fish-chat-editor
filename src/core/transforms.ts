@@ -57,8 +57,8 @@ export const getPlainText = (domNode: any) => {
   return text;
 };
 
-/** @name 获取一个节点的内容 */
-export const getNodeContent = (node: any): string => {
+/** @name 获取编辑行属性节点的内容 */
+export const getEditElementContent = (node: any): string => {
   let content = "";
 
   if (isNode.isDOMText(node)) {
@@ -66,17 +66,18 @@ export const getNodeContent = (node: any): string => {
   }
   if (isNode.isDOMElement(node)) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      content += getNodeContent(node.childNodes[i]);
+      content += getEditElementContent(node.childNodes[i]);
     }
+    if (isNode.isEditInline(node)) {
+      const emojiNodeAttrKey = base.getElementAttributeKey("emojiNode");
+      const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
+      // 是否是一个表情图片,如果是取出名称
+      const isEmojiVal = node?.dataset?.[emojiNodeAttrName] || "";
+      const isEmojiNode = node.hasAttribute(emojiNodeAttrKey);
 
-    const emojiNodeAttrKey = base.getElementAttributeKey("emojiNode");
-    const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
-    // 是否是一个表情图片,如果是取出
-    const isEmojiVal = node?.dataset?.[emojiNodeAttrName] || "";
-    const isEmojiNode = node.nodeName == "IMG" && node.hasAttribute(emojiNodeAttrKey);
-
-    if (isEmojiNode && isEmojiVal) {
-      content += isEmojiVal;
+      if (isEmojiNode && isEmojiVal) {
+        content += isEmojiVal;
+      }
     }
   }
 
@@ -84,15 +85,15 @@ export const getNodeContent = (node: any): string => {
 };
 
 /**
- * @name 获取富文本节点的输入内容。逐行获取
- * @returns 返回一个文本数组，
+ * @name 获取富文本输入的内容。逐行获取
+ * @returns 返回一个文本数组
  */
 export const handleEditNodeTransformsValue = (editNode: IEditorElement): string[] => {
   const result: string[] = [];
   if (!editNode || !editNode?.childNodes) return [];
   const nodes: any = Array.from(dom.cloneNodes((editNode as any).childNodes));
   for (const cld of Array.from(nodes)) {
-    const content = getNodeContent(cld as Element);
+    const content = getEditElementContent(cld as Element);
     result.push(content);
   }
   return result;

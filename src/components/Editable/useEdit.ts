@@ -94,7 +94,14 @@ export default function useEdit(props: IEditableProps) {
     }
     // 创建
     const node = base.createChunkEmojilement(item.url, 18, 18, item.name);
-    editor.insertNode([node], currentRange);
+    editor.insertNode([node], currentRange, () => {
+      range.setCursorPosition(node, "after");
+      // 主动触发输入框值变化
+      const val = editor.getText(editRef.current);
+      // 控制提示
+      setTipHolder(val == "");
+      restProps?.onChange?.(val);
+    });
   };
 
   /** @name 失去焦点 */
