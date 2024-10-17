@@ -58,7 +58,6 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
     if (!node.childNodes) return false;
     if (!node.childNodes.length) return false;
 
-    // 只有一个文本节点，且是一个空的br，直接返回
     if (node.childNodes.length == 1) {
       if (hasParentOnlyBr(node)) return false;
     }
@@ -94,11 +93,11 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as any;
 
-        // 按键 删除行-富文本自动合并行时，会主动创建一些自定义标签
-        // const isFlag = !isEditTextNode(node) && !isFishInline(node) && node.nodeName == "SPAN";
-        // if (isFlag) {
-        //   rewriteEmbryoTextNode(node as HTMLElement);
-        // }
+        // 按键合并行时，会主动创建一些自定义span标签
+        const isFlag = !isEditTextNode(node) && !isFishInline(node) && node.nodeName == "SPAN";
+        if (isFlag) {
+          rewriteEmbryoTextNode(node as HTMLElement);
+        }
 
         // 删除编辑器行内节点的样式
         if (hasTransparentBackgroundColor(node) && node.nodeName == "SPAN") {
