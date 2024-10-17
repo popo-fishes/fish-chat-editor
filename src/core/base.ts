@@ -92,7 +92,7 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   container.classList.add(`${prefixNmae}emoji-container`);
   container.setAttribute("style", `width:${width}px;height:${height}px`);
   // 不可编辑
-  container.setAttribute("contenteditable", "false");
+  // container.setAttribute("contenteditable", "false");
   // 标记为内联块节点
   const fishInlineKey = getElementAttributeKey("fishInline");
   container.setAttribute(fishInlineKey, "true");
