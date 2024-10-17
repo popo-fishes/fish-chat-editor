@@ -2,15 +2,15 @@
  * @Date: 2024-10-12 13:45:55
  * @Description: Modify here please
  */
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
 import { base, isNode, util, range, editor, IRange, dom, transforms } from "../../core";
 
 const { createLineElement, getElementAttributeKey, createChunkEmojilement } = base;
-const { isEditElement, isEditTextNode } = isNode;
+const { isEditElement, isEmptyEditNode } = isNode;
 const { deleteTextNodeOfEmptyNode, deleteTargetNodeOfBrNode } = util;
-const { setRangeNode, amendRangePosition, getRange } = range;
+const { amendRangePosition, getRange } = range;
 const { getText } = editor;
 
 import { transformsEditNodes } from "./transforms";
@@ -41,6 +41,11 @@ export default function useEdit(props: IEditableProps) {
   /** 是否显示提示placeholder */
   const [showTipHolder, setTipHolder] = useState<boolean>(true);
 
+  // 初始化
+  useEffect(() => {
+    init();
+  }, []);
+
   /** @name 初始化编辑器 */
   const init = async () => {
     const editor = editRef.current;
@@ -48,7 +53,7 @@ export default function useEdit(props: IEditableProps) {
 
     // 清空内容
     const curDom = clearEditor();
-    // 设置目标
+    // 设置光标的位置
     setRangePosition(curDom, 0, true);
   };
 
@@ -96,14 +101,6 @@ export default function useEdit(props: IEditableProps) {
     // 创建
     const node = base.createChunkEmojilement(item.url, 18, 18, item.name);
     editor.insertNode([node], currentRange);
-  };
-
-  /**
-   * @name 键盘按键被松开时发生
-   * !!! 非常重要的边角异常-处理方法
-   */
-  const onEditorKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    transformsEditNodes(editRef.current);
   };
 
   /** @name 失去焦点 */
@@ -220,6 +217,30 @@ export default function useEdit(props: IEditableProps) {
   };
 
   /**
+   * @name 键盘按键被松开时发生
+   * !!! 非常重要的边角异常-处理方法
+   */
+  const onEditorKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    transformsEditNodes(editRef.current);
+  };
+
+  /** @name 鼠标按下时 */
+  const onEditorMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e?.target as any;
+    // 是一个DOM元素节点，且光标位置为1，并且存在图片节点, 那么就禁止获取焦点。
+    // if (isDOMElement(target) && findNodeWithImg(target) && getNodeOfEditorInlineNode(target)) {
+    //   e.preventDefault();
+    // }
+    // 获取当前文档的选区
+
+    // if (selection && selection.rangeCount > 0) {
+    //   const range = selection.getRangeAt(0);
+    //   console.log("选区范围:", range);
+    //   // 在这里可以对range进行进一步的操作
+    // }
+  };
+
+  /**
    * @name 输入框的粘贴事件
    */
   const onEditorPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
@@ -254,7 +275,6 @@ export default function useEdit(props: IEditableProps) {
     setRangePosition,
 
     clearEditor,
-    init,
 
     insertEmoji,
 
@@ -266,6 +286,7 @@ export default function useEdit(props: IEditableProps) {
     onEditorKeydown,
     onCompositionStart,
     onCompositionEnd,
+    onEditorMouseDown,
     onEditorPaste
   };
 }

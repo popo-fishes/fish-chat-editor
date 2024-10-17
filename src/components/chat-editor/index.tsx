@@ -15,9 +15,6 @@ import { emoji as defaultEmoData } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
-/**
- * @name 聊天编辑器
- */
 const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
   const { placeholder, onChange, onEnterDown, onSend, emojiList = [], emojiCdn, ...restProps } = props;

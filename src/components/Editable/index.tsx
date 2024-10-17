@@ -1,9 +1,8 @@
 /*
  * @Date: 2024-09-30 15:40:27
  * @LastEditors: Please set LastEditors
- * @Description: 富文本组件
  */
-import React, { useEffect, forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
 import { labelRep } from "../../utils";
 
@@ -13,9 +12,6 @@ import useEdit from "./useEdit";
 
 import { editor, transforms } from "../../core";
 
-/**
- * @name 富文本组件
- */
 const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   const { placeholder, ...restProps } = props;
 
@@ -27,7 +23,6 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     setRangePosition,
 
     clearEditor,
-    init,
 
     insertEmoji,
 
@@ -39,13 +34,9 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     onEditorKeydown,
     onEditorPaste,
     onCompositionStart,
-    onCompositionEnd
+    onCompositionEnd,
+    onEditorMouseDown
   } = useEdit(props);
-
-  // 初始化
-  useEffect(() => {
-    init();
-  }, []);
 
   useImperativeHandle(
     ref,
@@ -86,22 +77,6 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       }) as IEditableRef
   );
 
-  /** @name 鼠标按下时 */
-  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e?.target as any;
-    // 是一个DOM元素节点，且光标位置为1，并且存在图片节点, 那么就禁止获取焦点。
-    // if (isDOMElement(target) && findNodeWithImg(target) && getNodeOfEditorInlineNode(target)) {
-    //   e.preventDefault();
-    // }
-    // 获取当前文档的选区
-
-    // if (selection && selection.rangeCount > 0) {
-    //   const range = selection.getRangeAt(0);
-    //   console.log("选区范围:", range);
-    //   // 在这里可以对range进行进一步的操作
-    // }
-  };
-
   return (
     <div className="fb-editor-container">
       <div className="fb-editor-scroll">
@@ -120,7 +95,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           onKeyDown={onEditorKeydown}
           onKeyUp={onEditorKeyUp}
           onCompositionStart={onCompositionStart}
-          onMouseDown={onMouseDown}
+          onMouseDown={onEditorMouseDown}
           onCompositionEnd={onCompositionEnd}
           onClick={(e) => {
             e.preventDefault();
