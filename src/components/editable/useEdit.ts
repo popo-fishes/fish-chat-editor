@@ -229,6 +229,12 @@ export default function useEdit(props: IEditableProps) {
         return;
       }
     }
+
+    // 检测到可能导致合并的操作，如退格键或删除键
+    if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      // 在这里可以根据需要进行自定义的处理逻辑
+    }
   };
 
   /**
