@@ -261,19 +261,29 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
       if (!rowElementNode) {
         amendRangePosition(editNode, (node) => {
           if (node) {
-            editor.insertText(repContent, range, (success) => {
-              isPasteLock = false;
-              callBack(success);
-            });
+            editor.insertText(
+              repContent,
+              range,
+              (success) => {
+                isPasteLock = false;
+                callBack(success);
+              },
+              true
+            );
           }
         });
         return;
       }
       // 插入文本
-      editor.insertText(repContent, range, (success) => {
-        isPasteLock = false;
-        callBack(success);
-      });
+      editor.insertText(
+        repContent,
+        range,
+        (success) => {
+          isPasteLock = false;
+          callBack(success);
+        },
+        true
+      );
     }
   }
 };

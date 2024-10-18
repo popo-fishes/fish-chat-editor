@@ -7,7 +7,7 @@ import { helper, base, dom, isNode, util, range as fishRange, transforms } from 
 
 import type { IRange } from "./range";
 
-const { getRangeAroundNode, toTargetAddNodes, removeNodes, cloneNodes, toTargetAfterInsertNodes } = dom;
+const { toTargetAddNodes, removeNodes, cloneNodes, toTargetAfterInsertNodes } = dom;
 const { isDOMElement, isDOMNode } = isNode;
 
 const { getEditElementContent, handleEditNodeTransformsValue } = transforms;
@@ -94,10 +94,14 @@ export const getHtml = (): string => {
  * @param content 内容
  * @param range 光标信息
  * @param callBack 回调（success?）=> void
+ * @param showCursor 插入成功后是否需要设置光标
  * @returns
  */
-export const insertText = (content: string, range: IRange, callBack?: (success: boolean) => void) => {
-  if (!content || !range) return callBack?.(false);
+export const insertText = (content: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean) => {
+  if (!content || !range) {
+    callBack?.(false);
+    return;
+  }
 
   const splitNodes = (startContainer: any, node) => {
     dom.toTargetAfterInsertNodes(startContainer, [node]);
@@ -113,6 +117,11 @@ export const insertText = (content: string, range: IRange, callBack?: (success: 
   }
 
   console.time("editable插入内容耗时");
+
+  // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
+  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
+
+  console.log(behindNodeList, nextNodeList);
 
   /** 处理内容插入 */
   {
@@ -150,9 +159,6 @@ export const insertText = (content: string, range: IRange, callBack?: (success: 
       }
     }
 
-    // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
-    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
-
     /** 给最后一个节点加入一个i标签方便我们插入内容后，设置光标的焦点位置 */
     const keyId = "editorFocusHack" + new Date().getTime() + helper.getRandomWord();
     const iElement = document.createElement("i");
@@ -168,26 +174,29 @@ export const insertText = (content: string, range: IRange, callBack?: (success: 
     /** 处理原始光标行位置节点的内容 */
     {
       // 获取焦点节点文本是空文本
-      const content = getEditElementContent(topElementNode);
+      const content = transforms.getEditElementContent(rowElementNode);
 
       if (content == "\n" || content == "") {
         if (isDOMElement(firstNode)) {
           // 直接把第一个插入的节点内容 赋值给 当前光标节点的顶级富文本节点
-          toTargetAddNodes(topElementNode, cloneNodes(firstNode.childNodes));
+          dom.toTargetAddNodes(rowElementNode, cloneNodes(firstNode.childNodes));
         }
       } else {
         // 不是空
-
-        // 1. 在当前光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
+        /**
+         * 1. 在当前光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
+         */
+        // 获取第一个插入节点的文本内容
         const firstContent = getEditElementContent(firstNode);
-
+        // 不是空文本
         if (firstContent !== "\n" && firstContent !== "") {
+          // 获取前面节点的最后一个节点
           const prevLast = behindNodeList[0];
           if (prevLast) {
-            toTargetAfterInsertNodes(prevLast, cloneNodes(firstNode.childNodes));
+            dom.toTargetAfterInsertNodes(prevLast, cloneNodes(firstNode.childNodes));
           } else {
             /**
-             * 如果光标位置的后面没节点, 则选择光标后面的一个节点，然后插入节点
+             * 如果光标位置的之前没节点, 则选择光标之后的第一个节点，然后插入节点
              */
             if (nextNodeList[0]) {
               const nodes: any = Array.from(cloneNodes(firstNode.childNodes));
@@ -195,7 +204,7 @@ export const insertText = (content: string, range: IRange, callBack?: (success: 
               for (let i = 0; i < nodes.length; i++) {
                 fragment.appendChild(nodes[i]);
               }
-              topElementNode.insertBefore(fragment, nextNodeList[0]);
+              rowElementNode.insertBefore(fragment, nextNodeList[0]);
             }
           }
         }
@@ -208,46 +217,37 @@ export const insertText = (content: string, range: IRange, callBack?: (success: 
           // 1: 把后面的节点放到 插入的尾部节点中
           if (nextNodeList.length) {
             // 插入的尾部节点中
-            toTargetAddNodes(lastNode, cloneNodes(nextNodeList), false);
-            /**
-             * 如果我添加的节点本身没有内容，就需要先清空节点吧BR标签删除掉
-             * 没有内容lastNode会只带一个 br标签子节点，如果不处理，会导致有2行的BUG视觉效果
-             */
-            util.judgeEditRowNotNull(lastNode);
+            dom.toTargetAddNodes(lastNode, cloneNodes(nextNodeList), false);
+            // /**
+            //  * 如果我添加的节点本身没有内容，就需要先清空节点吧BR标签删除掉
+            //  * 没有内容lastNode会只带一个 br标签子节点，如果不处理，会导致有2行的BUG视觉效果
+            //  */
+            // util.judgeEditRowNotNull(lastNode);
             // 删除原始节点中的换行部分的节点
-            removeNodes(nextNodeList);
+            dom.removeNodes(nextNodeList);
           }
         }
       }
     }
 
-    // console.log(behindNodeList, nextNodeList);
-    // console.log(
-    //   // 原始光标节点
-    //   topElementNode,
-    //   // 需要插入的第一个节点(没有被真正插入到dom，只用到了它的子节点去合并光标位置的节点)
-    //   firstNode,
-    //   // 需要插入的最后一个节点
-    //   lastNode
-    // );
+    console.timeEnd("editable插入内容耗时");
 
     // 设置光标的位置
     {
-      // 获取光标节点
       const focusNode = document.getElementById(keyId) as any;
 
-      focusNode?.scrollIntoView(true);
       // 设置光标
-      setRangeNode(focusNode, "after", () => {
-        // 删除节点
-        focusNode?.remove();
-        // 执行回调
-        callBack?.();
-      });
+      if (showCursor) {
+        focusNode?.scrollIntoView(true);
+        fishRange.setCursorPosition(focusNode, "after");
+      }
+      // 删除节点
+      focusNode?.remove();
+
+      callBack?.(true);
     }
   }
-
-  console.timeEnd("editable插入内容耗时");
+  return;
 };
 
 /**
@@ -312,4 +312,5 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
   }
 
   callBack?.(false);
+  return;
 };

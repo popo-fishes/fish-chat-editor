@@ -5,7 +5,6 @@
 import { forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps, IEditorElement } from "../../types";
 import { editor, transforms, util } from "../../core";
-import { labelRep } from "../../utils";
 
 import { onCopy, onCut } from "./core";
 import { amendRangePosition } from "./util";
@@ -19,22 +18,22 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     editNodeRef,
     showTipHolder,
 
-    setTipHolder,
+    setText,
+    setRangePosition,
 
     clearEditor,
-
     insertEmoji,
-    setRangePosition,
+
     onEditorKeyUp,
-    onEditorChange,
     onEditorBlur,
     onEditorFocus,
+    onEditorChange,
     onEditorClick,
     onEditorKeydown,
-    onEditorPaste,
     onCompositionStart,
     onCompositionEnd,
-    onEditorMouseDown
+    onEditorMouseDown,
+    onEditorPaste
   } = useEdit(props);
 
   useImperativeHandle(
@@ -47,20 +46,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           // 返回输入框信息
           return transforms.editTransformSpaceText(editValue);
         },
-        setValue: (content) => {
-          if (!content || !editNodeRef.current) return;
-          // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 当前光标的节点元素的值
-          const repContent = labelRep(content);
-          amendRangePosition(editNodeRef.current, () => {
-            editor.insertText(repContent, () => {
-              const val = editor.getText();
-              // 控制提示
-              setTipHolder(val == "");
-              // 返回输入框信息
-              restProps.onChange?.(transforms.editTransformSpaceText(val));
-            });
-          });
-        },
+        setValue: (content) => setText(content),
         clear: () => {
           // 清除内容
           clearEditor();

@@ -4,6 +4,7 @@
  */
 import { useRef, useState, useEffect } from "react";
 import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
+import { labelRep } from "../../utils";
 
 import { base, isNode, util, range, editor, IRange, dom, transforms } from "../../core";
 
@@ -69,7 +70,7 @@ export default function useEdit(props: IEditableProps) {
     return node;
   };
 
-  /** @name 设置光标的位置 */
+  /** @name 设置选区的位置 */
   const setRangePosition = (curDom: HTMLElement, startOffset: number, isReset?: boolean) => {
     let dom = curDom;
     if (isNode.isEditElement(curDom) && isReset) {
@@ -83,6 +84,29 @@ export default function useEdit(props: IEditableProps) {
       endOffset: 0,
       anchorNode: dom
     };
+  };
+
+  /**
+   * @name 设置编辑器文本
+   */
+  const setText = (content: string) => {
+    if (!content || !editNodeRef.current) return;
+    // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 当前光标的节点元素的值
+    const repContent = labelRep(content);
+    // 修正位置
+    amendRangePosition(editNodeRef.current, (node) => {
+      if (node) {
+        // 设置当前光标节点
+        setRangePosition(node, 0);
+        editor.insertText(repContent, currentRange, () => {
+          const val = editor.getText();
+          // 控制提示
+          setTipHolder(val == "");
+          // 返回输入框信息
+          restProps.onChange?.(transforms.editTransformSpaceText(val));
+        });
+      }
+    });
   };
 
   /** @name 选择插入表情图片 */
@@ -310,11 +334,10 @@ export default function useEdit(props: IEditableProps) {
     editNodeRef,
     showTipHolder,
 
-    setTipHolder,
+    setText,
     setRangePosition,
 
     clearEditor,
-
     insertEmoji,
 
     onEditorKeyUp,
