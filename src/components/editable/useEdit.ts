@@ -282,13 +282,15 @@ export default function useEdit(props: IEditableProps) {
    */
   const onEditorPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
-    handlePasteTransforms(e, editNodeRef.current, () => {
-      // 获取输入框的值，主动触发输入框值变化
-      const val = editor.getText();
-      // 控制提示
-      setTipHolder(val == "");
-      // 暴露值
-      restProps.onChange?.(transforms.editTransformSpaceText(val));
+    handlePasteTransforms(e, editNodeRef.current, (success) => {
+      if (success) {
+        // 获取输入框的值，主动触发输入框值变化
+        const val = editor.getText();
+        // 控制提示
+        setTipHolder(val == "");
+        // 暴露值
+        restProps.onChange?.(transforms.editTransformSpaceText(val));
+      }
     });
   };
 

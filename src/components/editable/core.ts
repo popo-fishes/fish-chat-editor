@@ -166,12 +166,14 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
  * @param editNode 编辑器节点
  * @param callBack 成功回调
  */
-export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNode: IEditorElement, callBack?: () => void) => {
+export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNode: IEditorElement, callBack: (success: boolean) => void) => {
   // 获取粘贴的内容
   const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
   const isFile = clp?.types?.includes("Files");
   const isHtml = clp?.types?.includes("text/html");
   const isPlain = clp?.types?.includes("text/plain");
+
+  const range = fishRange.getRange();
 
   /**
    * @name 如果是文件
@@ -235,9 +237,9 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
     // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;",
     const repContent = labelRep(content);
 
-    if (!repContent) {
+    if (!repContent || !range) {
       isPasteLock = false;
-      return;
+      return callBack(false);
     }
 
     if (isPasteLock) return;
@@ -252,29 +254,25 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
     {
       isPasteLock = true;
 
-      // 获取当前光标
-      const range = selection?.getRangeAt(0);
+      // 行属性节点
+      const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
 
-      // 获取当前光标的开始容器节点
-      const topElementNode = findNodetWithElement(range.startContainer);
-
-      // 如果当前光标节点不是一个富文本元素节点，就默认指向它的第一个子节点
-      if (!topElementNode) {
-        // !!非常重要的逻辑
-        amendRangeLastNode(editNode, (node) => {
+      // 修正节点
+      if (!rowElementNode) {
+        amendRangePosition(editNode, (node) => {
           if (node) {
-            editor.insertText(repContent, () => {
+            editor.insertText(repContent, range, (success) => {
               isPasteLock = false;
-              callBack?.();
+              callBack(success);
             });
           }
         });
         return;
       }
-
-      editor.insertText(repContent, () => {
+      // 插入文本
+      editor.insertText(repContent, range, (success) => {
         isPasteLock = false;
-        callBack?.();
+        callBack(success);
       });
     }
   }

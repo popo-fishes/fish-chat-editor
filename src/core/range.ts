@@ -26,7 +26,7 @@ export const setCursorPosition = (referenceNode: Node, type?: "before" | "after"
   // 都不传递直接返回
   if (!type && !isNumber(startOffset) && !isNumber(endOffset)) return null;
   try {
-    const selection = window.getSelection();
+    const selection = getSelection();
     const range = document.createRange();
     // 适用于文本
     if (isNumber(startOffset) || isNumber(endOffset)) {

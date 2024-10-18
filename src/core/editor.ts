@@ -89,39 +89,30 @@ export const getHtml = (): string => {
   return contentResult.join("\n");
 };
 
-/** @name 在选区插入文本*/
-export const insertText = (content: string, callBack?: () => void) => {
-  if (!content) return callBack?.();
+/**
+ * @name 在选区插入文本
+ * @param content 内容
+ * @param range 光标信息
+ * @param callBack 回调（success?）=> void
+ * @returns
+ */
+export const insertText = (content: string, range: IRange, callBack?: (success: boolean) => void) => {
+  if (!content || !range) return callBack?.(false);
 
   const splitNodes = (startContainer: any, node) => {
-    startContainer.insertAdjacentElement("afterend", node);
+    dom.toTargetAfterInsertNodes(startContainer, [node]);
   };
 
+  // 获取当前光标的行编辑节点
+  const rowElementNode: any = util.getNodeOfEditorElementNode(range.startContainer);
+
+  if (!rowElementNode) {
+    console.warn("无编辑行节点，不可插入");
+    callBack?.(false);
+    return;
+  }
+
   console.time("editable插入内容耗时");
-
-  // 获取页面的选择区域
-  const selection = window.getSelection();
-
-  // 获取当前光标
-  const range = selection?.getRangeAt(0);
-
-  // 必须存在光标
-  if (!selection || selection?.rangeCount == 0 || !range) {
-    console.timeEnd("editable插入内容耗时");
-    callBack?.();
-    return;
-  }
-
-  // 获取当前光标的开始容器节点
-  const topElementNode: any = util.findNodetWithElement(range.startContainer);
-  // console.log(topElementNode, range);
-  // 如果当前节点的最顶级节点不是一个富文本内容节点：element  直接返回
-  if (!topElementNode) {
-    console.warn("选区的容器节点不属于富文本节点");
-    console.timeEnd("editable插入内容耗时");
-    callBack?.();
-    return;
-  }
 
   /** 处理内容插入 */
   {
@@ -130,7 +121,7 @@ export const insertText = (content: string, callBack?: () => void) => {
     // 是否需要进行分割
     let split = false;
     // 初始化光标节点的顶级节点，在遍历时会不停地更新它
-    let initialNode = topElementNode;
+    let initialNode = rowElementNode;
     // 需要插入的第一个节点(没有被真正插入到dom，只用到了它的子节点去合并光标位置的节点)
     let firstNode: any = null;
     // 需要插入节点的最后一个节点（如果需要插入节点只有一个，那么这个值和第一个节点 相同）
@@ -160,7 +151,7 @@ export const insertText = (content: string, callBack?: () => void) => {
     }
 
     // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
-    const [behindNodeList, nextNodeList] = getRangeAroundNode();
+    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
     /** 给最后一个节点加入一个i标签方便我们插入内容后，设置光标的焦点位置 */
     const keyId = "editorFocusHack" + new Date().getTime() + helper.getRandomWord();
@@ -282,7 +273,6 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
     callBack?.(false);
     return;
   }
-
   console.time("editable插入节点耗时");
 
   // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
@@ -317,6 +307,7 @@ export const insertNode = (nodes: HTMLElement[], range: IRange, callBack?: (succ
       referenceNode?.scrollIntoView(true);
       fishRange.setCursorPosition(referenceNode, "after");
       callBack?.(true);
+      return;
     }
   }
 
