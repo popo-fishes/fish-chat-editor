@@ -155,6 +155,7 @@ export const getRangeAroundNode = (range: IRange) => {
     console.warn("getRangeAroundNode:: 不是一个编辑器行属性节点");
     return [behindNodeList, nextNodeList];
   }
+  // console.log(range);
 
   /** 处理节点类型 */
   if (isDOMElement(targetNode)) {

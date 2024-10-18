@@ -247,10 +247,13 @@ export default function useEdit(props: IEditableProps) {
 
     /**
      * bug2:
-     * 按下删除按键
+     * 按下删除按键：如果当前编辑器已经是一个空节点 就 阻止删除按键。不然会把空文本节点给删除了导致BUG
+     * 兜底处理,防止骚操作
      */
     if (event.keyCode === 8) {
-      // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
+      /**
+       * 是没有选定文本 && 当前编辑器是一个空节点
+       */
       if (!range.isSelected() && editor.isEmptyEditorNode()) {
         event.preventDefault();
         return;

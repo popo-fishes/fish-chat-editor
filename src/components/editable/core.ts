@@ -257,7 +257,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
       // 行属性节点
       const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
 
-      // 修正节点
+      // 修正光标节点
       if (!rowElementNode) {
         amendRangePosition(editNode, (node) => {
           if (node) {
