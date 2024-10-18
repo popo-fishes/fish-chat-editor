@@ -9,7 +9,7 @@ import { Tooltip, Image } from "antd";
 import Editable from "../editable";
 import { useClickAway } from "../../hooks";
 
-import { setEmojiCdn } from "../../utils";
+import { setEmojiCdn, setEmojiData } from "../../utils";
 import { emoji as defaultEmoData } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
@@ -38,6 +38,7 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
 
     // 如果外面传递了表情数据用外面的
     if (emojiList?.length) {
+      setEmojiData([...emojiList]);
       return [...emojiList];
     }
 
@@ -51,7 +52,7 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
         title: cli
       });
     }
-
+    setEmojiData(data);
     return data;
   }, [emojiList, cdnUrl]);
 

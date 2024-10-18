@@ -2,7 +2,6 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { regContentImg } from "../utils";
 import { helper, base, dom, isNode, util, range as fishRange, transforms } from ".";
 
 import type { IRange } from "./range";
@@ -136,13 +135,13 @@ export const insertText = (contentText: string, range: IRange, callBack?: (succe
     let lastNode: any = null;
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const htmlNodeStr = regContentImg(line);
-      console.log(htmlNodeStr, line);
+      const lineContent = lines[i];
+      const childNodes = transforms.transformTextToNodes(lineContent);
+      // console.log(childNodes);
       const node = base.createLineElement();
 
-      if (htmlNodeStr) {
-        node.innerHTML = htmlNodeStr;
+      if (childNodes.length) {
+        dom.toTargetAddNodes(node, childNodes as any[]);
       }
 
       if (i === lines.length - 1) {
@@ -210,12 +209,15 @@ export const insertText = (contentText: string, range: IRange, callBack?: (succe
          * 2.2 我们这里判断如果不是一个节点，那么就删除后面的节点
          */
         if (firstNode !== lastNode && nextNodeList.length) {
-          const isNotContent = transforms.getEditElementContent(lastNode);
+          const lastContent = transforms.getEditElementContent(lastNode);
           dom.toTargetAddNodes(lastNode, dom.cloneNodes(nextNodeList), false);
-          if (isNotContent) {
+          /**
+           * 如果添加的节点本身没有内容，就需要先清空节点吧BR标签删除掉
+           * 没有内容lastNode会带一个 br标签子节点，如果不处理，会导致有2行的BUG视觉效果
+           */
+          if (lastContent == "" || lastContent == "\n") {
             util.deleteTargetNodeOfBrNode(lastNode);
           }
-          // 删除原始节点中的换行部分的节点
           dom.removeNodes(nextNodeList);
         }
       }

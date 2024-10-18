@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 import { base, isNode, dom } from ".";
-
+import { getEmojiData } from "../utils";
 /** @name 字符串标签转换 */
 export const labelRep = (str: string, reversal?: boolean) => {
   if (!str) return "";
@@ -17,6 +17,56 @@ export const labelRep = (str: string, reversal?: boolean) => {
       .replace(/&#039;/g, "'");
   }
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+};
+
+/**
+ *  @name 把插入的文本转成节点
+ * 主要是把文本转成表情节点
+ */
+export const transformTextToNodes = (content: string): Node[] | [] => {
+  if (!content) return [];
+  const emojiList = getEmojiData();
+  const nodes: Node[] = [];
+
+  let strCont = content;
+  /**
+   * 比如content为：哈哈[爱你]哈[不看]哈--->
+   * 要转换为一个数组： [text节点内容为“"哈哈"，img节点， text节点内容为“"哈"，img节点， text节点内容为“"哈哈"]
+   * ：：：：：
+   *这里主要做字符串标记
+   */
+  for (const i in emojiList) {
+    const item = emojiList[i];
+    const reg = new RegExp("\\" + item.name, "g");
+    // 替换
+    strCont = strCont?.replace(reg, function () {
+      const key = base.getElementAttributeKey("emojiNode");
+      // 替换表情
+      const strimg = `<img src="${item.url}" width="${18}px" height="${18}px" ${key}="${item.name}"/>`;
+      return strimg;
+    });
+  }
+
+  // 创建一个p标签, 把字符串转成一个dom节点
+  const dom_p = document.createElement("p");
+  dom_p.innerHTML = strCont;
+  // 处理当前节点内容
+  if (dom_p.childNodes?.length) {
+    dom_p.childNodes.forEach((cldNode) => {
+      if (isNode.isDOMText(cldNode)) {
+        nodes.push(cldNode);
+      } else if (isNode.isDOMElement(cldNode) && cldNode.nodeName == "IMG") {
+        const attrName = base.getElementAttributeDatasetName("emojiNode");
+        const elementAttrVal = (cldNode as any)?.dataset?.[attrName] || "";
+        if (elementAttrVal && (cldNode as any).src) {
+          const imgNode = base.createChunkEmojilement((cldNode as any).src, 18, 18, elementAttrVal);
+          nodes.push(imgNode);
+        }
+      }
+    });
+  }
+
+  return nodes;
 };
 
 /**

@@ -4,6 +4,7 @@
  * @Description: file content
  */
 import { emoji } from "../config";
+import type { IEmojiType } from "../types";
 
 import { base, helper, transforms } from "../core";
 
@@ -11,12 +12,24 @@ const { getRandomWord } = helper;
 
 const { getElementAttributeKey } = base;
 
-let globalCdn = "";
+let globalCdn: string = "";
+let globalEmojiList: IEmojiType[] = [];
 
-export const labelRep = transforms.labelRep;
+export const labelRep = (str: string) => transforms.labelRep(str);
 
 /**
- * @name 获取表情图片的CDN路径，且吧传递进来的CDN路径保存到全局变量
+ * @name 设置当前表情图片数据
+ */
+export const setEmojiData = (emojiData: IEmojiType[]) => {
+  globalEmojiList = [...emojiData];
+};
+
+export const getEmojiData = (): IEmojiType[] => {
+  return globalEmojiList || [];
+};
+
+/**
+ * @name 设置表情图片的CDN路径
  * @param CDN_IMG
  * @returns
  */
@@ -45,7 +58,7 @@ export const getEmojiCdn = (img: string) => {
  * @strCont 字符串
  * @imgSize 表情图片的大小 默认为18px
  */
-export const regContentImg = (strCont?: string, imgSize?: number) => {
+const regContentImg = (strCont?: string, imgSize?: number) => {
   if (!strCont) return "";
   // 把字符串替换表情图片
   for (const i in emoji) {
