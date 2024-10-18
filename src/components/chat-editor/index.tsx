@@ -9,14 +9,14 @@ import { Tooltip, Image } from "antd";
 import Editable from "../editable";
 import { useClickAway } from "../../hooks";
 
-import { setEmojiCdn, setEmojiData } from "../../utils";
-import { emoji as defaultEmoData } from "../../config";
+import { setEmojiData } from "../../utils";
+import { emoji as defaultEmojiData } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
 const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
-  const { placeholder, onChange, onEnterDown, onSend, emojiList = [], emojiCdn, ...restProps } = props;
+  const { placeholder, onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
   // 输入框控制器
   const editInputRef = useRef<IEditableRef>(null);
   // 表情的弹窗
@@ -28,14 +28,7 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   // 可以点击发送按钮？?
   const [isSend, setSend] = useState<boolean>(false);
 
-  const cdnUrl = useMemo(() => {
-    const cdn = setEmojiCdn(emojiCdn || "http://43.136.119.145:83/image/");
-    return cdn;
-  }, [emojiCdn]);
-
   const mergeEmojiList = useMemo(() => {
-    if (!cdnUrl) return [];
-
     // 如果外面传递了表情数据用外面的
     if (emojiList?.length) {
       setEmojiData([...emojiList]);
@@ -43,18 +36,18 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
     }
 
     const data: IEmojiType[] = [];
-    for (const i in defaultEmoData) {
+    for (const i in defaultEmojiData) {
       const bli = i.replace("[", "");
       const cli = bli.replace("]", "");
       data.push({
-        url: `${cdnUrl}${defaultEmoData[i]}`,
+        url: `http://43.136.119.145:83/image/${defaultEmojiData[i]}`,
         name: i,
         title: cli
       });
     }
     setEmojiData(data);
     return data;
-  }, [emojiList, cdnUrl]);
+  }, [emojiList]);
 
   /** @name 暴露方法 */
   useImperativeHandle(ref, () => {

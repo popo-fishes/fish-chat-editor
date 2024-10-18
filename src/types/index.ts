@@ -7,8 +7,11 @@ import type { ReactNode } from "react";
 export type IEditorElement = HTMLDivElement;
 
 export type IEmojiType = {
+  /** 表情的url地址 */
   url: string;
+  /** 表情的名称，必须是“[爱心]”的格式 */
   name: string;
+  /** 表情的tip提升标题名 */
   title: string;
 };
 
@@ -21,8 +24,6 @@ export interface IChatEditorProps extends Pick<IEditableProps, "placeholder" | "
   className?: string;
   /** 表情列表数据 */
   emojiList?: IEmojiType[];
-  /** emoji cdn地址, 当你需要自定义emojiList 那么它是必须的。*/
-  emojiCdn?: string;
   /** 自定义工具栏内容 */
   toolbarRender?: () => ReactNode;
   /** 点击发送按钮事件 */

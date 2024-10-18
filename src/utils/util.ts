@@ -3,16 +3,12 @@
  * @LastEditors: Please set LastEditors
  * @Description: file content
  */
-import { emoji } from "../config";
 import type { IEmojiType } from "../types";
 
-import { base, helper, transforms } from "../core";
-
-const { getRandomWord } = helper;
+import { base, transforms } from "../core";
 
 const { getElementAttributeKey } = base;
 
-let globalCdn: string = "";
 let globalEmojiList: IEmojiType[] = [];
 
 export const labelRep = (str: string) => transforms.labelRep(str);
@@ -29,58 +25,32 @@ export const getEmojiData = (): IEmojiType[] => {
 };
 
 /**
- * @name 设置表情图片的CDN路径
- * @param CDN_IMG
- * @returns
- */
-export const setEmojiCdn = (CDN_IMG?: string) => {
-  if (CDN_IMG) {
-    globalCdn = CDN_IMG;
-    return CDN_IMG;
-  }
-  if (globalCdn) {
-    return globalCdn;
-  }
-  return "";
-};
-
-/**
- * @name 获取图片CDN链接
- * @param img 图片的路径或名称
- * @returns 返回拼接后的图片CDN链接
- */
-export const getEmojiCdn = (img: string) => {
-  return setEmojiCdn() + img;
-};
-
-/**
- * @name 文本转换图片替换方法
- * @strCont 字符串
- * @imgSize 表情图片的大小 默认为18px
- */
-const regContentImg = (strCont?: string, imgSize?: number) => {
-  if (!strCont) return "";
-  // 把字符串替换表情图片
-  for (const i in emoji) {
-    const reg = new RegExp("\\" + i, "g");
-    // 替换
-    strCont = strCont?.replace(reg, function () {
-      // 给当前替换的图片给一个位置的值，防止过滤匹配图片的时候出现问题
-      const t = "emoji-" + getRandomWord();
-      const key = getElementAttributeKey("emojiNode");
-      // 替换表情
-      const strimg = `<img src="${getEmojiCdn(`${emoji[i]}`)}" width="${imgSize || 18}px" height="${imgSize || 18}px" ${key}="${i}" data-key="${t}"/>`;
-      return strimg;
-    });
-  }
-  return strCont;
-};
-
-/**
  * @name 文本消息转换，批量替换方法
  * @msgText 消息字符串
  */
 export const replaceMsgText = (msgText?: string): string => {
+  /**
+   * @name 文本转换图片替换方法
+   * @strCont 字符串
+   */
+  function regContentImg(strCont?: string) {
+    if (!strCont) return "";
+    const emojiList = getEmojiData();
+    // 把字符串替换表情图片
+    for (const i in emojiList) {
+      const item = emojiList[i];
+      const reg = new RegExp("\\" + item.name, "g");
+      // 替换
+      strCont = strCont?.replace(reg, function () {
+        const key = base.getElementAttributeKey("emojiNode");
+        // 替换表情
+        const strimg = `<img src="${item.url}" width="${18}px" height="${18}px" ${key}="${item.name}"/>`;
+        return strimg;
+      });
+    }
+    return strCont;
+  }
+
   // 文本转换批量图片替换方法
   const transMsgStr = regContentImg(msgText);
   /**
