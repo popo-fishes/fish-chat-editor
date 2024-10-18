@@ -4,11 +4,9 @@
  */
 import { base, isNode, dom } from ".";
 
-import type { IEditorElement } from "../types";
-
 /**
  * @name 除去字符串空格换后是否为一个空文本，如果是直接赋值为空，否则用原始的
- * 常用于获取富文本值后，判断是否全部是空格 和 换行，如果是就给字符串置空
+ * 常用于获取节点值后，判断是否全部是空格 和 换行，如果是就给字符串置空
  */
 export const editTransformSpaceText = (content: string) => {
   // 删除所有换行
@@ -24,8 +22,8 @@ export const editTransformSpaceText = (content: string) => {
   return content;
 };
 
-/** @name 复制富文本节点的文本值 */
-export const getPlainText = (domNode: any) => {
+/** @name 复制节点的文本值 */
+export const getPlainText = (domNode: HTMLElement) => {
   let text = "";
 
   if (isNode.isDOMText(domNode) && domNode.nodeValue) {
@@ -34,7 +32,7 @@ export const getPlainText = (domNode: any) => {
 
   if (isNode.isDOMElement(domNode)) {
     for (const childNode of Array.from(domNode.childNodes)) {
-      text += getPlainText(childNode as Element);
+      text += getPlainText(childNode as any);
     }
 
     const display = getComputedStyle(domNode).getPropertyValue("display");
@@ -85,13 +83,13 @@ export const getEditElementContent = (node: any): string => {
 };
 
 /**
- * @name 获取富文本输入的内容。逐行获取
+ * @name 获取编辑器节点输入的内容。逐行获取
  * @returns 返回一个文本数组
  */
-export const handleEditNodeTransformsValue = (editNode: IEditorElement): string[] => {
+export const handleEditNodeTransformsValue = (node: HTMLElement): string[] => {
   const result: string[] = [];
-  if (!editNode || !editNode?.childNodes) return [];
-  const nodes: any = Array.from(dom.cloneNodes((editNode as any).childNodes));
+  if (!node || !node?.childNodes) return [];
+  const nodes: any = Array.from(dom.cloneNodes((node as any).childNodes));
   for (const cld of Array.from(nodes)) {
     const content = getEditElementContent(cld as Element);
     result.push(content);

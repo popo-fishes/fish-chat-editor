@@ -2,8 +2,7 @@
  * @Date: 2024-10-09 09:43:04
  * @Description: Modify here please
  */
-import { base, editor } from ".";
-import type { IEditorElement } from "../types";
+import { base } from ".";
 
 /**
  * @name 返回DOM节点的主机窗口
@@ -26,22 +25,6 @@ export const isDOMElement = (value: any) => {
 /** @name 检查DOM节点是否为文本节点。 */
 export const isDOMText = (value: any) => {
   return isDOMNode(value) && value.nodeType === 3;
-};
-
-/**
- * @name 当前编辑器是一个空节点？
- * @returns boolean
- */
-export const isEmptyEditNode = (editNode: IEditorElement) => {
-  if (!editNode || !editNode?.childNodes) return true;
-  // 子节点大于1返回false，代表不是空
-  if (editNode?.childNodes && editNode?.childNodes.length > 1) {
-    return false;
-  }
-  // 获取纯文本内容，有内容返回false，没内容返回true
-  if (!editor.getText(editNode)) return true;
-
-  return false;
 };
 
 /**

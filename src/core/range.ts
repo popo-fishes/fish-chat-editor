@@ -1,8 +1,6 @@
 import isNumber from "lodash/isNumber";
 import { isNode } from ".";
 
-import type { IEditorElement } from "../types";
-
 export interface IRange {
   /** Range起始节点 */
   startContainer?: Node | null;
@@ -53,30 +51,6 @@ export const setCursorPosition = (referenceNode: Node, type?: "before" | "after"
     console.error(err);
     return null;
   }
-};
-
-/**
- * @name 修正光标的位置
- */
-export const amendRangePosition = (editNode: IEditorElement, callBack?: (node?: HTMLElement) => void) => {
-  if (!editNode || !editNode.childNodes) return callBack?.();
-
-  let lastElement = editNode.childNodes[editNode.childNodes.length - 1];
-
-  if (!lastElement) {
-    console.warn("富文本不存在节点，请排查问题");
-    return;
-  }
-  // 是一个节点块
-  if (isNode.isEditElement(lastElement as HTMLElement)) {
-    const referenceElement = lastElement.lastChild;
-    if (referenceElement) {
-      setCursorPosition(referenceElement, "before");
-      callBack?.(referenceElement as HTMLElement);
-      return;
-    }
-  }
-  console.warn("富文本不存在节点，请排查问题");
 };
 
 /**

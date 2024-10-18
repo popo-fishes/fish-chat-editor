@@ -10,6 +10,8 @@ import { base, isNode, util, range, editor, IRange, dom, transforms } from "../.
 import { transformsEditNodes } from "./transforms";
 import { handlePasteTransforms, handleLineFeed } from "./core";
 
+import { amendRangePosition } from "./util";
+
 // 备份当前的光标位置
 let currentRange: IRange = null;
 
@@ -30,19 +32,26 @@ let isLineFeedLock = false;
 export default function useEdit(props: IEditableProps) {
   const { ...restProps } = props;
 
-  /** 用于操作聊天输入框元素 */
-  const editRef = useRef<IEditorElement>(null);
+  /** 编辑区域的元素 */
+  const editNodeRef = useRef<IEditorElement>(null);
   /** 是否显示提示placeholder */
   const [showTipHolder, setTipHolder] = useState<boolean>(true);
 
   // 初始化
   useEffect(() => {
+    instantiateEditor();
     init();
   }, []);
 
+  const instantiateEditor = (): void => {
+    const node = util.getEditorInstance();
+    editNodeRef.current = node || null;
+  };
+
   /** @name 初始化编辑器 */
   const init = async () => {
-    const editor = editRef.current;
+    const editor = editNodeRef.current;
+    // console.log(editNodeRef.current);
     if (!editor) return;
 
     // 清空内容
@@ -54,9 +63,8 @@ export default function useEdit(props: IEditableProps) {
   /** @name 清空输入框的值 */
   const clearEditor = (): HTMLParagraphElement | null => {
     const node = base.createLineElement();
-    if (!editRef.current) return null;
-    editRef.current.innerHTML = ""; // 清空所有子节点
-    dom.toTargetAddNodes(editRef.current, [node]);
+    if (!editNodeRef.current) return null;
+    dom.toTargetAddNodes(editNodeRef.current, [node]);
     // 设置提示
     setTipHolder(true);
     return node;
@@ -83,7 +91,7 @@ export default function useEdit(props: IEditableProps) {
     const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
     if (!editorElementNode) {
       // 修正光标位置
-      range.amendRangePosition(editRef.current, (node) => {
+      amendRangePosition(editNodeRef.current, (node) => {
         if (node) {
           // 设置当前光标节点
           setRangePosition(node, 0);
@@ -97,7 +105,7 @@ export default function useEdit(props: IEditableProps) {
     editor.insertNode([node], currentRange, () => {
       range.setCursorPosition(node as any, "after");
       // 主动触发输入框值变化
-      const val = editor.getText(editRef.current);
+      const val = editor.getText();
       // 控制提示
       setTipHolder(val == "");
       props?.onChange?.(val);
@@ -134,7 +142,7 @@ export default function useEdit(props: IEditableProps) {
     if (isLock) return;
 
     // 获取输入框的值，主动触发输入框值变化
-    const val = editor.getText(editRef.current);
+    const val = editor.getText();
     // 控制提示
     setTipHolder(val == "");
     // 暴露值
@@ -195,9 +203,9 @@ export default function useEdit(props: IEditableProps) {
       isLineFeedLock = true;
 
       // 插入换行符
-      handleLineFeed(editRef.current, (success) => {
+      handleLineFeed(editNodeRef.current, (success) => {
         if (success) {
-          const isFlag = isNode.isEmptyEditNode(editRef.current);
+          const isFlag = editor.isEmptyEditorNode();
           setTipHolder(isFlag);
         }
         isLineFeedLock = false;
@@ -220,7 +228,7 @@ export default function useEdit(props: IEditableProps) {
      */
     if (event.keyCode === 8) {
       // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
-      if (!range.isSelected() && isNode.isEmptyEditNode(editRef.current)) {
+      if (!range.isSelected() && editor.isEmptyEditorNode()) {
         event.preventDefault();
         return;
       }
@@ -249,10 +257,9 @@ export default function useEdit(props: IEditableProps) {
 
   /**
    * @name 键盘按键被松开时发生
-   * !!! 非常重要的边角异常-处理方法
    */
   const onEditorKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    transformsEditNodes(editRef.current);
+    transformsEditNodes(editNodeRef.current);
   };
 
   /** @name 鼠标按下时 */
@@ -276,9 +283,9 @@ export default function useEdit(props: IEditableProps) {
    */
   const onEditorPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
-    handlePasteTransforms(e, editRef.current, () => {
+    handlePasteTransforms(e, editNodeRef.current, () => {
       // 获取输入框的值，主动触发输入框值变化
-      const val = editor.getText(editRef.current);
+      const val = editor.getText();
       // 控制提示
       setTipHolder(val == "");
       // 暴露值
@@ -299,7 +306,7 @@ export default function useEdit(props: IEditableProps) {
   };
 
   return {
-    editRef,
+    editNodeRef,
     showTipHolder,
 
     setTipHolder,

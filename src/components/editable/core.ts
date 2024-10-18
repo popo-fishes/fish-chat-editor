@@ -4,6 +4,8 @@ import { regContentImg, labelRep } from "../../utils";
 
 import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
 
+import { amendRangePosition } from "./util";
+
 import type { IEditorElement } from "../../types";
 
 const { isEditElement } = isNode;
@@ -96,8 +98,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
   const rowElementNode = util.getNodeOfEditorElementNode(rangeStartContainer);
 
   if (!rowElementNode) {
-    // 非常重要的逻辑--修正光标位置
-    fishRange.amendRangePosition(editNode, (node) => {
+    amendRangePosition(editNode, (node) => {
       if (node) {
         // 在调用自己一次
         handleLineFeed(editNode, callBack);

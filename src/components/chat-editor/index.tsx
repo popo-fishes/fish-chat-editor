@@ -1,7 +1,6 @@
 /*
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
- * @Description: 聊天富文本
  */
 import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
 import classNames from "classnames";
@@ -109,9 +108,9 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   }, [onSend, isSend]);
 
   return (
-    <div className={classNames("fb-editor", restProps.className)}>
+    <div className={classNames("fb-chat-wrapper", restProps.className)}>
       {/* 功能区 */}
-      <div className="fb-editor-controls">
+      <div className="fb-chat-toolbar">
         {/* 默认工具栏 */}
         <Tooltip
           title="表情包"
@@ -136,14 +135,14 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
       {/* 编辑框 */}
       <Editable placeholder={placeholder} ref={editInputRef} onChange={onEditableChange} onEnterDown={onEnterDownEvent} onClick={onEditableClick} />
       {/* 发送区 */}
-      <div className="fb-chat-op">
+      <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
         <button className={classNames("btn-send", isSend && "activate")} onClick={onSubmit}>
           发送
         </button>
       </div>
       {/* 表情选择列表 */}
-      <div className="fb-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
+      <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
             {mergeEmojiList.map((item, index) => (

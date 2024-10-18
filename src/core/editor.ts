@@ -6,21 +6,39 @@ import { regContentImg } from "../utils";
 import { helper, base, dom, isNode, util, range as fishRange, transforms } from ".";
 
 import type { IRange } from "./range";
-import type { IEditorElement } from "../types";
 
 const { getRangeAroundNode, toTargetAddNodes, removeNodes, cloneNodes, toTargetAfterInsertNodes } = dom;
 const { isDOMElement, isDOMNode } = isNode;
 
 const { getEditElementContent, handleEditNodeTransformsValue } = transforms;
 /**
+ * @name 当前编辑器是一个空节点？
+ * @returns boolean
+ */
+export const isEmptyEditorNode = () => {
+  const editorNode = util.getEditorInstance();
+  if (!editorNode || !editorNode?.childNodes) return true;
+  // 子节点大于1返回false，代表不是空
+  if (editorNode?.childNodes && editorNode?.childNodes.length > 1) {
+    return false;
+  }
+  // 获取纯文本内容，有内容返回false，没内容返回true
+  if (!getText()) return true;
+
+  return false;
+};
+
+/**
  * @name 获取当前编辑器的纯文本内容
- * @param editNode 富文本节点
+ * @param editorNode 富文本节点
  * @returns
  */
-export const getText = (editNode: IEditorElement): string => {
-  if (!editNode || !isDOMNode(editNode)) return "";
+export const getText = (): string => {
+  const editorNode = util.getEditorInstance();
 
-  const contents = editNode.cloneNode(true);
+  if (!editorNode || !isDOMNode(editorNode)) return "";
+
+  const contents = editorNode.cloneNode(true);
 
   const odiv = document.createElement("div");
 
@@ -38,27 +56,20 @@ export const getText = (editNode: IEditorElement): string => {
   contents.ownerDocument.body.removeChild(odiv);
 
   return contentResult.join("\n");
-};
-
-/** @name 设置文本值 */
-export const setText = (editNode: IEditorElement, content: string, callBack?: () => void) => {
-  if (!content || !editNode) return callBack?.();
-  // 把光标设置在富文本内容的最后一行的最后一个位置
-  fishRange.amendRangePosition(editNode, () => {
-    insertText(content, () => callBack?.());
-  });
 };
 
 /**
  * todo
  * @name 获取非格式化的html
- * @param editNode 富文本节点
+ * @param editorNode 富文本节点
  * @returns
  */
-export const getHtml = (editNode: IEditorElement): string => {
-  if (!editNode || !isDOMNode(editNode)) return "";
+export const getHtml = (): string => {
+  const editorNode = util.getEditorInstance();
 
-  const contents = editNode.cloneNode(true);
+  if (!editorNode || !isDOMNode(editorNode)) return "";
+
+  const contents = editorNode.cloneNode(true);
 
   const odiv = document.createElement("div");
 
@@ -78,10 +89,7 @@ export const getHtml = (editNode: IEditorElement): string => {
   return contentResult.join("\n");
 };
 
-/**
- * @name 在选区插入文本
- * 核心方法之一
- */
+/** @name 在选区插入文本*/
 export const insertText = (content: string, callBack?: () => void) => {
   if (!content) return callBack?.();
 

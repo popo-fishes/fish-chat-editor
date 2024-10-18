@@ -3,11 +3,12 @@
  * @LastEditors: Please set LastEditors
  */
 import { forwardRef, useImperativeHandle } from "react";
-import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
-import { editor, transforms, range } from "../../core";
+import type { IEmojiType, IEditableRef, IEditableProps, IEditorElement } from "../../types";
+import { editor, transforms, util } from "../../core";
 import { labelRep } from "../../utils";
 
 import { onCopy, onCut } from "./core";
+import { amendRangePosition } from "./util";
 
 import useEdit from "./useEdit";
 
@@ -15,7 +16,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   const { placeholder, ...restProps } = props;
 
   const {
-    editRef,
+    editNodeRef,
     showTipHolder,
 
     setTipHolder,
@@ -42,33 +43,35 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       ({
         insertEmoji: (item: IEmojiType) => insertEmoji(item),
         getValue: () => {
-          const editValue = editor.getText(editRef.current);
+          const editValue = editor.getText();
           // 返回输入框信息
           return transforms.editTransformSpaceText(editValue);
         },
-        setValue: (val) => {
-          if (!val || !editRef.current) return;
+        setValue: (content) => {
+          if (!content || !editNodeRef.current) return;
           // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 当前光标的节点元素的值
-          const repContent = labelRep(val);
-          editor.setText(editRef.current, repContent, () => {
-            const val = editor.getText(editRef.current);
-            // 控制提示
-            setTipHolder(val == "");
-            // 返回输入框信息
-            restProps.onChange?.(transforms.editTransformSpaceText(val));
+          const repContent = labelRep(content);
+          amendRangePosition(editNodeRef.current, () => {
+            editor.insertText(repContent, () => {
+              const val = editor.getText();
+              // 控制提示
+              setTipHolder(val == "");
+              // 返回输入框信息
+              restProps.onChange?.(transforms.editTransformSpaceText(val));
+            });
           });
         },
         clear: () => {
           // 清除内容
           clearEditor();
           // 失去焦点
-          editRef?.current?.blur();
+          editNodeRef.current?.blur();
           restProps.onChange?.("");
         },
         focus: () => {
           requestAnimationFrame(() => {
             // 修正光标位置
-            range.amendRangePosition(editRef.current, (node) => {
+            amendRangePosition(editNodeRef.current, (node) => {
               if (node) {
                 // 设置当前光标节点
                 setRangePosition(node, 0);
@@ -76,7 +79,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
             });
           });
         },
-        blur: () => editRef?.current?.blur()
+        blur: () => editNodeRef.current?.blur()
       }) as IEditableRef
   );
 
@@ -84,8 +87,9 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     <div className="fb-editor-container">
       <div className="fb-editor-scroll">
         <div
-          className="fb-editor-wrapper"
-          ref={editRef}
+          className="fb-editor"
+          id="fa-editor"
+          ref={(instance: IEditorElement | null) => util.setEditorInstance(instance)}
           contentEditable
           data-fish-editor
           spellCheck
@@ -121,7 +125,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           }}
         />
       </div>
-      <div className="fb-tip-placeholder" style={{ display: showTipHolder ? "block" : "none" }}>
+      <div className="fb-placeholder" style={{ display: showTipHolder ? "block" : "none" }}>
         {placeholder == "" ? "" : placeholder || "请输入发送的消息"}
       </div>
     </div>

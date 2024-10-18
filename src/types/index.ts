@@ -36,7 +36,7 @@ export interface IEditableRef {
    */
   insertEmoji: (item: IEmojiType) => void;
   /**
-   * @获取输入框值
+   * @获取纯文本值
    */
   getValue: () => string;
   /**
@@ -52,7 +52,7 @@ export interface IEditableRef {
    */
   blur: () => void;
   /**
-   * @设置输入框值
+   * @设置纯文本值
    */
   setValue: (val: string) => void;
 }

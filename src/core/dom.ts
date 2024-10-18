@@ -128,7 +128,6 @@ export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElemen
 };
 
 /**
- * !!! 重要方法
  * @name 获取节点的前面的节点和后面的节点
  * @desc: 默认当前光标位置节点作为目标
  * 返回的数组中都是从近到远的 排序，距离当前光标节点越近的排在第一个
