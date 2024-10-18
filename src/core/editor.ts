@@ -116,8 +116,6 @@ export const insertText = (contentText: string, range: IRange, callBack?: (succe
   // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
-  // console.log(behindNodeList, nextNodeList);
-
   /** 处理内容插入 */
   {
     // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 当前光标的节点元素的值

@@ -52,12 +52,12 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   /** @name 暴露方法 */
   useImperativeHandle(ref, () => {
     return {
-      ...(editInputRef.current as IEditableRef)
+      ...editInputRef.current
       /**
        *  额外的部分
        *  ...
        */
-    } as IChatEditorRef;
+    };
   });
 
   /** @name 设置表情弹窗隐藏 */
