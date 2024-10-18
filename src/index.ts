@@ -1,7 +1,7 @@
 /*
  * @Date: 2024-03-19 09:43:43
  */
-export { default } from "./components/chat-editor";
+export { default } from "./components/chat-wrapper";
 
 export * from "./hooks";
 

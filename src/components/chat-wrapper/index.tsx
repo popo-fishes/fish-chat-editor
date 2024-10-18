@@ -6,7 +6,7 @@ import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
-import Editable from "../editable";
+import Editable from "../editor";
 import { useClickAway } from "../../hooks";
 
 import { setEmojiData } from "../../utils";
@@ -14,7 +14,7 @@ import { emoji as defaultEmojiData } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
-const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
+const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
   const { placeholder, onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
   // 输入框控制器
@@ -159,4 +159,4 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   );
 });
 
-export default ChatEditor;
+export default ChatWrapper;

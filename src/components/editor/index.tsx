@@ -11,7 +11,7 @@ import { amendRangePosition } from "./util";
 
 import useEdit from "./useEdit";
 
-const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
+const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   const { placeholder, ...restProps } = props;
 
   const {
@@ -118,4 +118,4 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   );
 });
 
-export default Editable;
+export default Editor;
