@@ -33,14 +33,15 @@ import FbChatEditor from "fish-chat-editor";
 
 ### Editor props
 
-| 参数          | 说明             | 类型            | 默认值 |
-| ------------- | ---------------- | --------------- | ------ |
-| placeholder   | 提示占位符       | string          | ——     |
-| className     | 扩展类名         | string          | ——     |
-| toolbarRender | 自定义工具栏内容 | () => ReactNode | ——     |
-| onSend        | 点击发送按钮事件 | () => ReactNode | ——     |
-| onEnterDown   | 键盘回车事件     | Function        | ——     |
-| onChange      | 输入框内容变化时 | Function        | ——     |
+| 参数          | 说明                                  | 类型            | 默认值 |
+| ------------- | ------------------------------------- | --------------- | ------ |
+| placeholder   | 提示占位符                            | string          | ——     |
+| className     | 扩展类名                              | string          | ——     |
+| emojiList     | 表情列表数据,请看下面的IEmojiType描述 | IEmojiType[]    | ——     |
+| toolbarRender | 自定义工具栏内容                      | () => ReactNode | ——     |
+| onSend        | 点击发送按钮事件                      | () => ReactNode | ——     |
+| onEnterDown   | 键盘回车事件                          | Function        | ——     |
+| onChange      | 输入框内容变化时                      | Function        | ——     |
 
 ### Editor Methods
 
@@ -51,3 +52,20 @@ import FbChatEditor from "fish-chat-editor";
 | clear    | 清空输入框值 | () => void            |
 | focus    | 获取焦点     | () => void            |
 | blur     | 失去焦点     | () => void            |
+
+### IEmojiType描述
+
+```ts
+export type IEmojiType = {
+  /** 表情的url地址 */
+  url: string;
+  /** 表情的名称，必须是“[爱心]”的格式 */
+  name: string;
+  /** 表情的tip提示标题名 */
+  title: string;
+};
+// 如：
+export const emoji: { [key: string]: string } = {
+  "[爱你]": "www.cc.com/[爱你].png"
+};
+```

@@ -1,41 +1,22 @@
 /*
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
- * @Description: 聊天组件
  */
-import { useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
-import Editable from "../Editable";
+import Editable from "../editor";
 import { useClickAway } from "../../hooks";
 
-import { getImgCdn } from "../../utils";
-import { emoji } from "../../config";
+import { setEmojiData } from "../../utils";
+import { emoji as defaultEmojiData } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
 
-const getEmojiData = () => {
-  const data: IEmojiType[] = [];
-  for (const i in emoji) {
-    const bli = i.replace("[", "");
-    const cli = bli.replace("]", "");
-    data.push({
-      url: getImgCdn("faces/" + emoji[i]),
-      name: i,
-      title: cli
-    });
-  }
-  return data;
-};
-
-// 表情数据
-const emojiData = getEmojiData();
-
-// 聊天组件
-const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
+const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
-  const { className: _className, placeholder, onChange, onEnterDown, onSend } = props;
+  const { placeholder, onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
   // 输入框控制器
   const editInputRef = useRef<IEditableRef>(null);
   // 表情的弹窗
@@ -47,15 +28,36 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   // 可以点击发送按钮？?
   const [isSend, setSend] = useState<boolean>(false);
 
+  const mergeEmojiList = useMemo(() => {
+    // 如果外面传递了表情数据用外面的
+    if (emojiList?.length) {
+      setEmojiData([...emojiList]);
+      return [...emojiList];
+    }
+
+    const data: IEmojiType[] = [];
+    for (const i in defaultEmojiData) {
+      const bli = i.replace("[", "");
+      const cli = bli.replace("]", "");
+      data.push({
+        url: `http://43.136.119.145:83/image/${defaultEmojiData[i]}`,
+        name: i,
+        title: cli
+      });
+    }
+    setEmojiData(data);
+    return data;
+  }, [emojiList]);
+
   /** @name 暴露方法 */
   useImperativeHandle(ref, () => {
     return {
-      ...(editInputRef.current as IEditableRef)
+      ...editInputRef.current
       /**
        *  额外的部分
        *  ...
        */
-    } as IChatEditorRef;
+    };
   });
 
   /** @name 设置表情弹窗隐藏 */
@@ -100,9 +102,9 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   }, [onSend, isSend]);
 
   return (
-    <div className={classNames("fb-editor", _className)}>
+    <div className={classNames("fb-chat-wrapper", restProps.className)}>
       {/* 功能区 */}
-      <div className="fb-editor-controls">
+      <div className="fb-chat-toolbar">
         {/* 默认工具栏 */}
         <Tooltip
           title="表情包"
@@ -127,17 +129,17 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
       {/* 编辑框 */}
       <Editable placeholder={placeholder} ref={editInputRef} onChange={onEditableChange} onEnterDown={onEnterDownEvent} onClick={onEditableClick} />
       {/* 发送区 */}
-      <div className="fb-chat-op">
+      <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
         <button className={classNames("btn-send", isSend && "activate")} onClick={onSubmit}>
           发送
         </button>
       </div>
       {/* 表情选择列表 */}
-      <div className="fb-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
+      <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
-            {emojiData.map((item, index) => (
+            {mergeEmojiList.map((item, index) => (
               <div
                 className="emoji-item"
                 title={item.title}
@@ -157,4 +159,4 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
   );
 });
 
-export default ChatEditor;
+export default ChatWrapper;

@@ -1,12 +1,12 @@
 /*
  * @Date: 2024-03-19 09:43:43
  */
-export { default } from "./components/ChatEditor";
+export { default } from "./components/chat-wrapper";
 
 export * from "./hooks";
 
-export * from "./utils";
+export { replaceMsgText, labelRep } from "./utils";
 
 export * from "./types";
 
-export const Version = "1.0.6";
+export const Version = "1.0.7";

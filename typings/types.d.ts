@@ -240,3 +240,7 @@ declare global {
     export default src;
   }
 }
+
+interface ClipboardEventWithOriginalEvent extends React.ClipboardEvent<HTMLDivElement> {
+  originalEvent?: Event;
+}
