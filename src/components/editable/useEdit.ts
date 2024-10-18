@@ -31,7 +31,6 @@ let isLineFeedLock = false;
 
 export default function useEdit(props: IEditableProps) {
   const { ...restProps } = props;
-
   /** 编辑区域的元素 */
   const editNodeRef = useRef<IEditorElement>(null);
   /** 是否显示提示placeholder */

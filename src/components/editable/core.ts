@@ -8,13 +8,10 @@ import { amendRangePosition } from "./util";
 
 import type { IEditorElement } from "../../types";
 
-const { isEditElement } = isNode;
-
 const { createLineElement, getElementAttributeKey, prefixNmae } = base;
 
-const { insertText, insertNode } = editor;
-
-const { fileToBase64, getRandomWord } = helper;
+// 是否正在处理粘贴内容
+let isPasteLock = false;
 
 /** @name 处理复制事件 */
 export const onCopy = (event: React.ClipboardEvent<HTMLDivElement>) => {
@@ -118,7 +115,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
   // 创建换行节点
   const lineDom = createLineElement(true);
 
-  if (!isEditElement(rowElementNode as HTMLElement)) {
+  if (!isNode.isEditElement(rowElementNode as HTMLElement)) {
     console.warn("无编辑行节点，不可插入");
     return callBack(false);
   }
@@ -191,7 +188,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
     // 处理获取到的文件
     for (let i = 0; i < sfiles.length; i++) {
       const file = sfiles[i];
-      promiseData.push(fileToBase64(file));
+      promiseData.push(helper.fileToBase64(file));
     }
     Promise.allSettled(promiseData)
       .then((res) => {
@@ -207,8 +204,8 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         datas.forEach((baseItem) => {
           // 创建一个图片容器节点
           const container = document.createElement("span");
-          container.id = `${prefixNmae}image-container-` + getRandomWord();
-          container.classList.add(`${prefixNmae}image-container`);
+          container.id = `${base.prefixNmae}image-container-` + helper.getRandomWord();
+          container.classList.add(`${base.prefixNmae}image-container`);
 
           const node = new Image();
           node.src = baseItem;
@@ -222,7 +219,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
           nodes.push(...[createChunkSapnElement(container), textNode]);
         });
 
-        insertNode(nodes);
+        editor.insertNode(nodes);
       })
       .catch(() => {});
   }
@@ -266,7 +263,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         // !!非常重要的逻辑
         amendRangeLastNode(editNode, (node) => {
           if (node) {
-            insertText(repContent, () => {
+            editor.insertText(repContent, () => {
               isPasteLock = false;
               callBack?.();
             });
@@ -275,7 +272,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         return;
       }
 
-      insertText(repContent, () => {
+      editor.insertText(repContent, () => {
         isPasteLock = false;
         callBack?.();
       });

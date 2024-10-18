@@ -2,8 +2,6 @@ import { dom, isNode, range as fishRange, editor, helper, util, base, transforms
 
 import type { IEditorElement } from "../../types";
 
-const { isEditInline, isEditElement } = isNode;
-
 // 子节点是否只有一个br节点
 function hasParentOnlyBr(node: HTMLElement) {
   if (node) {
@@ -38,7 +36,7 @@ function hasNotSatisfiedNode(node: HTMLElement) {
   let exist = false;
   for (const cld of node.childNodes) {
     // 节点不是内联块属性节点 || 节点有背景色属性
-    if ((!isEditInline(cld as any) && node.nodeName == "SPAN") || hasTransparentBackgroundColor(cld as any)) {
+    if ((!isNode.isEditInline(cld as any) && node.nodeName == "SPAN") || hasTransparentBackgroundColor(cld as any)) {
       exist = true;
       break;
     }
@@ -71,13 +69,13 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as any;
 
-        const isFlag = !isEditInline(node) && node.nodeName == "SPAN";
+        const isFlag = !isNode.isEditInline(node) && node.nodeName == "SPAN";
         if (isFlag) {
           const textNode = document.createTextNode(node.textContent || "");
           node.parentNode?.replaceChild(textNode, node);
         }
 
-        if (hasTransparentBackgroundColor(node) && isEditInline(node)) {
+        if (hasTransparentBackgroundColor(node) && isNode.isEditInline(node)) {
           node.style.removeProperty("background-color");
         }
 
@@ -94,7 +92,7 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
    * 主要解决骚操作删除内容时，把editNode下面的全部行编辑节点删完了
    * 兜底处理,防止骚操作
    */
-  if (!isEditElement(editNode.firstChild as any)) {
+  if (!isNode.isEditElement(editNode.firstChild as any)) {
     // 创建一个编辑器--行节点
     const lineDom = base.createLineElement();
     dom.toTargetAddNodes(editNode as any, [lineDom]);
@@ -117,7 +115,7 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as any;
 
-        if (!isEditElement(node) && node.nodeName !== "BR") {
+        if (!isNode.isEditElement(node) && node.nodeName !== "BR") {
           node?.remove();
         }
         if (node.nodeName == "BR") {
