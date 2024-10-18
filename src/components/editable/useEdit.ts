@@ -136,7 +136,7 @@ export default function useEdit(props: IEditableProps) {
   const onEditorBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const rangeInfo = range.getRange();
     if (rangeInfo) {
-      // console.log(rangeInfo);
+      console.log(rangeInfo);
       // 备份当前光标位置
       setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
     }

@@ -30,7 +30,7 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
 
   let strCont = content;
   /**
-   * 比如content为：哈哈[爱你]哈[不看]哈--->
+   * 比如content为：哈哈[爱你]哈[不看]哈 --->
    * 要转换为一个数组： [text节点内容为“"哈哈"，img节点， text节点内容为“"哈"，img节点， text节点内容为“"哈哈"]
    * ：：：：：
    *这里主要做字符串标记

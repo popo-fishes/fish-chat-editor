@@ -102,9 +102,10 @@ export const getSelection = () => {
 };
 
 /**
- * @name 是否有光标选中的文本 和 元素
+ * @name 是否有选中的文本 和 元素
  *  Selection.isCollapsed 只读属性返回一个布尔值，表示当前是否有任何文本被选中。
  * 当选定内容的起点和终点位于内容中的同一位置时，没有选定文本
+ * 如果返回true，表示选择范围折叠；如果返回false，表示选择范围没有折叠，有一定的文本被选中
  */
 export const isSelected = () => {
   const selection = getSelection();

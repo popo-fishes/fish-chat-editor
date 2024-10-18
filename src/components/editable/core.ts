@@ -8,7 +8,7 @@ import type { IEditorElement } from "../../types";
 
 const { createLineElement, getElementAttributeKey, prefixNmae } = base;
 
-// 是否正在处理粘贴内容
+/** 是否正在处理粘贴内容 */
 let isPasteLock = false;
 
 /** @name 处理复制事件 */
@@ -230,8 +230,6 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
   if ((isHtml || isPlain) && !isFile) {
     // 如果是粘贴的是文本
     const content = clp.getData("text/plain");
-    // x.getSelection
-    const selection = window.getSelection();
 
     if (!content || !range) {
       isPasteLock = false;
@@ -241,13 +239,14 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
     if (isPasteLock) return;
 
     // 存在选区
-    if (selection && !selection.isCollapsed) {
+    if (fishRange.isSelected()) {
       // 后续可以拓展删除节点方法，先原生的
       document.execCommand("delete", false, undefined);
     }
 
     // 在删除完成后执行其他操作
     {
+      // 标记
       isPasteLock = true;
 
       // 行属性节点
@@ -257,9 +256,11 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
       if (!rowElementNode) {
         amendRangePosition(editNode, (node) => {
           if (node) {
+            // update range
+            const resetRange = fishRange.getRange();
             editor.insertText(
               content,
-              range,
+              resetRange,
               (success) => {
                 isPasteLock = false;
                 callBack(success);
