@@ -4,7 +4,7 @@
  */
 import { forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps } from "../../types";
-import { editor, transforms } from "../../core";
+import { editor, transforms, range } from "../../core";
 import { labelRep } from "../../utils";
 
 import { onCopy, onCut } from "./core";
@@ -19,12 +19,11 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     showTipHolder,
 
     setTipHolder,
-    setRangePosition,
 
     clearEditor,
 
     insertEmoji,
-
+    setRangePosition,
     onEditorKeyUp,
     onEditorChange,
     onEditorBlur,
@@ -60,16 +59,21 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           });
         },
         clear: () => {
-          const curDom = clearEditor();
-          // 设置光标位置
-          setRangePosition(curDom, 0, true);
+          // 清除内容
+          clearEditor();
           // 失去焦点
           editRef?.current?.blur();
           restProps.onChange?.("");
         },
         focus: () => {
           requestAnimationFrame(() => {
-            editRef?.current?.focus();
+            // 修正光标位置
+            range.amendRangePosition(editRef.current, (node) => {
+              if (node) {
+                // 设置当前光标节点
+                setRangePosition(node, 0);
+              }
+            });
           });
         },
         blur: () => editRef?.current?.blur()

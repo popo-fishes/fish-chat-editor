@@ -49,7 +49,7 @@ function hasNotSatisfiedNode(node: HTMLElement) {
 export const transformsEditNodes = (editNode: IEditorElement) => {
   const range = fishRange.getRange();
 
-  console.time("transforms转换节点耗时");
+  // console.time("transforms转换节点耗时");
 
   /**
    * bug1:
@@ -62,7 +62,7 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
     const editorRowNode = util.getNodeOfEditorElementNode(range.startContainer);
 
     if (editorRowNode && hasNotSatisfiedNode(editorRowNode)) {
-      console.log(editorRowNode.childNodes);
+      // console.log(editorRowNode.childNodes);
       /**
        * 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
        * 遍历行节点集合
@@ -71,22 +71,16 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as any;
 
-        // 按键合并行时，会主动创建一些自定义span标签
         const isFlag = !isEditInline(node) && node.nodeName == "SPAN";
         if (isFlag) {
-          // 把编辑行内的span元素转为文本节点
-          // 创建文本节点
           const textNode = document.createTextNode(node.textContent || "");
-          // 替换 <span> 元素
           node.parentNode?.replaceChild(textNode, node);
         }
 
-        // 删除行属性节点的子块属性节点的样式
         if (hasTransparentBackgroundColor(node) && isEditInline(node)) {
           node.style.removeProperty("background-color");
         }
 
-        // 有其它节点就删除br
         if (node.nodeName === "BR" && nodes.length > 1) {
           node.remove();
         }
@@ -140,5 +134,5 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
     }
   }
 
-  console.timeEnd("transforms转换节点耗时");
+  // console.timeEnd("transforms转换节点耗时");
 };

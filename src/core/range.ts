@@ -69,7 +69,7 @@ export const amendRangePosition = (editNode: IEditorElement, callBack?: (node?: 
   }
   // 是一个节点块
   if (isNode.isEditElement(lastElement as HTMLElement)) {
-    const referenceElement = lastElement.firstChild;
+    const referenceElement = lastElement.lastChild;
     if (referenceElement) {
       setCursorPosition(referenceElement, "before");
       callBack?.(referenceElement as HTMLElement);

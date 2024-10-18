@@ -108,7 +108,7 @@ export default function useEdit(props: IEditableProps) {
   const onEditorBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const rangeInfo = range.getRange();
     if (rangeInfo) {
-      console.log(rangeInfo);
+      // console.log(rangeInfo);
       // 备份当前光标位置
       setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
     }
@@ -127,6 +127,12 @@ export default function useEdit(props: IEditableProps) {
 
   /** @name 输入框值变化onChange事件 */
   const onEditorChange = (e: React.CompositionEvent<HTMLDivElement>) => {
+    /***
+     * 在谷歌浏览器，输入遇见输入框先清除焦点然后调用focus方法，重新修正光标的位置，会导致，下次输入中文时 onCompositionEnd事件不会触发，导致
+     * isLock变量状态有问题，这里先注释掉，不判断了，直接变化值，就去暴露值
+     */
+    if (isLock) return;
+
     // 获取输入框的值，主动触发输入框值变化
     const val = editor.getText(editRef.current);
     // 控制提示
@@ -207,7 +213,11 @@ export default function useEdit(props: IEditableProps) {
       restProps.onEnterDown?.();
       return;
     }
-    // 按下删除按键
+
+    /**
+     * bug2:
+     * 按下删除按键
+     */
     if (event.keyCode === 8) {
       // 如果当前已经是一个空节点 就 阻止事件 不然会把空文本节点给删除了导致BUG
       if (!range.isSelected() && isNode.isEmptyEditNode(editRef.current)) {
@@ -215,12 +225,12 @@ export default function useEdit(props: IEditableProps) {
         return;
       }
     }
+
     /**
      * bug3:
      * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
      * 兜底处理,防止骚操作
      */
-    console.log(rangeInfo.startContainer);
     if (rangeInfo && rangeInfo.startContainer) {
       // 不是行编辑节点，直接禁止操作
       const elementRowNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
@@ -230,11 +240,11 @@ export default function useEdit(props: IEditableProps) {
       }
     }
 
-    // 检测到可能导致合并的操作，如退格键或删除键
-    if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      // 在这里可以根据需要进行自定义的处理逻辑
-    }
+    // 检测到可能导致合并的操作，如退格键或删除键, 主动处理合并行。
+    // if (event.key === "Backspace" || event.key === "Delete") {
+    //   event.preventDefault();
+    //   // 在这里可以根据需要进行自定义的处理逻辑
+    // }
   };
 
   /**

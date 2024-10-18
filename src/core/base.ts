@@ -6,6 +6,8 @@ import { helper } from ".";
 
 export const prefixNmae = "fb-e-";
 
+const specialmode = false;
+
 /** 零宽度非换行空格 */
 export const zeroWidthNoBreakSpace = "\uFEFF";
 
@@ -86,25 +88,37 @@ export const createLineElement = (isNullNode = false): HTMLParagraphElement => {
  * @returns 块容器图片节点
  */
 export const createChunkEmojilement = (url: string, width: number, height: number, emijiName: string): HTMLSpanElement => {
-  // 创建一个图片容器节点
-  const container = document.createElement("span");
-  container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
-  container.classList.add(`${prefixNmae}emoji-container`);
-  container.setAttribute("style", `width:${width}px;height:${height}px`);
-  // 不可编辑
-  container.setAttribute("contenteditable", "false");
-  // 标记为内联块节点
-  const fishInlineKey = getElementAttributeKey("fishInline");
-  container.setAttribute(fishInlineKey, "true");
+  if (specialmode) {
+    // 创建一个图片容器节点，这种的方式需要自己去处理合并行时的场景太复杂了
+    const container = document.createElement("span");
+    container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
+    container.classList.add(`${prefixNmae}emoji-container`);
+    container.setAttribute("style", `width:${width}px;height:${height}px`);
+    // 不可编辑
+    container.setAttribute("contenteditable", "false");
+    // 标记为内联块节点
+    const fishInlineKey = getElementAttributeKey("fishInline");
+    container.setAttribute(fishInlineKey, "true");
+    // 表情name值
+    const emojiNodeKey = getElementAttributeKey("emojiNode");
+    container.setAttribute(emojiNodeKey, emijiName);
+    // 添加图片
+    const node = new Image();
+    node.src = url || null;
+    container.appendChild(node);
+    return container;
+  } else {
+    const node = new Image();
+    node.src = url || null;
+    node.id = `${prefixNmae}emoji-img-` + helper.getRandomWord();
+    node.classList.add(`${prefixNmae}emoji-img`);
+    node.setAttribute("style", `width:${width}px;height:${height}px`);
 
-  // 表情name值
-  const emojiNodeKey = getElementAttributeKey("emojiNode");
-  container.setAttribute(emojiNodeKey, emijiName);
-
-  // 添加图片
-  const node = new Image();
-  node.src = url || null;
-  container.appendChild(node);
-
-  return container;
+    const fishInlineKey = getElementAttributeKey("fishInline");
+    node.setAttribute(fishInlineKey, "true");
+    // 表情name值
+    const emojiNodeKey = getElementAttributeKey("emojiNode");
+    node.setAttribute(emojiNodeKey, emijiName);
+    return node;
+  }
 };
