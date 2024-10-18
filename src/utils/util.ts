@@ -5,13 +5,15 @@
  */
 import { emoji } from "../config";
 
-import { base, helper } from "../core";
+import { base, helper, transforms } from "../core";
 
 const { getRandomWord } = helper;
 
 const { getElementAttributeKey } = base;
 
 let globalCdn = "";
+
+export const labelRep = transforms.labelRep;
 
 /**
  * @name 获取表情图片的CDN路径，且吧传递进来的CDN路径保存到全局变量
@@ -36,21 +38,6 @@ export const setEmojiCdn = (CDN_IMG?: string) => {
  */
 export const getEmojiCdn = (img: string) => {
   return setEmojiCdn() + img;
-};
-
-/** @name 字符串标签转换 */
-export const labelRep = (str: string, reversal?: boolean) => {
-  if (!str) return "";
-  // 反转回去
-  if (reversal) {
-    return str
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#039;/g, "'");
-  }
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
 
 /**

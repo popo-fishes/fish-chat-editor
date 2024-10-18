@@ -1,7 +1,5 @@
 import isObject from "lodash/isObject";
 
-import { regContentImg, labelRep } from "../../utils";
-
 import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
 
 import { amendRangePosition } from "./util";
@@ -234,10 +232,8 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
     const content = clp.getData("text/plain");
     // x.getSelection
     const selection = window.getSelection();
-    // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;",
-    const repContent = labelRep(content);
 
-    if (!repContent || !range) {
+    if (!content || !range) {
       isPasteLock = false;
       return callBack(false);
     }
@@ -262,7 +258,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         amendRangePosition(editNode, (node) => {
           if (node) {
             editor.insertText(
-              repContent,
+              content,
               range,
               (success) => {
                 isPasteLock = false;
@@ -276,7 +272,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
       }
       // 插入文本
       editor.insertText(
-        repContent,
+        content,
         range,
         (success) => {
           isPasteLock = false;

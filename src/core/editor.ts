@@ -87,14 +87,14 @@ export const getHtml = (): string => {
 
 /**
  * @name 在选区插入文本
- * @param content 内容
+ * @param contentText 内容
  * @param range 光标信息
  * @param callBack 回调（success?）=> void
  * @param showCursor 插入成功后是否需要设置光标
  * @returns
  */
-export const insertText = (content: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean) => {
-  if (!content || !range) {
+export const insertText = (contentText: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean) => {
+  if (!contentText || !range) {
     callBack?.(false);
     return;
   }
@@ -121,7 +121,10 @@ export const insertText = (content: string, range: IRange, callBack?: (success: 
 
   /** 处理内容插入 */
   {
-    const lines = content?.split(/\r\n|\r|\n/) || [];
+    // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 当前光标的节点元素的值
+    const semanticContent = transforms.labelRep(contentText);
+
+    const lines = semanticContent?.split(/\r\n|\r|\n/) || [];
 
     // 是否需要进行分割
     let split = false;
@@ -134,8 +137,8 @@ export const insertText = (content: string, range: IRange, callBack?: (success: 
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      // 把表情文本转换为图片,
       const htmlNodeStr = regContentImg(line);
+      console.log(htmlNodeStr, line);
       const node = base.createLineElement();
 
       if (htmlNodeStr) {

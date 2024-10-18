@@ -4,6 +4,21 @@
  */
 import { base, isNode, dom } from ".";
 
+/** @name 字符串标签转换 */
+export const labelRep = (str: string, reversal?: boolean) => {
+  if (!str) return "";
+  // 反转回去
+  if (reversal) {
+    return str
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'");
+  }
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+};
+
 /**
  * @name 除去字符串空格换后是否为一个空文本，如果是直接赋值为空，否则用原始的
  * 常用于获取节点值后，判断是否全部是空格 和 换行，如果是就给字符串置空
