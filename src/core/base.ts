@@ -65,7 +65,7 @@ export const getElementAttributeDatasetName = (name: keyof typeof elementAttribu
  */
 export const createLineElement = (isNullNode = false): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
-  const id = `${prefixNmae}element-` + helper.getRandomWord();
+  const id = `${prefixNmae}element-` + helper.generateRandomString();
   const key = getElementAttributeKey("fishNode");
   dom_p.setAttribute(key, "element");
   dom_p.id = id;
@@ -91,7 +91,7 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   if (specialmode) {
     // 创建一个图片容器节点，这种的方式需要自己去处理合并行时的场景太复杂了
     const container = document.createElement("span");
-    container.id = `${prefixNmae}emoji-container-` + helper.getRandomWord();
+    container.id = `${prefixNmae}emoji-container-` + helper.generateRandomString();
     container.classList.add(`${prefixNmae}emoji-container`);
     container.setAttribute("style", `width:${width}px;height:${height}px`);
     // 不可编辑
@@ -110,7 +110,7 @@ export const createChunkEmojilement = (url: string, width: number, height: numbe
   } else {
     const node = new Image();
     node.src = url || null;
-    node.id = `${prefixNmae}emoji-img-` + helper.getRandomWord();
+    node.id = `${prefixNmae}emoji-img-` + helper.generateRandomString();
     node.classList.add(`${prefixNmae}emoji-img`);
     node.setAttribute("style", `width:${width}px;height:${height}px`);
 

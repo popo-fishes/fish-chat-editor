@@ -157,7 +157,7 @@ export const insertText = (contentText: string, range: IRange, callBack?: (succe
       }
     }
 
-    const keyId = "editorFocusHack" + new Date().getTime() + helper.getRandomWord();
+    const keyId = "editorFocusHack" + new Date().getTime() + helper.generateRandomString();
     const iElement = document.createElement("i");
     iElement.id = keyId;
 

@@ -11,7 +11,7 @@ export type IEmojiType = {
   url: string;
   /** 表情的名称，必须是“[爱心]”的格式 */
   name: string;
-  /** 表情的tip提升标题名 */
+  /** 表情的tip提示标题名 */
   title: string;
 };
 

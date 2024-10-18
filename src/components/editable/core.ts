@@ -204,7 +204,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
         datas.forEach((baseItem) => {
           // 创建一个图片容器节点
           const container = document.createElement("span");
-          container.id = `${base.prefixNmae}image-container-` + helper.getRandomWord();
+          container.id = `${base.prefixNmae}image-container-` + helper.generateRandomString();
           container.classList.add(`${base.prefixNmae}image-container`);
 
           const node = new Image();
