@@ -6,8 +6,6 @@ import { amendRangePosition } from "./util";
 
 import type { IEditorElement } from "../../types";
 
-const { createLineElement, getElementAttributeKey, prefixNmae } = base;
-
 /** 是否正在处理粘贴内容 */
 let isPasteLock = false;
 
@@ -111,7 +109,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
    * @dec 把之前的节点放到需要换行的节点后面
    */
   // 创建换行节点
-  const lineDom = createLineElement(true);
+  const lineDom = base.createLineElement(true);
 
   if (!isNode.isEditElement(rowElementNode as HTMLElement)) {
     console.warn("无编辑行节点，不可插入");
