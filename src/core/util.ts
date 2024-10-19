@@ -5,7 +5,7 @@
 import { isNode } from ".";
 import { IEditorElement } from "../types";
 
-const { isNodeNotTtxt, isImgNode, isEmojiImgNode, isEditInline, isEditElement } = isNode;
+const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditInline, isEditElement } = isNode;
 
 const editorNode = { current: null };
 
@@ -78,7 +78,7 @@ export const findNodeWithImg = (node: any): boolean => {
     return false;
   }
 
-  if (isImgNode(node)) return true;
+  if (isImageNode(node)) return true;
 
   // 否则继续查询子节点
   return findNodeWithImg(node?.firstChild || null);

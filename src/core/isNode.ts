@@ -64,10 +64,10 @@ export const isEditInline = (node: HTMLElement): boolean => {
 };
 
 /** @name 判断是否为一个图片属性节点，不包含表情图 */
-export const isImgNode = (node: HTMLElement): boolean => {
+export const isImageNode = (node: HTMLElement): boolean => {
   if (!node || !isDOMElement(node)) return false;
-  const key = base.getElementAttributeKey("imgNode");
-  const attrName = base.getElementAttributeDatasetName("imgNode");
+  const key = base.getElementAttributeKey("imageNode");
+  const attrName = base.getElementAttributeDatasetName("imageNode");
   const hasAttr = node.hasAttribute(key);
   if (hasAttr) {
     const elementAttrVal = node?.dataset?.[attrName] || "";

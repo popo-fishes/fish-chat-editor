@@ -133,16 +133,12 @@ export const getEditElementContent = (node: any): string => {
     for (let i = 0; i < node.childNodes.length; i++) {
       content += getEditElementContent(node.childNodes[i]);
     }
-    if (isNode.isEditInline(node)) {
-      const emojiNodeAttrKey = base.getElementAttributeKey("emojiNode");
+    // 如果是一个表情图片节点，就获取它的name值拼接
+    if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
       // 是否是一个表情图片,如果是取出名称
       const isEmojiVal = node?.dataset?.[emojiNodeAttrName] || "";
-      const isEmojiNode = node.hasAttribute(emojiNodeAttrKey);
-
-      if (isEmojiNode && isEmojiVal) {
-        content += isEmojiVal;
-      }
+      if (isEmojiVal) content += isEmojiVal;
     }
   }
 

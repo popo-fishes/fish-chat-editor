@@ -33,7 +33,7 @@ const elementAttributeData = {
    * 图片节点
    * 属性值：true 代表是图片节点
    */
-  imgNode: {
+  imageNode: {
     key: "data-fish-is-img",
     value: "fishIsImg"
   },
@@ -137,6 +137,9 @@ export const createChunkImgElement = (url: string): HTMLSpanElement => {
     // 标记为内联块节点
     const fishInlineKey = getElementAttributeKey("fishInline");
     container.setAttribute(fishInlineKey, "true");
+    // 标记为图片节点
+    const imageNodeKey = getElementAttributeKey("imageNode");
+    container.setAttribute(imageNodeKey, "true");
     // 添加图片
     const node = new Image();
     node.src = url || null;
@@ -150,6 +153,10 @@ export const createChunkImgElement = (url: string): HTMLSpanElement => {
 
     const fishInlineKey = getElementAttributeKey("fishInline");
     node.setAttribute(fishInlineKey, "true");
+
+    // 标记为图片节点
+    const imageNodeKey = getElementAttributeKey("imageNode");
+    node.setAttribute(imageNodeKey, "true");
 
     return node;
   }

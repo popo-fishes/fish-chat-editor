@@ -86,6 +86,7 @@
   display: inline-block;
   box-sizing: border-box;
   outline: none;
+  border: 2px solid transparent;
 
   min-width: 40px;
   min-height: 40px;
@@ -93,6 +94,9 @@
   max-width: 100%;
   -webkit-user-drag: none;
   object-fit: contain;
+  &:hover {
+    border: 2px solid #b4d5ff;
+  }
 }
 
 .fb-e-emoji-container {
