@@ -179,6 +179,12 @@ export default function useEdit(props: IEditableProps) {
       // 选中它
       range.selectNode(emojiNode);
     }
+    // 如果是图片节点
+    const imageNode = util.getNodeOfEditorImageNode(target);
+    if (imageNode) {
+      // 选中它
+      // range.selectNode(imageNode);
+    }
 
     /**
      * 如果存在光标

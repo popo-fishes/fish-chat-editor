@@ -9,7 +9,7 @@ export const prefixNmae = "fb-e-";
 const specialmode = false;
 
 /** 零宽度非换行空格 */
-export const zeroWidthNoBreakSpace = "\uFEFF";
+export const zeroWidthNoBreakSpace = "\u200B";
 
 /** 编辑器标签扩展属性配置表 */
 const elementAttributeData = {
@@ -34,8 +34,8 @@ const elementAttributeData = {
    * 属性值：true 代表是图片节点
    */
   imageNode: {
-    key: "data-fish-is-img",
-    value: "fishIsImg"
+    key: "data-fish-image",
+    value: "fishImage"
   },
   /**
   /**
