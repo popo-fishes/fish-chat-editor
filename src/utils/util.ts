@@ -28,7 +28,7 @@ export const getEmojiData = (): IEmojiType[] => {
  * @name 文本消息转换，批量替换方法
  * @msgText 消息字符串
  */
-export const replaceMsgText = (msgText?: string): string => {
+export const replaceMsgText = (msgText?: string, size?: number): string => {
   /**
    * @name 文本转换图片替换方法
    * @strCont 字符串
@@ -44,7 +44,7 @@ export const replaceMsgText = (msgText?: string): string => {
       strCont = strCont?.replace(reg, function () {
         const key = base.getElementAttributeKey("emojiNode");
         // 替换表情
-        const strimg = `<img src="${item.url}" width="${18}px" height="${18}px" ${key}="${item.name}"/>`;
+        const strimg = `<img src="${item.url}" width="${size || 16}px" height="${size || 16}px" ${key}="${item.name}"/>`;
         return strimg;
       });
     }

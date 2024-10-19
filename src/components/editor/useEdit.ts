@@ -6,6 +6,7 @@ import { useRef, useState, useEffect } from "react";
 import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
 import { base, isNode, util, range, editor, IRange, dom, transforms } from "../../core";
+import { emojiSize } from "../../config";
 
 import { transformsEditNodes } from "./transforms";
 import { handlePasteTransforms, handleLineFeed } from "./core";
@@ -121,7 +122,7 @@ export default function useEdit(props: IEditableProps) {
       return;
     }
     // 创建
-    const node = base.createChunkEmojilement(item.url, 18, 18, item.name);
+    const node = base.createChunkEmojiElement(item.url, emojiSize, item.name);
     editor.insertNode([node], currentRange, () => {
       range.setCursorPosition(node as any, "after");
       // 主动触发输入框值变化

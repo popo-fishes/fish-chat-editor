@@ -113,7 +113,6 @@ export const insertText = (contentText: string, range: IRange, callBack?: (succe
 
   console.time("editable插入内容耗时");
 
-  // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
   /** 处理内容插入 */

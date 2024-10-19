@@ -79,6 +79,21 @@
     vertical-align: text-bottom;
   }
 }
+.fb-e-image {
+  cursor: default;
+  border-style: none;
+  vertical-align: text-bottom;
+  display: inline-block;
+  box-sizing: border-box;
+  outline: none;
+
+  min-width: 40px;
+  min-height: 40px;
+  max-height: 320px;
+  max-width: 100%;
+  -webkit-user-drag: none;
+  object-fit: contain;
+}
 
 .fb-e-emoji-container {
   display: inline-block;

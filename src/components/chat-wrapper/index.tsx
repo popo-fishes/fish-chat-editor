@@ -6,7 +6,7 @@ import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
-import Editable from "../editor";
+import Editor from "../editor";
 import { useClickAway } from "../../hooks";
 
 import { setEmojiData } from "../../utils";
@@ -102,7 +102,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   }, [onSend, isSend]);
 
   return (
-    <div className={classNames("fb-chat-wrapper", restProps.className)}>
+    <div className={classNames("fb-chat-editor", restProps.className)}>
       {/* 功能区 */}
       <div className="fb-chat-toolbar">
         {/* 默认工具栏 */}
@@ -127,7 +127,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
         {props?.toolbarRender?.()}
       </div>
       {/* 编辑框 */}
-      <Editable placeholder={placeholder} ref={editInputRef} onChange={onEditableChange} onEnterDown={onEnterDownEvent} onClick={onEditableClick} />
+      <Editor placeholder={placeholder} ref={editInputRef} onChange={onEditableChange} onEnterDown={onEnterDownEvent} onClick={onEditableClick} />
       {/* 发送区 */}
       <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>

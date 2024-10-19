@@ -1,9 +1,11 @@
 /*
- * @Date: 2024-10-12 16:00:15
+ * @Date: 2024-10-12 21:00:15
  * @Description: Modify here please
  */
 import { base, isNode, dom } from ".";
 import { getEmojiData } from "../utils";
+import { emojiSize } from "../config";
+
 /** @name 字符串标签转换 */
 export const labelRep = (str: string, reversal?: boolean) => {
   if (!str) return "";
@@ -42,7 +44,7 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
     strCont = strCont?.replace(reg, function () {
       const key = base.getElementAttributeKey("emojiNode");
       // 替换表情
-      const strimg = `<img src="${item.url}" width="${18}px" height="${18}px" ${key}="${item.name}"/>`;
+      const strimg = `<img src="${item.url}" ${key}="${item.name}"/>`;
       return strimg;
     });
   }
@@ -59,7 +61,7 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
         const attrName = base.getElementAttributeDatasetName("emojiNode");
         const elementAttrVal = (cldNode as any)?.dataset?.[attrName] || "";
         if (elementAttrVal && (cldNode as any).src) {
-          const imgNode = base.createChunkEmojilement((cldNode as any).src, 18, 18, elementAttrVal);
+          const imgNode = base.createChunkEmojiElement((cldNode as any).src, emojiSize, elementAttrVal);
           nodes.push(imgNode);
         }
       }

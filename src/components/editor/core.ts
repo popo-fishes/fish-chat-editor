@@ -184,44 +184,84 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
     // 截取前面5个文件
     const sfiles = vfiles.slice(-5);
 
+    if (!range) {
+      isPasteLock = false;
+      return callBack(false);
+    }
+
+    if (isPasteLock) return;
+
     const promiseData = [];
-    // 处理获取到的文件
+
     for (let i = 0; i < sfiles.length; i++) {
       const file = sfiles[i];
       promiseData.push(helper.fileToBase64(file));
     }
-    Promise.allSettled(promiseData)
-      .then((res) => {
-        const datas = [];
-        // 请求结束后再去清除掉
-        res.forEach((result) => {
-          if (result.status == "fulfilled" && result.value) {
-            datas.push(`data:image/jpeg;base64,${result.value}`);
+
+    // 标记
+    isPasteLock = true;
+
+    // 执行其他操作
+    {
+      Promise.allSettled(promiseData)
+        .then((res) => {
+          const datas = [];
+          // 请求结束后再去清除掉
+          res.forEach((result) => {
+            if (result.status == "fulfilled" && result.value) {
+              datas.push(`data:image/jpeg;base64,${result.value}`);
+            }
+          });
+
+          const nodes: HTMLSpanElement[] = [];
+          datas.forEach((baseSrc) => {
+            // 创建一个图片容器节点
+            // const textNode = createChunkTextElement();
+            nodes.push(...[base.createChunkImgElement(baseSrc)]);
+          });
+
+          if (nodes.length) {
+            // 存在选区
+            if (fishRange.isSelected()) {
+              // 后续可以拓展删除节点方法，先原生的
+              document.execCommand("delete", false, undefined);
+            }
+
+            // 行属性节点
+            const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
+
+            // 修改为位置，在插入
+            if (!rowElementNode) {
+              amendRangePosition(editNode, (node) => {
+                if (node) {
+                  // update range
+                  const resetRange = fishRange.getRange();
+                  editor.insertNode(nodes, resetRange, (success) => {
+                    isPasteLock = false;
+                    callBack(success);
+                  });
+                }
+              });
+              return;
+            }
+
+            editor.insertNode(nodes, range, (success) => {
+              isPasteLock = false;
+              callBack(success);
+            });
+            return;
           }
+
+          // 没有节点插入时
+          isPasteLock = false;
+          callBack(false);
+          return;
+        })
+        .catch(() => {
+          isPasteLock = false;
+          callBack(false);
         });
-
-        const nodes: HTMLSpanElement[] = [];
-        datas.forEach((baseItem) => {
-          // 创建一个图片容器节点
-          const container = document.createElement("span");
-          container.id = `${base.prefixNmae}image-container-` + helper.generateRandomString();
-          container.classList.add(`${base.prefixNmae}image-container`);
-
-          const node = new Image();
-          node.src = baseItem;
-          const key = getElementAttributeKey("imgNode");
-          node.setAttribute(key, "true");
-
-          container.appendChild(node);
-
-          const textNode = createChunkTextElement();
-
-          nodes.push(...[createChunkSapnElement(container), textNode]);
-        });
-
-        editor.insertNode(nodes);
-      })
-      .catch(() => {});
+    }
   }
 
   /**
