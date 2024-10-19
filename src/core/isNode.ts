@@ -102,3 +102,14 @@ export const isNodeNotTtxt = (node: HTMLElement): boolean => {
   }
   return false;
 };
+
+/** @name 判断一个节点是零宽度文本节点 */
+export const isNodeZeroSpace = (node: HTMLElement): boolean => {
+  if (isDOMText(node)) {
+    const tranText = node.nodeValue.replace(new RegExp(base.zeroWidthNoBreakSpace, "g"), "");
+    if (tranText == "") {
+      return true;
+    }
+  }
+  return false;
+};

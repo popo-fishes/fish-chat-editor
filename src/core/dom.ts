@@ -246,6 +246,6 @@ export const getRangeAroundNode = (range: IRange) => {
     }
     return node.nodeName !== "BR" && !isNodeNotTtxt(node);
   });
-
+  // console.log(cloneNodes(tempPrev), cloneNodes(tempNext));
   return [tempPrev, tempNext];
 };

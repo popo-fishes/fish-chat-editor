@@ -161,3 +161,11 @@ export const createChunkImgElement = (url: string): HTMLSpanElement => {
     return node;
   }
 };
+
+/**
+ * @name 创建一个编辑器--零宽度文本节点
+ * @returns
+ */
+export const createZeroSpaceElement = (): Text => {
+  return document.createTextNode(zeroWidthNoBreakSpace);
+};
