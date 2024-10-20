@@ -82,7 +82,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     (editor: IEditorInterface) => {
       console.log(editor.getText());
       // setSend(!!v);
-      onChange?.(v);
+      //  onChange?.(v);
     },
     [onChange]
   );

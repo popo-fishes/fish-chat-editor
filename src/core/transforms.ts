@@ -5,6 +5,7 @@
 import { base, isNode, dom } from ".";
 import { getEmojiData } from "../utils";
 import { emojiSize } from "../config";
+import { isEditElement } from "./isNode";
 
 /** @name 字符串标签转换 */
 export const labelRep = (str: string, reversal?: boolean) => {
@@ -90,34 +91,33 @@ export const editTransformSpaceText = (content: string) => {
 };
 
 /**
- * @name 获取节点转换后的纯文本
- * @param domNode 转换内容的的dom
+ * @name 传入节点,获取它的纯文本内容
  * @returns
  */
-export const getCopyPlainText = (domNode: HTMLElement) => {
+export const getNodePlainText = (node: HTMLElement) => {
   let text = "";
 
-  if (isNode.isDOMText(domNode) && domNode.nodeValue) {
-    return domNode.nodeValue;
+  if (isNode.isDOMText(node) && node.nodeValue) {
+    return node.nodeValue;
   }
 
-  if (isNode.isDOMElement(domNode)) {
-    for (const childNode of Array.from(domNode.childNodes)) {
-      text += getCopyPlainText(childNode as any);
+  if (isNode.isDOMElement(node)) {
+    for (const childNode of Array.from(node.childNodes)) {
+      text += getNodePlainText(childNode as any);
     }
 
-    const display = getComputedStyle(domNode).getPropertyValue("display");
+    const display = getComputedStyle(node).getPropertyValue("display");
 
-    if (isNode.isEditInline(domNode) && isNode.isEmojiImgNode(domNode)) {
+    if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
       // 是否是一个表情图片,如果是取出名称
-      const isEmojiVal = domNode.dataset?.[emojiNodeAttrName] || "";
+      const isEmojiVal = node.dataset?.[emojiNodeAttrName] || "";
       if (isEmojiVal) {
         text += isEmojiVal;
       }
     }
 
-    if (display === "block" && !isNode.isEditInline(domNode)) {
+    if (display === "block" && !isNode.isEditInline(node)) {
       text += "\n";
     }
   }
@@ -125,23 +125,27 @@ export const getCopyPlainText = (domNode: HTMLElement) => {
   return text;
 };
 
-/** @name 获取编辑行属性节点的纯文本内容 */
-export const getEditElementContent = (node: any): string => {
+/** @name 获取编辑行属性节点的html内容 */
+export const getEditElementContent = (node: HTMLElement): string => {
   let content = "";
 
-  if (isNode.isDOMText(node)) {
-    content += node.textContent;
+  if (isNode.isDOMText(node) && node.nodeValue) {
+    return node.nodeValue;
   }
+
   if (isNode.isDOMElement(node)) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      content += getEditElementContent(node.childNodes[i]);
+      content += getEditElementContent((node as any).childNodes[i]);
     }
-    // 如果是一个表情图片节点，就获取它的name值拼接
+
     if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
-      // 是否是一个表情图片,如果是取出名称
-      const isEmojiVal = node?.dataset?.[emojiNodeAttrName] || "";
-      if (isEmojiVal) content += isEmojiVal;
+      const emojiVal = node?.dataset?.[emojiNodeAttrName] || "";
+      if (emojiVal) content += emojiVal;
+    }
+
+    if (isNode.isEditInline(node) && isNode.isImageNode(node)) {
+      content += node.outerHTML;
     }
   }
 
@@ -150,15 +154,24 @@ export const getEditElementContent = (node: any): string => {
 
 /**
  * @name 获取编辑器节点输入的内容。逐行获取
- * @returns 返回一个文本数组
+ * @returns 返回一个html格式数组
  */
-export const handleEditNodeTransformsValue = (node: HTMLElement): string[] => {
+export const handleEditTransformsHtml = (node: HTMLElement): string => {
   const result: string[] = [];
-  if (!node || !node?.childNodes) return [];
+  if (!node || !node?.childNodes) return "";
   const nodes: any = Array.from(dom.cloneNodes((node as any).childNodes));
+
   for (const cld of Array.from(nodes)) {
-    const content = getEditElementContent(cld as Element);
-    result.push(content);
+    if (isEditElement(cld as HTMLElement)) {
+      const content = getEditElementContent(cld as any);
+      if (content) {
+        result.push(`<p>${content}</p>`);
+      } else {
+        result.push(`<p><br></p>`);
+      }
+    }
   }
-  return result;
+  const htmlStr = result.join("");
+  // console.log(htmlStr);
+  return htmlStr;
 };

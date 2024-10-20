@@ -61,13 +61,11 @@ export const editor: IEditorInterface = {
     // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
     contents.ownerDocument.body.appendChild(odiv);
 
-    let contentResult = transforms.handleEditNodeTransformsValue(odiv);
+    const contentResult = transforms.getNodePlainText(odiv);
 
     contents.ownerDocument.body.removeChild(odiv);
 
-    // console.log(contentResult);
-
-    return contentResult.join("\n");
+    return contentResult;
   },
   getHtml() {
     const editorNode = util.getEditorInstance();
@@ -87,11 +85,11 @@ export const editor: IEditorInterface = {
     // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
     contents.ownerDocument.body.appendChild(odiv);
 
-    let contentResult = transforms.handleEditNodeTransformsValue(odiv);
+    const contentResult = transforms.handleEditTransformsHtml(odiv);
 
     contents.ownerDocument.body.removeChild(odiv);
 
-    return contentResult.join("\n");
+    return contentResult;
   },
   insertText(contentText, range, callBack, showCursor) {
     if (!contentText || !range) {

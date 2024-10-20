@@ -106,10 +106,11 @@ export default function useEdit(props: IEditableProps) {
   };
 
   const updateVlue = () => {
-    const val = editor.getHtml();
+    const val = editor.getText();
+    console.log(val);
     // 控制提示,为空就提示placeholder
-    setTipHolder(val == "");
-    restProps.onChange?.(editor);
+    // setTipHolder(val == "");
+    // restProps.onChange?.(editor);
   };
 
   /** @name 选择插入表情图片 */

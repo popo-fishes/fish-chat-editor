@@ -9,6 +9,7 @@ import type { IEditorElement } from "../../types";
 /** 是否正在处理粘贴内容 */
 let isPasteLock = false;
 
+/** @name 设置复制的内容 */
 const setCopyText = (event: React.ClipboardEvent<HTMLDivElement>) => {
   if (!fishRange.isSelected()) {
     return;
@@ -27,7 +28,7 @@ const setCopyText = (event: React.ClipboardEvent<HTMLDivElement>) => {
   odiv.setAttribute("hidden", "true");
   contents.ownerDocument.body.appendChild(odiv);
 
-  const content = transforms.getCopyPlainText(odiv);
+  const content = transforms.getNodePlainText(odiv);
 
   // event.clipboardData.setData("text/html", odiv.innerHTML);
   event.clipboardData?.setData("text/plain", content);
