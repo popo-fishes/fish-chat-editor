@@ -39,7 +39,7 @@ export const editor: IEditorInterface = {
       return false;
     }
     // 获取纯文本内容，有内容返回false，没内容返回true
-    if (!Editor.getText()) return true;
+    if (!editor.getText()) return true;
 
     return false;
   },
@@ -64,6 +64,8 @@ export const editor: IEditorInterface = {
     let contentResult = transforms.handleEditNodeTransformsValue(odiv);
 
     contents.ownerDocument.body.removeChild(odiv);
+
+    // console.log(contentResult);
 
     return contentResult.join("\n");
   },

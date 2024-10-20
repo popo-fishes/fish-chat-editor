@@ -8,6 +8,7 @@ import classNames from "classnames";
 import { Tooltip, Image } from "antd";
 import Editor from "../editor";
 import { useClickAway } from "../../hooks";
+import type { IEditorInterface } from "../../core";
 
 import { setEmojiData } from "../../utils";
 import { emoji as defaultEmojiData } from "../../config";
@@ -78,8 +79,9 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
 
   /** @name 富文本值变化时 */
   const onEditableChange = useCallback(
-    (v) => {
-      setSend(!!v);
+    (editor: IEditorInterface) => {
+      console.log(editor.getText());
+      // setSend(!!v);
       onChange?.(v);
     },
     [onChange]

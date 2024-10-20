@@ -51,7 +51,7 @@ export default function useEdit(props: IEditableProps) {
   /** @name 初始化编辑器 */
   const init = async () => {
     const editor = editNodeRef.current;
-    // console.log(editNodeRef.current);
+
     if (!editor) return;
 
     // 清空内容
@@ -106,16 +106,10 @@ export default function useEdit(props: IEditableProps) {
   };
 
   const updateVlue = () => {
-    // 主动触发输入框值变化
-    const val = editor.getText();
-    // 控制提示
+    const val = editor.getHtml();
+    // 控制提示,为空就提示placeholder
     setTipHolder(val == "");
-    console.log(editor);
-    //restProps?.onChange?.(editor);
-    // // 控制提示
-    // setTipHolder(val == "");
-    // // 暴露值
-    // restProps.onChange?.(transforms.editTransformSpaceText(val));
+    restProps.onChange?.(editor);
   };
 
   /** @name 选择插入表情图片 */
@@ -236,8 +230,7 @@ export default function useEdit(props: IEditableProps) {
       // 插入换行符
       handleLineFeed(editNodeRef.current, (success) => {
         if (success) {
-          const isFlag = editor.isEmptyEditorNode();
-          setTipHolder(isFlag);
+          updateVlue();
         }
         isLineFeedLock = false;
       });

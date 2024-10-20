@@ -90,7 +90,7 @@ export const editTransformSpaceText = (content: string) => {
 };
 
 /**
- * @name 转换节点的内容文本
+ * @name 获取节点转换后的纯文本
  * @param domNode 转换内容的的dom
  * @returns
  */
@@ -125,7 +125,7 @@ export const getCopyPlainText = (domNode: HTMLElement) => {
   return text;
 };
 
-/** @name 获取编辑行属性节点的内容 */
+/** @name 获取编辑行属性节点的纯文本内容 */
 export const getEditElementContent = (node: any): string => {
   let content = "";
 
