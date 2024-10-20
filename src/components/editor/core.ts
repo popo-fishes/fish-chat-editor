@@ -29,7 +29,6 @@ const setCopyText = (event: React.ClipboardEvent<HTMLDivElement>) => {
   contents.ownerDocument.body.appendChild(odiv);
 
   const content = transforms.getNodePlainText(odiv);
-  console.log(JSON.stringify(content));
 
   // event.clipboardData.setData("text/html", odiv.innerHTML);
   event.clipboardData?.setData("text/plain", content);
