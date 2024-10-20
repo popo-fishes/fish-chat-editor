@@ -54,7 +54,7 @@ export const setCursorPosition = (referenceNode: Node, type?: "before" | "after"
 };
 
 /**
- * @name 获取光标的信息
+ * @name 获取当前文档中用户选择的文本范围（range）对象
  */
 export const getRange = (): IRange | null => {
   // 光标的信息

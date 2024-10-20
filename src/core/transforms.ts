@@ -89,8 +89,12 @@ export const editTransformSpaceText = (content: string) => {
   return content;
 };
 
-/** @name 复制节点的文本值 */
-export const getPlainText = (domNode: HTMLElement) => {
+/**
+ * @name 转换节点的内容文本
+ * @param domNode 转换内容的的dom
+ * @returns
+ */
+export const getCopyPlainText = (domNode: HTMLElement) => {
   let text = "";
 
   if (isNode.isDOMText(domNode) && domNode.nodeValue) {
@@ -99,22 +103,21 @@ export const getPlainText = (domNode: HTMLElement) => {
 
   if (isNode.isDOMElement(domNode)) {
     for (const childNode of Array.from(domNode.childNodes)) {
-      text += getPlainText(childNode as any);
+      text += getCopyPlainText(childNode as any);
     }
 
     const display = getComputedStyle(domNode).getPropertyValue("display");
 
-    const emojiNodeAttrKey = base.getElementAttributeKey("emojiNode");
-    const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
-    // 是否是一个表情图片,如果是取出
-    const isEmojiVal = domNode?.dataset?.[emojiNodeAttrName] || "";
-    const isEmojiNode = domNode.nodeName == "IMG" && domNode.hasAttribute(emojiNodeAttrKey);
-
-    if (isEmojiNode && isEmojiVal) {
-      text += isEmojiVal;
+    if (isNode.isEditInline(domNode) && isNode.isEmojiImgNode(domNode)) {
+      const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
+      // 是否是一个表情图片,如果是取出名称
+      const isEmojiVal = domNode.dataset?.[emojiNodeAttrName] || "";
+      if (isEmojiVal) {
+        text += isEmojiVal;
+      }
     }
 
-    if (display === "block" && domNode.nodeName !== "IMG") {
+    if (display === "block" && !isNode.isEditInline(domNode)) {
       text += "\n";
     }
   }

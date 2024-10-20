@@ -9,24 +9,16 @@ import type { IEditorElement } from "../../types";
 /** 是否正在处理粘贴内容 */
 let isPasteLock = false;
 
-/** @name 处理复制事件 */
-export const onCopy = (event: React.ClipboardEvent<HTMLDivElement>) => {
-  // 阻止默认事件，防止复制真实发生
-  event.preventDefault();
-
-  const selection = window.getSelection();
-
-  if (!selection) {
+const setCopyText = (event: React.ClipboardEvent<HTMLDivElement>) => {
+  if (!fishRange.isSelected()) {
     return;
   }
 
-  if (selection.isCollapsed) {
-    return;
-  }
+  const selection = fishRange.getSelection();
 
-  // 获取当前光标选中的内容，我们需要吧复制的内容转换一次
-  // cloneContents很关键，获取选中的文档碎片（此方法返回从Range的内容创建的DocumentFragment对象）
   const contents = selection.getRangeAt(0)?.cloneContents();
+
+  if (!contents) return;
 
   // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
   const odiv = contents.ownerDocument.createElement("div");
@@ -35,45 +27,32 @@ export const onCopy = (event: React.ClipboardEvent<HTMLDivElement>) => {
   odiv.setAttribute("hidden", "true");
   contents.ownerDocument.body.appendChild(odiv);
 
-  const content = transforms.getPlainText(odiv);
+  const content = transforms.getCopyPlainText(odiv);
 
   // event.clipboardData.setData("text/html", odiv.innerHTML);
   event.clipboardData?.setData("text/plain", content);
   contents.ownerDocument.body.removeChild(odiv);
 };
 
+/** @name 处理复制事件 */
+export const onCopy = (event: React.ClipboardEvent<HTMLDivElement>) => {
+  // 阻止默认事件，防止复制真实发生
+  event.preventDefault();
+
+  setCopyText(event);
+};
+
 /** @name 处理剪切事件 */
 export const onCut = (event: React.ClipboardEvent<HTMLDivElement>) => {
   event.preventDefault();
-  const selection = window.getSelection();
-  // 存在选区
-  if (selection && !selection.isCollapsed) {
-    /**
-     * 1；设置复制内容
-     */
-    // 获取当前光标选中的内容，我们需要吧复制的内容转换一次
-    // cloneContents很关键，获取选中的文档碎片（此方法返回从Range的内容创建的DocumentFragment对象）
-    const contents = selection.getRangeAt(0)?.cloneContents();
 
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    const odiv = contents.ownerDocument.createElement("div");
-    odiv.appendChild(contents);
+  setCopyText(event);
 
-    odiv.setAttribute("hidden", "true");
-    contents.ownerDocument.body.appendChild(odiv);
-
-    const content = transforms.getPlainText(odiv);
-
-    // event.clipboardData.setData("text/html", odiv.innerHTML);
-    event.clipboardData?.setData("text/plain", content);
-    contents.ownerDocument.body.removeChild(odiv);
-
-    /**
-     * 删除选区
-     *  */
-    // 后续可以拓展删除节点方法，先原生的
-    document.execCommand("delete", false, undefined);
-  }
+  /**
+   * 删除选区
+   *  */
+  // 后续可以拓展删除节点方法，先原生的
+  document.execCommand("delete", false, undefined);
 };
 
 /**
