@@ -3,6 +3,7 @@
  * @Description: file content
  */
 import type { ReactNode } from "react";
+import type { IEditorInterface } from "../core";
 
 export type IEditorElement = HTMLDivElement;
 
@@ -11,7 +12,7 @@ export type IEmojiType = {
   url: string;
   /** 表情的名称，必须是“[爱心]”的格式 */
   name: string;
-  /** 表情的tip提示标题名 */
+  /** 表情的tip提示名 */
   title: string;
 };
 
@@ -27,7 +28,7 @@ export interface IChatEditorProps extends Pick<IEditableProps, "placeholder" | "
   /** 自定义工具栏内容 */
   toolbarRender?: () => ReactNode;
   /** 点击发送按钮事件 */
-  onSend?: (val: string) => void;
+  onSend?: (editor: IEditorInterface) => void;
 }
 
 /** 编辑器输入框ref */
@@ -36,10 +37,6 @@ export interface IEditableRef {
    * @添加表情方法
    */
   insertEmoji: (item: IEmojiType) => void;
-  /**
-   * @获取纯文本值
-   */
-  getValue: () => string;
   /**
    * @清空输入框值
    */
@@ -56,6 +53,10 @@ export interface IEditableRef {
    * @设置纯文本值
    */
   setValue: (val: string) => void;
+  /**
+   * editor
+   */
+  editor: IEditorInterface;
 }
 
 /** 编辑器输入框Props */
@@ -65,7 +66,7 @@ export interface IEditableProps {
   /** 输入框点击事件 */
   onClick?: () => void;
   /** 键盘回车事件 */
-  onEnterDown?: (v?: string) => void;
+  onEnterDown?: (editor: IEditorInterface) => void;
   /** 输入框内容变化时的回调 */
-  onChange?: (val: string) => void;
+  onChange?: (editor: IEditorInterface) => void;
 }

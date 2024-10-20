@@ -64,10 +64,10 @@ export const isEditInline = (node: HTMLElement): boolean => {
 };
 
 /** @name 判断是否为一个图片属性节点，不包含表情图 */
-export const isImgNode = (node: HTMLElement): boolean => {
+export const isImageNode = (node: HTMLElement): boolean => {
   if (!node || !isDOMElement(node)) return false;
-  const key = base.getElementAttributeKey("imgNode");
-  const attrName = base.getElementAttributeDatasetName("imgNode");
+  const key = base.getElementAttributeKey("imageNode");
+  const attrName = base.getElementAttributeDatasetName("imageNode");
   const hasAttr = node.hasAttribute(key);
   if (hasAttr) {
     const elementAttrVal = node?.dataset?.[attrName] || "";
@@ -97,6 +97,17 @@ export const isEmojiImgNode = (node: HTMLElement): boolean => {
 export const isNodeNotTtxt = (node: HTMLElement): boolean => {
   if (isDOMText(node)) {
     if (node?.nodeValue == "") {
+      return true;
+    }
+  }
+  return false;
+};
+
+/** @name 判断一个节点是零宽度文本节点 */
+export const isNodeZeroSpace = (node: HTMLElement): boolean => {
+  if (isDOMText(node)) {
+    const tranText = node.nodeValue.replace(new RegExp(base.zeroWidthNoBreakSpace, "g"), "");
+    if (tranText == "") {
       return true;
     }
   }

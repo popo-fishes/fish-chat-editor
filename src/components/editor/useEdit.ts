@@ -6,6 +6,7 @@ import { useRef, useState, useEffect } from "react";
 import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
 import { base, isNode, util, range, editor, IRange, dom, transforms } from "../../core";
+import { emojiSize } from "../../config";
 
 import { transformsEditNodes } from "./transforms";
 import { handlePasteTransforms, handleLineFeed } from "./core";
@@ -50,13 +51,15 @@ export default function useEdit(props: IEditableProps) {
   /** @name 初始化编辑器 */
   const init = async () => {
     const editor = editNodeRef.current;
-    // console.log(editNodeRef.current);
+
     if (!editor) return;
 
     // 清空内容
     const curDom = clearEditor();
     // 设置光标的位置
     setRangePosition(curDom, 0, true);
+    // ..
+    updateVlue();
   };
 
   /** @name 清空输入框的值 */
@@ -95,15 +98,22 @@ export default function useEdit(props: IEditableProps) {
       if (node) {
         // 设置当前光标节点
         setRangePosition(node, 0);
-        editor.insertText(content, currentRange, () => {
-          const val = editor.getText();
-          // 控制提示
-          setTipHolder(val == "");
-          // 返回输入框信息
-          restProps.onChange?.(transforms.editTransformSpaceText(val));
+        editor.insertText(content, currentRange, (success) => {
+          if (success) {
+            updateVlue();
+          }
         });
       }
     });
+  };
+
+  /** @name 更新值 */
+  const updateVlue = () => {
+    const html = editor.getHtml();
+    // console.log(html, JSON.stringify(editor.getText()));
+    // 控制提示,为空就提示placeholder
+    setTipHolder(html == base.emptyEditHtmlText);
+    restProps.onChange?.(editor);
   };
 
   /** @name 选择插入表情图片 */
@@ -121,14 +131,12 @@ export default function useEdit(props: IEditableProps) {
       return;
     }
     // 创建
-    const node = base.createChunkEmojilement(item.url, 18, 18, item.name);
-    editor.insertNode([node], currentRange, () => {
-      range.setCursorPosition(node as any, "after");
-      // 主动触发输入框值变化
-      const val = editor.getText();
-      // 控制提示
-      setTipHolder(val == "");
-      props?.onChange?.(val);
+    const node = base.createChunkEmojiElement(item.url, emojiSize, item.name);
+    editor.insertNode([node], currentRange, (success) => {
+      if (success) {
+        range.setCursorPosition(node as any, "after");
+        updateVlue();
+      }
     });
   };
 
@@ -153,7 +161,7 @@ export default function useEdit(props: IEditableProps) {
     // console.log(event, document.activeElement);
   };
 
-  /** @name 输入框值变化onChange事件 */
+  /** @name 输入框值变化事件 */
   const onEditorChange = (e: React.CompositionEvent<HTMLDivElement>) => {
     /***
      * 在谷歌浏览器，输入遇见输入框先清除焦点然后调用focus方法，重新修正光标的位置，会导致，下次输入中文时 onCompositionEnd事件不会触发，导致
@@ -161,12 +169,7 @@ export default function useEdit(props: IEditableProps) {
      */
     if (isLock) return;
 
-    // 获取输入框的值，主动触发输入框值变化
-    const val = editor.getText();
-    // 控制提示
-    setTipHolder(val == "");
-    // 暴露值
-    restProps.onChange?.(transforms.editTransformSpaceText(val));
+    updateVlue();
   };
 
   /** @name 点击输入框事件（点击时） */
@@ -177,6 +180,12 @@ export default function useEdit(props: IEditableProps) {
     if (emojiNode) {
       // 选中它
       range.selectNode(emojiNode);
+    }
+    // 如果是图片节点
+    const imageNode = util.getNodeOfEditorImageNode(target);
+    if (imageNode) {
+      // 选中它
+      // range.selectNode(imageNode);
     }
 
     /**
@@ -225,8 +234,7 @@ export default function useEdit(props: IEditableProps) {
       // 插入换行符
       handleLineFeed(editNodeRef.current, (success) => {
         if (success) {
-          const isFlag = editor.isEmptyEditorNode();
-          setTipHolder(isFlag);
+          updateVlue();
         }
         isLineFeedLock = false;
       });
@@ -238,7 +246,7 @@ export default function useEdit(props: IEditableProps) {
       event.preventDefault();
       event.stopPropagation();
       // 执行回车事件给父组件
-      restProps.onEnterDown?.();
+      restProps.onEnterDown?.(editor);
       return;
     }
 
@@ -251,7 +259,7 @@ export default function useEdit(props: IEditableProps) {
       /**
        * 是没有选定文本 && 当前编辑器是一个空节点
        */
-      if (!range.isSelected() && editor.isEmptyEditorNode()) {
+      if (!range.isSelected() && editor.isEmpty()) {
         event.preventDefault();
         return;
       }
@@ -308,12 +316,7 @@ export default function useEdit(props: IEditableProps) {
     e.preventDefault();
     handlePasteTransforms(e, editNodeRef.current, (success) => {
       if (success) {
-        // 获取输入框的值，主动触发输入框值变化
-        const val = editor.getText();
-        // 控制提示
-        setTipHolder(val == "");
-        // 暴露值
-        restProps.onChange?.(transforms.editTransformSpaceText(val));
+        updateVlue();
       }
     });
   };

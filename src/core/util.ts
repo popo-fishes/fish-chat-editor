@@ -5,7 +5,7 @@
 import { isNode } from ".";
 import { IEditorElement } from "../types";
 
-const { isNodeNotTtxt, isImgNode, isEmojiImgNode, isEditInline, isEditElement } = isNode;
+const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditInline, isEditElement } = isNode;
 
 const editorNode = { current: null };
 
@@ -70,18 +70,17 @@ export const getNodeOfEditorEmojiNode = (node: any, level = 0): HTMLElement | nu
 };
 
 /**
- * @name 判断节点是否图片元素节点，如果不是，一直找子节点
- * @returns boolean
+ * @name 传入一个节点--获取图片属性节点，如果没有，最多找3级父节点
+ * @returns 如果是图片属性节点就返回，不是就返回空
  */
-export const findNodeWithImg = (node: any): boolean => {
-  if (!node) {
-    return false;
+export const getNodeOfEditorImageNode = (node: any, level = 0): HTMLElement | null => {
+  if (!node || level >= 3) {
+    return null;
   }
 
-  if (isImgNode(node)) return true;
+  if (isImageNode(node) && isEditInline(node)) return node;
 
-  // 否则继续查询子节点
-  return findNodeWithImg(node?.firstChild || null);
+  return getNodeOfEditorImageNode(node.parentNode, level + 1);
 };
 
 /**

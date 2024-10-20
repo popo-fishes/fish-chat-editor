@@ -4,7 +4,7 @@
  */
 import { forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps, IEditorElement } from "../../types";
-import { editor, transforms, util } from "../../core";
+import { editor, util } from "../../core";
 
 import { onCopy, onCut } from "./core";
 import { amendRangePosition } from "./util";
@@ -40,19 +40,15 @@ const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     ref,
     () =>
       ({
+        editor: editor,
         insertEmoji: (item: IEmojiType) => insertEmoji(item),
-        getValue: () => {
-          const editValue = editor.getText();
-          // 返回输入框信息
-          return transforms.editTransformSpaceText(editValue);
-        },
         setValue: (content) => setText(content),
         clear: () => {
           // 清除内容
           clearEditor();
           // 失去焦点
           editNodeRef.current?.blur();
-          restProps.onChange?.("");
+          restProps.onChange?.(editor);
         },
         focus: () => {
           requestAnimationFrame(() => {
