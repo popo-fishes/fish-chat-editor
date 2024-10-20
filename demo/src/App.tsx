@@ -3,7 +3,9 @@
  * @Description: Modify here please
  */
 import { useRef, useState } from "react";
-import ChatEditor, { IChatEditorRef } from "../../src";
+// 正式使用时应该：
+// import FbChatEditor, { IChatEditorRef } from "fish-chat-editor";
+import FbChatEditor, { IChatEditorRef } from "../../src";
 import "./App.css";
 
 function App() {
@@ -24,13 +26,17 @@ function App() {
       <a href="https://github.com/popo-fishes/fish-chat-editor/blob/main/README.md" target="_blank">
         fish-chat-editor文档
       </a>
+      <a style={{ marginLeft: "20px" }} href="https://github.com/popo-fishes/fish-chat-editor/blob/main/demo/src/App.tsx" target="_blank">
+        demo源码
+      </a>
       <div style={{ marginTop: "180px" }}>
-        <ChatEditor
+        <FbChatEditor
           onEnterDown={onSend}
           onSend={onSend}
           ref={editorRef}
           onChange={(editor) => {
             const html = editor.getHtml();
+            // const text = editor.getText();
             setHtml(html);
           }}
         />
