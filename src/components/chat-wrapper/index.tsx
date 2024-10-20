@@ -72,8 +72,8 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   const onEnterDownEvent = useCallback(async () => {
     if (!isSend) return;
     // 获取输入框的值
-    const msgValue = editInputRef.current?.getValue();
-    onEnterDown?.(msgValue as string);
+    // const msgValue = editInputRef.current?.getValue();
+    // onEnterDown?.(msgValue as string);
   }, [onEnterDown, isSend]);
 
   /** @name 富文本值变化时 */
@@ -95,10 +95,10 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   const onSubmit = useCallback(async () => {
     // 没有输入值
     if (!isSend) return;
-    // 获取输入框的值
-    const msgValue = editInputRef.current?.getValue();
-    // 发送消息
-    onSend?.(msgValue as string);
+    // // 获取输入框的值
+    // const msgValue = editInputRef.current?.getValue();
+    // // 发送消息
+    // onSend?.(msgValue as string);
   }, [onSend, isSend]);
 
   return (

@@ -5,7 +5,6 @@
 /**
  * 注意导出的顺序，不要变化
  */
-export type * from "./range";
 
 export * as base from "./base";
 
@@ -21,4 +20,7 @@ export * as dom from "./dom";
 
 export * as transforms from "./transforms";
 
-export * as editor from "./editor";
+export * from "./editor";
+
+export type * from "./range";
+export type * from "./editor";

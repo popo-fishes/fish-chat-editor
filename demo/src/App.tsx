@@ -27,7 +27,15 @@ function App() {
         fish-chat-editor文档
       </a> */}
       <div style={{ marginTop: "180px" }}>
-        <ChatEditor onEnterDown={onSend} onSend={onSend} ref={editorRef} onChange={(v) => setVal(v)} />
+        <ChatEditor
+          onEnterDown={onSend}
+          onSend={onSend}
+          ref={editorRef}
+          onChange={(v) => {
+            console.log(123, v);
+            setVal(v);
+          }}
+        />
       </div>
       <p style={{ marginTop: "15px" }}>富文本内容:</p>
       <p style={{ marginTop: "15px" }}>{v}</p>
