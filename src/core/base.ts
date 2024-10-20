@@ -4,12 +4,7 @@
  */
 import { helper } from ".";
 
-export const prefixNmae = "fb-e-";
-
 const specialmode = false;
-
-/** 零宽度非换行空格 */
-export const zeroWidthNoBreakSpace = "\u200B";
 
 /** 编辑器标签扩展属性配置表 */
 const elementAttributeData = {
@@ -47,6 +42,15 @@ const elementAttributeData = {
     value: "fishEmojiName"
   }
 };
+
+/** 空的富文本内容 */
+export const emptyEditHtmlText = "<p><br></p>";
+
+/** 样式前缀名称 */
+export const prefixNmae = "fb-e-";
+
+/** 零宽度非换行空格 */
+export const zeroWidthNoBreakSpace = "\u200B";
 
 /** @name 获取编辑器节点属性key */
 export const getElementAttributeKey = (name: keyof typeof elementAttributeData) => {

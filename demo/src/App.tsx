@@ -3,42 +3,45 @@
  * @Description: Modify here please
  */
 import { useRef, useState } from "react";
-import ChatEditor, { Version } from "../../src";
+import ChatEditor, { IChatEditorRef } from "../../src";
 import "./App.css";
 
-console.log(Version);
-
 function App() {
-  const [v, setVal] = useState("");
-  const editorRef = useRef();
+  const [html, setHtml] = useState("");
+  const editorRef = useRef<IChatEditorRef>(null);
 
   // 发送文本消息
-  const onSend = async (v) => {
+  const onSend = async (_) => {
     // 清空输入框
     editorRef.current?.clear();
-    // 延迟
+
     editorRef.current?.focus();
   };
 
   return (
     <>
-      {/* <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-chat-editor</p>
+      <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-chat-editor</p>
       <a href="https://github.com/popo-fishes/fish-chat-editor/blob/main/README.md" target="_blank">
         fish-chat-editor文档
-      </a> */}
+      </a>
       <div style={{ marginTop: "180px" }}>
         <ChatEditor
           onEnterDown={onSend}
           onSend={onSend}
           ref={editorRef}
-          onChange={(v) => {
-            console.log(123, v);
-            setVal(v);
+          onChange={(editor) => {
+            const html = editor.getHtml();
+            setHtml(html);
           }}
         />
       </div>
+      {/*  显示内容 */}
       <p style={{ marginTop: "15px" }}>富文本内容:</p>
-      <p style={{ marginTop: "15px" }}>{v}</p>
+
+      <div style={{ marginTop: "20px" }}>
+        <textarea className="editor-textarea-view" readOnly value={html} />
+      </div>
+      <div className="editor-content-view" dangerouslySetInnerHTML={{ __html: html }} />
     </>
   );
 }

@@ -70,19 +70,19 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   useClickAway(closeEmojiPop, [modalRef, emotionTarget]);
 
   /** @name 点击回车事件 */
-  const onEnterDownEvent = useCallback(async () => {
-    if (!isSend) return;
-    // 获取输入框的值
-    // const msgValue = editInputRef.current?.getValue();
-    // onEnterDown?.(msgValue as string);
-  }, [onEnterDown, isSend]);
+  const onEnterDownEvent = useCallback(
+    (editor: IEditorInterface) => {
+      if (!isSend) return;
+      onEnterDown?.(editor);
+    },
+    [onEnterDown, isSend]
+  );
 
   /** @name 富文本值变化时 */
   const onEditableChange = useCallback(
     (editor: IEditorInterface) => {
-      console.log(editor.getText());
-      // setSend(!!v);
-      //  onChange?.(v);
+      setSend(!editor.isEmpty());
+      onChange?.(editor);
     },
     [onChange]
   );
@@ -94,13 +94,14 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   }, []);
 
   /** @name 发送消息 */
-  const onSubmit = useCallback(async () => {
+  const onSubmit = useCallback(() => {
     // 没有输入值
     if (!isSend) return;
-    // // 获取输入框的值
-    // const msgValue = editInputRef.current?.getValue();
-    // // 发送消息
-    // onSend?.(msgValue as string);
+    const editor = editInputRef.current?.editor;
+    if (editor) {
+      // 发送消息
+      onSend?.(editor);
+    }
   }, [onSend, isSend]);
 
   return (

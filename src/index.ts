@@ -3,10 +3,13 @@
  */
 export { default } from "./components/chat-wrapper";
 
-export * from "./hooks";
+export { useClickAway } from "./hooks";
 
 export { replaceMsgText, labelRep } from "./utils";
 
-export * from "./types";
+export { contentReplaceEmpty } from "./core/helper";
+
+export type * from "./types";
+export type { IEditorInterface } from "./core";
 
 export const Version = "1.0.7";

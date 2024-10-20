@@ -12,7 +12,7 @@ export type IEmojiType = {
   url: string;
   /** 表情的名称，必须是“[爱心]”的格式 */
   name: string;
-  /** 表情的tip提示标题名 */
+  /** 表情的tip提示名 */
   title: string;
 };
 
@@ -28,7 +28,7 @@ export interface IChatEditorProps extends Pick<IEditableProps, "placeholder" | "
   /** 自定义工具栏内容 */
   toolbarRender?: () => ReactNode;
   /** 点击发送按钮事件 */
-  onSend?: (val: string) => void;
+  onSend?: (editor: IEditorInterface) => void;
 }
 
 /** 编辑器输入框ref */

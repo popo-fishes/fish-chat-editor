@@ -58,6 +58,8 @@ export default function useEdit(props: IEditableProps) {
     const curDom = clearEditor();
     // 设置光标的位置
     setRangePosition(curDom, 0, true);
+    // ..
+    updateVlue();
   };
 
   /** @name 清空输入框的值 */
@@ -105,12 +107,13 @@ export default function useEdit(props: IEditableProps) {
     });
   };
 
+  /** @name 更新值 */
   const updateVlue = () => {
-    const val = editor.getHtml();
-    console.log(val, JSON.stringify(editor.getText()));
+    const html = editor.getHtml();
+    // console.log(html, JSON.stringify(editor.getText()));
     // 控制提示,为空就提示placeholder
-    // setTipHolder(val == "");
-    // restProps.onChange?.(editor);
+    setTipHolder(html == base.emptyEditHtmlText);
+    restProps.onChange?.(editor);
   };
 
   /** @name 选择插入表情图片 */

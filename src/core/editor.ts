@@ -34,13 +34,12 @@ export const editor: IEditorInterface = {
   isEmpty() {
     const editorNode = util.getEditorInstance();
     if (!editorNode || !editorNode?.childNodes) return true;
-    // 子节点大于1返回false，代表不是空
+    // 子节点大于1返回, 免得去走判断方法。
     if (editorNode?.childNodes && editorNode?.childNodes.length > 1) {
       return false;
     }
-
     // 获取纯文本内容，有内容返回false，没内容返回true
-    if (editor.getText() == "") return true;
+    if (editor.getText() == "" && editor.getHtml() == base.emptyEditHtmlText) return true;
 
     return false;
   },
@@ -113,7 +112,7 @@ export const editor: IEditorInterface = {
       return;
     }
 
-    console.time("editable插入内容耗时");
+    console.time("editor插入内容耗时");
 
     const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
@@ -222,7 +221,7 @@ export const editor: IEditorInterface = {
         }
       }
 
-      console.timeEnd("editable插入内容耗时");
+      console.timeEnd("editor插入内容耗时");
 
       {
         const focusNode = document.getElementById(keyId) as any;
@@ -254,13 +253,13 @@ export const editor: IEditorInterface = {
       callBack?.(false);
       return;
     }
-    console.time("editable插入节点耗时");
+    console.time("editor插入节点耗时");
 
     // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
     const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
     if (nodes.length == 0) {
-      console.timeEnd("editable插入节点耗时");
+      console.timeEnd("editor插入节点耗时");
       callBack?.(false);
       return;
     }
@@ -279,7 +278,7 @@ export const editor: IEditorInterface = {
       }
     }
 
-    console.timeEnd("editable插入节点耗时");
+    console.timeEnd("editor插入节点耗时");
 
     // 设置光标的位置
     {

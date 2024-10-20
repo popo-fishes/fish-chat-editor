@@ -22,5 +22,5 @@ export * as transforms from "./transforms";
 
 export * from "./editor";
 
-export type * from "./range";
-export type * from "./editor";
+export type { IRange } from "./range";
+export type { IEditorInterface } from "./editor";
