@@ -73,24 +73,6 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
 };
 
 /**
- * @name 除去字符串空格换后是否为一个空文本，如果是直接赋值为空，否则用原始的
- * 常用于获取节点值后，判断是否全部是空格 和 换行，如果是就给字符串置空
- */
-export const editTransformSpaceText = (content: string) => {
-  // 删除所有换行
-  const cStr = content.replace(/\s/g, "");
-  // 去掉所有的换行
-  const lStr = cStr.replace(/\n/g, "");
-
-  // 删除全部的换行和空格，得到一个 空字符，直接用空字符串作为值
-  if (lStr == "") {
-    content = "";
-  }
-
-  return content;
-};
-
-/**
  * @name 传入节点,获取它的纯文本内容
  * @returns
  */

@@ -106,8 +106,8 @@ export default function useEdit(props: IEditableProps) {
   };
 
   const updateVlue = () => {
-    const val = editor.getText();
-    console.log(val);
+    const val = editor.getHtml();
+    console.log(val, JSON.stringify(editor.getText()));
     // 控制提示,为空就提示placeholder
     // setTipHolder(val == "");
     // restProps.onChange?.(editor);
@@ -256,7 +256,7 @@ export default function useEdit(props: IEditableProps) {
       /**
        * 是没有选定文本 && 当前编辑器是一个空节点
        */
-      if (!range.isSelected() && editor.isEmptyEditorNode()) {
+      if (!range.isSelected() && editor.isEmpty()) {
         event.preventDefault();
         return;
       }

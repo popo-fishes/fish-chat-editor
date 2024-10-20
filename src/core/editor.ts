@@ -7,8 +7,8 @@ import { helper, base, dom, isNode, util, range as fishRange, transforms } from 
 import type { IRange } from "./range";
 
 export interface IEditorInterface {
-  /** @name 当前编辑器是一个空节点??? */
-  isEmptyEditorNode: () => boolean;
+  /** @name 判断当前编辑器内容是否为空 */
+  isEmpty: () => boolean;
   /** @name 获取当前编辑器的纯文本内容 */
   getText: () => string;
   /** @name 获取非格式化的html */
@@ -31,15 +31,16 @@ export interface IEditorInterface {
   insertNode: (nodes: HTMLElement[], range: IRange, callBack?: (success: boolean) => void) => void;
 }
 export const editor: IEditorInterface = {
-  isEmptyEditorNode() {
+  isEmpty() {
     const editorNode = util.getEditorInstance();
     if (!editorNode || !editorNode?.childNodes) return true;
     // 子节点大于1返回false，代表不是空
     if (editorNode?.childNodes && editorNode?.childNodes.length > 1) {
       return false;
     }
+
     // 获取纯文本内容，有内容返回false，没内容返回true
-    if (!editor.getText()) return true;
+    if (editor.getText() == "") return true;
 
     return false;
   },
@@ -48,46 +49,48 @@ export const editor: IEditorInterface = {
 
     if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
 
-    const contents = editorNode.cloneNode(true);
+    const contentNode = editorNode.cloneNode(true);
 
     const odiv = document.createElement("div");
 
-    for (const childNode of Array.from(contents.childNodes)) {
+    for (const childNode of Array.from(contentNode.childNodes)) {
       odiv.appendChild(childNode as Node);
     }
 
     odiv.setAttribute("hidden", "true");
 
     // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contents.ownerDocument.body.appendChild(odiv);
+    contentNode.ownerDocument.body.appendChild(odiv);
 
-    const contentResult = transforms.getNodePlainText(odiv);
+    const contentStr = transforms.getNodePlainText(odiv);
 
-    contents.ownerDocument.body.removeChild(odiv);
+    contentNode.ownerDocument.body.removeChild(odiv);
 
-    return contentResult;
+    const result = helper.contentReplaceEmpty(helper.removeTailLineFeed(contentStr));
+
+    return result;
   },
   getHtml() {
     const editorNode = util.getEditorInstance();
 
     if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
 
-    const contents = editorNode.cloneNode(true);
+    const contentNode = editorNode.cloneNode(true);
 
     const odiv = document.createElement("div");
 
-    for (const childNode of Array.from(contents.childNodes)) {
+    for (const childNode of Array.from(contentNode.childNodes)) {
       odiv.appendChild(childNode as Node);
     }
 
     odiv.setAttribute("hidden", "true");
 
     // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contents.ownerDocument.body.appendChild(odiv);
+    contentNode.ownerDocument.body.appendChild(odiv);
 
     const contentResult = transforms.handleEditTransformsHtml(odiv);
 
-    contents.ownerDocument.body.removeChild(odiv);
+    contentNode.ownerDocument.body.removeChild(odiv);
 
     return contentResult;
   },
