@@ -130,7 +130,14 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
         {props?.toolbarRender?.()}
       </div>
       {/* 编辑框 */}
-      <Editor placeholder={placeholder} ref={editInputRef} onChange={onEditableChange} onEnterDown={onEnterDownEvent} onClick={onEditableClick} />
+      <Editor
+        placeholder={placeholder}
+        ref={editInputRef}
+        beforePasteImage={restProps.beforePasteImage}
+        onChange={onEditableChange}
+        onEnterDown={onEnterDownEvent}
+        onClick={onEditableClick}
+      />
       {/* 发送区 */}
       <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>

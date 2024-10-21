@@ -1,10 +1,12 @@
 import isObject from "lodash/isObject";
+import isFunction from "lodash/isFunction";
+import isArray from "lodash/isArray";
 
 import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
 
-import { amendRangePosition } from "./util";
+import { amendRangePosition, getEditImageAmount } from "./util";
 
-import type { IEditorElement } from "../../types";
+import type { IEditorElement, IEditableProps } from "../../types";
 
 /** 是否正在处理粘贴内容 */
 let isPasteLock = false;
@@ -141,8 +143,14 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
  * @param e 粘贴事件
  * @param editNode 编辑器节点
  * @param callBack 成功回调
+ * @param beforePasteImage 粘贴图片之前的钩子
  */
-export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNode: IEditorElement, callBack: (success: boolean) => void) => {
+export const handlePasteTransforms = (
+  e: ClipboardEventWithOriginalEvent,
+  editNode: IEditorElement,
+  callBack: (success: boolean) => void,
+  beforePasteImage?: IEditableProps["beforePasteImage"]
+) => {
   // 获取粘贴的内容
   const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
   const isFile = clp?.types?.includes("Files");
@@ -159,20 +167,36 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
     // console.log(files);
     // 必须是图片
     const vfiles = files?.filter((item) => item.type.includes("image/"));
-    // 截取前面5个文件
-    const sfiles = vfiles.slice(-5);
 
     if (!range) {
       isPasteLock = false;
-      return callBack(false);
+      return;
     }
 
     if (isPasteLock) return;
 
+    // 截取前面10个文件
+    let filtratefiles = vfiles.slice(0, 10);
+
+    if (isFunction(beforePasteImage)) {
+      const amount = getEditImageAmount(editNode);
+      const result = beforePasteImage(vfiles.slice(0, 10), amount);
+      if (isArray(result) && result?.length) {
+        filtratefiles = result;
+      } else {
+        filtratefiles = [];
+      }
+    }
+
+    // 如果是一个空文件直接返回
+    if (filtratefiles.length == 0) {
+      return;
+    }
+
     const promiseData = [];
 
-    for (let i = 0; i < sfiles.length; i++) {
-      const file = sfiles[i];
+    for (let i = 0; i < filtratefiles.length; i++) {
+      const file = filtratefiles[i];
       promiseData.push(helper.fileToBase64(file));
     }
 
@@ -208,7 +232,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
             // 行属性节点
             const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
 
-            // 修改为位置，在插入
+            // 修正光标节点，在插入
             if (!rowElementNode) {
               amendRangePosition(editNode, (node) => {
                 if (node) {
@@ -251,7 +275,7 @@ export const handlePasteTransforms = (e: ClipboardEventWithOriginalEvent, editNo
 
     if (!content || !range) {
       isPasteLock = false;
-      return callBack(false);
+      return;
     }
 
     if (isPasteLock) return;

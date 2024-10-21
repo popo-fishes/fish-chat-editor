@@ -20,7 +20,7 @@ export type IEmojiType = {
 export interface IChatEditorRef extends IEditableRef {}
 
 /** 聊天组件的props */
-export interface IChatEditorProps extends Pick<IEditableProps, "placeholder" | "onEnterDown" | "onChange"> {
+export interface IChatEditorProps extends Omit<IEditableProps, "onClick"> {
   /** 扩展类名 */
   className?: string;
   /** 表情列表数据 */
@@ -69,4 +69,10 @@ export interface IEditableProps {
   onEnterDown?: (editor: IEditorInterface) => void;
   /** 输入框内容变化时的回调 */
   onChange?: (editor: IEditorInterface) => void;
+  /**
+   * 粘贴图片之前的钩子, 参数为粘贴的文件，若返回为空数组则停止粘贴，若返回为文件数组则继续处理
+   * @param files 粘贴的文件数组
+   * @param amount 富文本中已有的图片文件数量
+   */
+  beforePasteImage?: (files: File[], amount: number) => File[] | [];
 }

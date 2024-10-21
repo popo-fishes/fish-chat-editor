@@ -314,11 +314,17 @@ export default function useEdit(props: IEditableProps) {
    */
   const onEditorPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
-    handlePasteTransforms(e, editNodeRef.current, (success) => {
-      if (success) {
-        updateVlue();
-      }
-    });
+    /** 处理粘贴事件的内容转换 */
+    handlePasteTransforms(
+      e,
+      editNodeRef.current,
+      (success) => {
+        if (success) {
+          updateVlue();
+        }
+      },
+      restProps.beforePasteImage
+    );
   };
 
   const onCompositionStart = (e: React.CompositionEvent<HTMLDivElement>) => {
