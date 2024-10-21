@@ -43,8 +43,20 @@ export const removeTailLineFeed = (content: string) => {
   return content;
 };
 
-/** @name 把一个file对象转为base64 */
-export function fileToBase64(file: any) {
+const dataURLToBlob = (dataURL: string): Blob => {
+  const arr = dataURL.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1] || "";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+};
+
+/** @name 把一个file对象转为Blob */
+export function fileToBlob(file: any) {
   return new Promise((resolve, reject) => {
     // 创建一个新的 FileReader 对象
     const reader = new FileReader();
@@ -52,10 +64,15 @@ export function fileToBase64(file: any) {
     reader.readAsDataURL(file);
     // 加载完成后
     reader.onload = function () {
-      // 将读取的数据转换为 base64 编码的字符串
-      const base64String = (reader.result as any).split(",")[1];
-      // 解析为 Promise 对象，并返回 base64 编码的字符串
-      resolve(base64String);
+      try {
+        const base64Data = reader.result as string;
+        // 解析为 Promise 对象，并返回 base64 编码的字符串
+        const blob = dataURLToBlob(base64Data);
+        const url = URL.createObjectURL(blob);
+        resolve(url);
+      } catch (err) {
+        reject(new Error(err));
+      }
     };
 
     // 加载失败时

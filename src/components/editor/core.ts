@@ -145,7 +145,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
  * @param callBack 成功回调
  * @param beforePasteImage 粘贴图片之前的钩子
  */
-export const handlePasteTransforms = (
+export const handlePasteTransforms = async (
   e: ClipboardEventWithOriginalEvent,
   editNode: IEditorElement,
   callBack: (success: boolean) => void,
@@ -180,7 +180,7 @@ export const handlePasteTransforms = (
 
     if (isFunction(beforePasteImage)) {
       const amount = getEditImageAmount(editNode);
-      const result = beforePasteImage(vfiles.slice(0, 10), amount);
+      const result = await beforePasteImage(vfiles.slice(0, 10), amount);
       if (isArray(result) && result?.length) {
         filtratefiles = result;
       } else {
@@ -197,7 +197,7 @@ export const handlePasteTransforms = (
 
     for (let i = 0; i < filtratefiles.length; i++) {
       const file = filtratefiles[i];
-      promiseData.push(helper.fileToBase64(file));
+      promiseData.push(helper.fileToBlob(file));
     }
 
     // 标记
@@ -211,15 +211,14 @@ export const handlePasteTransforms = (
           // 请求结束后再去清除掉
           res.forEach((result) => {
             if (result.status == "fulfilled" && result.value) {
-              datas.push(`data:image/jpeg;base64,${result.value}`);
+              datas.push(result.value);
             }
           });
 
           const nodes: HTMLSpanElement[] = [];
           datas.forEach((baseSrc) => {
-            // 创建一个图片容器节点
-            // const textNode = createChunkTextElement();
-            nodes.push(...[base.createChunkImgElement(baseSrc)]);
+            const zeroSpaceNode = base.createZeroSpaceElement() as any;
+            nodes.push(...[base.createChunkImgElement(baseSrc), zeroSpaceNode]);
           });
 
           if (nodes.length) {

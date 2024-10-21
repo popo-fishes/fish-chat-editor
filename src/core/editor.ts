@@ -283,15 +283,22 @@ export const editor: IEditorInterface = {
     // 设置光标的位置
     {
       const referenceNode = nodes[nodes.length - 1] as any;
-      if (referenceNode) {
-        referenceNode?.scrollIntoView(true);
+      if (isNode.isDOMElement(referenceNode)) {
+        referenceNode?.scrollIntoView({ block: "end", inline: "end" });
         fishRange.setCursorPosition(referenceNode, "after");
+        callBack?.(true);
+        return;
+      } else {
+        const scrollNode = nodes[nodes.length - 2];
+        /**
+         * bug4:
+         * 插入一个内联节点，基本要在节点的后面插入一个文本，解决光标非常高的问题。
+         */
+        fishRange.setCursorPosition(referenceNode, null, 1);
+        scrollNode?.scrollIntoView({ block: "end", inline: "end" });
         callBack?.(true);
         return;
       }
     }
-
-    callBack?.(false);
-    return;
   }
 };

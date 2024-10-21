@@ -132,9 +132,8 @@ export default function useEdit(props: IEditableProps) {
     }
     // 创建
     const node = base.createChunkEmojiElement(item.url, emojiSize, item.name);
-    editor.insertNode([node], currentRange, (success) => {
+    editor.insertNode([node, base.createZeroSpaceElement() as any], currentRange, (success) => {
       if (success) {
-        range.setCursorPosition(node as any, "after");
         updateVlue();
       }
     });

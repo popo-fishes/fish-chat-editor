@@ -74,5 +74,5 @@ export interface IEditableProps {
    * @param files 粘贴的文件数组
    * @param amount 富文本中已有的图片文件数量
    */
-  beforePasteImage?: (files: File[], amount: number) => File[] | [];
+  beforePasteImage?: (files: File[], amount: number) => (File[] | []) | Promise<File[] | []>;
 }

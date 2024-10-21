@@ -80,6 +80,14 @@ export const createLineElement = (isNullNode = false): HTMLParagraphElement => {
     dom_p.innerHTML = "<br/>";
   }
 
+  // const fragment = new DocumentFragment();
+  // for (let i = 0; i < 200; i++) {
+  //   const node = new Image();
+  //   node.src = "https://static107.cdqlkj.cn/r/3a88/107/pb/p/20240628/01be10a6cd484b21b3d38a69ee6d4401.png";
+  //   fragment.appendChild(node);
+  // }
+  // dom_p.appendChild(fragment);
+
   return dom_p;
 };
 
@@ -168,6 +176,7 @@ export const createChunkImgElement = (url: string): HTMLSpanElement => {
 
 /**
  * @name 创建一个编辑器--零宽度文本节点
+ * 它是一个核心！！
  * @returns
  */
 export const createZeroSpaceElement = (): Text => {
