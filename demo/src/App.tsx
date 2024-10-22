@@ -22,13 +22,13 @@ function App() {
 
   return (
     <>
-      <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-chat-editor</p>
+      {/* <p style={{ fontSize: "30px", textAlign: "center", fontWeight: "bold" }}>fish-chat-editor</p>
       <a href="https://github.com/popo-fishes/fish-chat-editor/blob/main/README.md" target="_blank">
         fish-chat-editor文档
       </a>
       <a style={{ marginLeft: "20px" }} href="https://github.com/popo-fishes/fish-chat-editor/blob/main/demo/src/App.tsx" target="_blank">
         demo源码
-      </a>
+      </a> */}
       <div style={{ marginTop: "180px" }}>
         <FbChatEditor
           onEnterDown={onSend}

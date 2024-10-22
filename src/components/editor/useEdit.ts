@@ -132,9 +132,9 @@ export default function useEdit(props: IEditableProps) {
     }
     // 创建
     const node = base.createChunkEmojiElement(item.url, emojiSize, item.name);
+    // , base.createZeroSpaceElement() as any
     editor.insertNode([node], currentRange, (success) => {
       if (success) {
-        range.setCursorPosition(node as any, "after");
         updateVlue();
       }
     });
@@ -314,11 +314,17 @@ export default function useEdit(props: IEditableProps) {
    */
   const onEditorPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
-    handlePasteTransforms(e, editNodeRef.current, (success) => {
-      if (success) {
-        updateVlue();
-      }
-    });
+    /** 处理粘贴事件的内容转换 */
+    handlePasteTransforms(
+      e,
+      editNodeRef.current,
+      (success) => {
+        if (success) {
+          updateVlue();
+        }
+      },
+      restProps.beforePasteImage
+    );
   };
 
   const onCompositionStart = (e: React.CompositionEvent<HTMLDivElement>) => {
