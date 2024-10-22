@@ -132,7 +132,8 @@ export default function useEdit(props: IEditableProps) {
     }
     // 创建
     const node = base.createChunkEmojiElement(item.url, emojiSize, item.name);
-    editor.insertNode([node, base.createZeroSpaceElement() as any], currentRange, (success) => {
+    // , base.createZeroSpaceElement() as any
+    editor.insertNode([node], currentRange, (success) => {
       if (success) {
         updateVlue();
       }

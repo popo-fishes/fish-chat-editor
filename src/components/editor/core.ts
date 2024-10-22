@@ -217,8 +217,8 @@ export const handlePasteTransforms = async (
 
           const nodes: HTMLSpanElement[] = [];
           datas.forEach((baseSrc) => {
-            const zeroSpaceNode = base.createZeroSpaceElement() as any;
-            nodes.push(...[base.createChunkImgElement(baseSrc), zeroSpaceNode]);
+            // const zeroSpaceNode = base.createZeroSpaceElement() as any;
+            nodes.push(...[base.createChunkImgElement(baseSrc)]);
           });
 
           if (nodes.length) {
