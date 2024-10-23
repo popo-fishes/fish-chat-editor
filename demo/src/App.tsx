@@ -35,7 +35,9 @@ function App() {
           onSend={onSend}
           ref={editorRef}
           onChange={(editor) => {
-            const html = editor.getHtml();
+            console.time("editor获取内容耗时");
+            const html = editor.getProtoHTML();
+            console.timeEnd("editor获取内容耗时");
             // const text = editor.getText();
             setHtml(html);
           }}

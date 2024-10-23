@@ -193,11 +193,11 @@ export const handlePasteTransforms = async (
       return;
     }
 
-    const promiseData = [];
+    const promiseData: Promise<{ blobUrl: string; base64: string }>[] = [];
 
     for (let i = 0; i < filtratefiles.length; i++) {
       const file = filtratefiles[i];
-      promiseData.push(helper.fileToBlob(file));
+      promiseData.push(helper.imageFileToBlob(file));
     }
 
     // 标记
@@ -207,8 +207,7 @@ export const handlePasteTransforms = async (
     {
       Promise.allSettled(promiseData)
         .then((res) => {
-          const datas = [];
-          // 请求结束后再去清除掉
+          const datas: { blobUrl: string; base64: string }[] = [];
           res.forEach((result) => {
             if (result.status == "fulfilled" && result.value) {
               datas.push(result.value);
@@ -216,9 +215,9 @@ export const handlePasteTransforms = async (
           });
 
           const nodes: HTMLSpanElement[] = [];
-          datas.forEach((baseSrc) => {
+          datas.forEach((item) => {
             // const zeroSpaceNode = base.createZeroSpaceElement() as any;
-            nodes.push(...[base.createChunkImgElement(baseSrc)]);
+            nodes.push(...[base.createChunkImgElement(item.blobUrl)]);
           });
 
           if (nodes.length) {

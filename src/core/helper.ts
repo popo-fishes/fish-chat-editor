@@ -43,8 +43,10 @@ export const removeTailLineFeed = (content: string) => {
   return content;
 };
 
-/** @name 把一个file对象转为Blob */
-export function fileToBlob(file: any) {
+/**
+ * @name 把图片的file对象转为blob
+ */
+export function imageFileToBlob(file: any): Promise<{ blobUrl: string; base64: string }> {
   const dataURLToBlob = (dataURL: string): Blob => {
     const arr = dataURL.split(",");
     const mime = arr[0].match(/:(.*?);/)?.[1] || "";
@@ -66,10 +68,13 @@ export function fileToBlob(file: any) {
     reader.onload = function () {
       try {
         const base64Data = reader.result as string;
-        // 解析为 Promise 对象，并返回 base64 编码的字符串
+        // 解析base64Data，并返回blob字符串
         const blob = dataURLToBlob(base64Data);
         const url = URL.createObjectURL(blob);
-        resolve(url);
+        resolve({
+          blobUrl: url,
+          base64: base64Data
+        });
       } catch (err) {
         reject(new Error(err));
       }
@@ -80,4 +85,34 @@ export function fileToBlob(file: any) {
       reject(new Error("Failed to load file"));
     };
   });
+}
+
+/**
+ * @name 通过blob-url获取base64
+ * @desc 把图片的blob类型转为base64
+ */
+export async function fetchBlobAsBase64(url: string): Promise<{ base64: string; blobUrl: string }> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve({
+          base64: reader.result as string,
+          blobUrl: url
+        });
+      };
+      reader.onerror = () => {
+        reject(new Error("Error reading file"));
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error fetching or processing blob:", error);
+    throw error;
+  }
 }

@@ -11,8 +11,18 @@ export interface IEditorInterface {
   isEmpty: () => boolean;
   /** @name 获取当前编辑器的纯文本内容 */
   getText: () => string;
-  /** @name 获取非格式化的html */
-  getHtml: () => string;
+  /**
+   * @name 获取编辑器内容的语义HTML
+   * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
+   * @returns 返回Promise
+   */
+  getSemanticHTML: () => Promise<string>;
+  /**
+   * @name 获取编辑器内容的原始html，主要用于判断存在场景 or 富文本内部使用
+   * @desc 它不会转换img图片的src，还是blob格式
+   * @returns 返回一个html标签字符串
+   */
+  getProtoHTML: () => string;
   /**
    * @name 在选区插入文本
    * @param contentText 内容
@@ -39,7 +49,7 @@ export const editor: IEditorInterface = {
       return false;
     }
     // 获取纯文本内容，有内容返回false，没内容返回true
-    if (editor.getText() == "" && editor.getHtml() == base.emptyEditHtmlText) return true;
+    if (editor.getText() == "" && editor.getProtoHTML() == base.emptyEditHtmlText) return true;
 
     return false;
   },
@@ -69,7 +79,7 @@ export const editor: IEditorInterface = {
 
     return result;
   },
-  getHtml() {
+  async getSemanticHTML() {
     const editorNode = util.getEditorInstance();
 
     if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
@@ -87,7 +97,31 @@ export const editor: IEditorInterface = {
     // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
     contentNode.ownerDocument.body.appendChild(odiv);
 
-    const contentResult = transforms.handleEditTransformsHtml(odiv);
+    const contentResult = await transforms.handleEditTransformsSemanticHtml(odiv);
+
+    contentNode.ownerDocument.body.removeChild(odiv);
+
+    return contentResult;
+  },
+  getProtoHTML() {
+    const editorNode = util.getEditorInstance();
+
+    if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
+
+    const contentNode = editorNode.cloneNode(true);
+
+    const odiv = document.createElement("div");
+
+    for (const childNode of Array.from(contentNode.childNodes)) {
+      odiv.appendChild(childNode as Node);
+    }
+
+    odiv.setAttribute("hidden", "true");
+
+    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
+    contentNode.ownerDocument.body.appendChild(odiv);
+
+    const contentResult = transforms.handleEditTransformsProtoHtml(odiv);
 
     contentNode.ownerDocument.body.removeChild(odiv);
 

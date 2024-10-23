@@ -109,7 +109,7 @@ export default function useEdit(props: IEditableProps) {
 
   /** @name 更新值 */
   const updateVlue = () => {
-    const html = editor.getHtml();
+    const html = editor.getProtoHTML();
     // console.log(html, JSON.stringify(editor.getText()));
     // 控制提示,为空就提示placeholder
     setTipHolder(html == base.emptyEditHtmlText);
@@ -144,7 +144,7 @@ export default function useEdit(props: IEditableProps) {
   const onEditorBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const rangeInfo = range.getRange();
     if (rangeInfo) {
-      console.log(rangeInfo);
+      // console.log(rangeInfo);
       // 备份当前光标位置
       setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
     }
