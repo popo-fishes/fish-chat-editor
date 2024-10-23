@@ -9,7 +9,7 @@
 
 .fb-editor-scroll {
   width: 100%;
-  max-height: 210px;
+  max-height: 75px;
   overflow-y: auto;
   &::-webkit-scrollbar {
     width: 4px;
@@ -25,7 +25,7 @@
 
 .fb-editor {
   width: 100%;
-  min-height: 210px;
+  min-height: 75px;
   overflow-x: hidden;
   border: none;
   outline: none;
@@ -89,10 +89,12 @@
   border: 2px solid transparent;
   margin: 0 2px;
 
-  min-width: 40px;
-  min-height: 40px;
-  max-height: 320px;
-  max-width: 100%;
+  // min-width: 40px;
+  // min-height: 40px;
+  // max-height: 320px;
+  // max-width: 100%;
+  width: auto;
+  max-height: 64px;
   -webkit-user-drag: none;
   object-fit: contain;
   &:hover {
