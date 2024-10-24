@@ -39,6 +39,10 @@ export interface IEditorInterface {
    * @returns
    */
   insertNode: (nodes: HTMLElement[], range: IRange, callBack?: (success: boolean) => void) => void;
+  /** @name 获取行数 */
+  getLine: () => number;
+  /** @name 检索编辑器内容的长度，不包含图片 */
+  getLength: () => number;
 }
 export const editor: IEditorInterface = {
   isEmpty() {
@@ -334,5 +338,13 @@ export const editor: IEditorInterface = {
         return;
       }
     }
+  },
+  getLine() {
+    const editorNode = util.getEditorInstance();
+    if (!editorNode || !editorNode?.childNodes) return 0;
+    return editorNode.childNodes.length;
+  },
+  getLength() {
+    return editor.getText()?.length;
   }
 };
