@@ -10,17 +10,33 @@ import { isNode, range } from "../../core";
 export const amendRangePosition = (editNode: IEditorElement, callBack?: (node?: HTMLElement) => void) => {
   if (!editNode || !editNode.childNodes) return callBack?.();
 
-  let lastElement = editNode.childNodes[editNode.childNodes.length - 1];
+  let lastRowElement = editNode.childNodes[editNode.childNodes.length - 1];
 
-  if (!lastElement) {
+  if (!lastRowElement) {
     console.warn("富文本不存在节点，请排查问题");
     return;
   }
-  // 是一个节点块
-  if (isNode.isEditElement(lastElement as HTMLElement)) {
-    const referenceElement = lastElement.lastChild;
+  // 最后一行编辑节点是一个节点块
+  if (isNode.isEditElement(lastRowElement as HTMLElement)) {
+    // 获取编辑行的最后一个子节点
+    const referenceElement = lastRowElement.childNodes[lastRowElement.childNodes.length - 1];
     if (referenceElement) {
-      range.setCursorPosition(referenceElement, "before");
+      /**
+       * 解决在初始化时，当富文本中只有一个br时，光标点不能设置在BR结束位置.不然会有输入中文时，不生效
+       * 特别是在清空输入内容时：然后在次获取焦点，再次输入就会有BUG
+       * 比如： 发送文本消息
+         const onSend = async (_) => {
+           // 清空输入框
+           editorRef.current?.clear();
+
+           editorRef.current?.focus();
+          };
+       */
+      if (referenceElement.nodeName == "BR") {
+        range.setCursorPosition(referenceElement, "before");
+      } else {
+        range.setCursorPosition(referenceElement, "after");
+      }
       callBack?.(referenceElement as HTMLElement);
       return;
     }

@@ -18,8 +18,7 @@ const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     editNodeRef,
     showTipHolder,
 
-    setText,
-    setRangePosition,
+    setEditText,
 
     clearEditor,
     insertEmoji,
@@ -42,7 +41,7 @@ const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
       ({
         editor: editor,
         insertEmoji: (item: IEmojiType) => insertEmoji(item),
-        setValue: (content) => setText(content),
+        setText: (content) => setEditText(content),
         clear: () => {
           // 清除内容
           clearEditor();
@@ -51,15 +50,7 @@ const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           restProps.onChange?.(editor);
         },
         focus: () => {
-          requestAnimationFrame(() => {
-            // 修正光标位置
-            amendRangePosition(editNodeRef.current, (node) => {
-              if (node) {
-                // 设置当前光标节点
-                setRangePosition(node, 0);
-              }
-            });
-          });
+          requestAnimationFrame(() => amendRangePosition(editNodeRef.current));
         },
         blur: () => editNodeRef.current?.blur()
       }) as IEditableRef

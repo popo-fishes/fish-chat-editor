@@ -52,7 +52,7 @@ export interface IEditableRef {
   /**
    * @设置纯文本值
    */
-  setValue: (val: string) => void;
+  setText: (val: string) => void;
   /**
    * editor
    */

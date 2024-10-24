@@ -50,13 +50,11 @@ export default function useEdit(props: IEditableProps) {
 
   /** @name 初始化编辑器 */
   const init = async () => {
-    const editor = editNodeRef.current;
-
-    if (!editor) return;
+    if (!editNodeRef.current) return;
 
     // 清空内容
     const curDom = clearEditor();
-    // 设置光标的位置
+    // 备份光标的位置
     setRangePosition(curDom, 0, true);
     // ..
     updateVlue();
@@ -72,7 +70,7 @@ export default function useEdit(props: IEditableProps) {
     return node;
   };
 
-  /** @name 设置选区的位置 */
+  /** @name 备份选区的位置 */
   const setRangePosition = (curDom: HTMLElement, startOffset: number, isReset?: boolean) => {
     let dom = curDom;
     if (isNode.isEditElement(curDom) && isReset) {
@@ -91,18 +89,24 @@ export default function useEdit(props: IEditableProps) {
   /**
    * @name 设置编辑器文本
    */
-  const setText = (content: string) => {
+  const setEditText = (content: string) => {
     if (!content || !editNodeRef.current) return;
     // 修正位置
     amendRangePosition(editNodeRef.current, (node) => {
       if (node) {
-        // 设置当前光标节点
-        setRangePosition(node, 0);
-        editor.insertText(content, currentRange, (success) => {
-          if (success) {
-            updateVlue();
-          }
-        });
+        const rangeInfo = range.getRange();
+        editor.insertText(
+          content,
+          rangeInfo,
+          (success) => {
+            if (success) {
+              updateVlue();
+              // 失去焦点
+              editNodeRef.current.blur();
+            }
+          },
+          true
+        );
       }
     });
   };
@@ -123,8 +127,10 @@ export default function useEdit(props: IEditableProps) {
       // 修正光标位置
       amendRangePosition(editNodeRef.current, (node) => {
         if (node) {
-          // 设置当前光标节点
-          setRangePosition(node, 0);
+          const rangeInfo = range.getRange();
+          // 备份当前光标位置
+          setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
+          // 再次执行
           insertEmoji(item);
         }
       });
@@ -143,8 +149,8 @@ export default function useEdit(props: IEditableProps) {
   /** @name 失去焦点 */
   const onEditorBlur = (e: React.FocusEvent<HTMLDivElement>) => {
     const rangeInfo = range.getRange();
+    // console.log(rangeInfo);
     if (rangeInfo) {
-      // console.log(rangeInfo);
       // 备份当前光标位置
       setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
     }
@@ -343,8 +349,7 @@ export default function useEdit(props: IEditableProps) {
     editNodeRef,
     showTipHolder,
 
-    setText,
-    setRangePosition,
+    setEditText,
 
     clearEditor,
     insertEmoji,
