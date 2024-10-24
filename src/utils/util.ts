@@ -27,6 +27,7 @@ export const getEmojiData = (): IEmojiType[] => {
 /**
  * @name 文本消息转换，批量替换方法
  * @msgText 消息字符串
+ * @size 表情的大小
  */
 export const replaceMsgText = (msgText?: string, size?: number): string => {
   /**
