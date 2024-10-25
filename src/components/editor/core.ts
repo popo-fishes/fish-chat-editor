@@ -81,10 +81,9 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
     });
     return callBack(false);
   }
+  console.time("editor插入换行耗时");
 
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
-
-  console.time("editor插入换行耗时");
 
   /**
    * 创建换行节点
@@ -121,10 +120,9 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
 
   dom.toTargetAfterInsertNodes(rowElementNode, [lineDom]);
 
-  // 第一个节点是一个文本节点
-  if (lineDom.firstChild) {
+  if (isNode.isDOMNode(lineDom.firstChild)) {
     fishRange.setCursorPosition(lineDom.firstChild, "before");
-    lineDom?.scrollIntoView(true);
+    lineDom?.scrollIntoView({ block: "end", inline: "end" });
 
     console.timeEnd("editor插入换行耗时");
 

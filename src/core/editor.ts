@@ -44,6 +44,35 @@ export interface IEditorInterface {
   /** @name 检索编辑器内容的长度，不包含图片 */
   getLength: () => number;
 }
+
+/** @name 获取克隆编辑器的行节点 */
+const getCloneEditeElements = (): HTMLDivElement | null => {
+  const editorNode = util.getEditorInstance();
+
+  if (!editorNode || !isNode.isDOMNode(editorNode)) return null;
+
+  const contentNode = editorNode.cloneNode(true);
+
+  const odiv = document.createElement("div");
+
+  for (const childNode of Array.from(contentNode.childNodes)) {
+    odiv.appendChild(childNode as Node);
+  }
+
+  odiv.setAttribute("hidden", "true");
+
+  contentNode.ownerDocument.body.appendChild(odiv);
+
+  return odiv;
+};
+
+const removeBodyChild = (node: HTMLElement) => {
+  if (document.body) {
+    // 移除节点
+    document.body.removeChild(node);
+  }
+};
+
 export const editor: IEditorInterface = {
   isEmpty() {
     const editorNode = util.getEditorInstance();
@@ -58,77 +87,29 @@ export const editor: IEditorInterface = {
     return false;
   },
   getText() {
-    const editorNode = util.getEditorInstance();
-
-    if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
-
-    const contentNode = editorNode.cloneNode(true);
-
-    const odiv = document.createElement("div");
-
-    for (const childNode of Array.from(contentNode.childNodes)) {
-      odiv.appendChild(childNode as Node);
-    }
-
-    odiv.setAttribute("hidden", "true");
-
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contentNode.ownerDocument.body.appendChild(odiv);
-
-    const contentStr = transforms.getNodePlainText(odiv);
-
-    contentNode.ownerDocument.body.removeChild(odiv);
-
+    const cloneEditeNode = getCloneEditeElements();
+    const contentStr = transforms.getNodePlainText(cloneEditeNode);
+    // 移除节点
+    removeBodyChild(cloneEditeNode);
+    // 替换
     const result = helper.contentReplaceEmpty(helper.removeTailLineFeed(contentStr));
 
     return result;
   },
   async getSemanticHTML() {
-    const editorNode = util.getEditorInstance();
+    const cloneEditeNode = getCloneEditeElements();
 
-    if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
-
-    const contentNode = editorNode.cloneNode(true);
-
-    const odiv = document.createElement("div");
-
-    for (const childNode of Array.from(contentNode.childNodes)) {
-      odiv.appendChild(childNode as Node);
-    }
-
-    odiv.setAttribute("hidden", "true");
-
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contentNode.ownerDocument.body.appendChild(odiv);
-
-    const contentResult = await transforms.handleEditTransformsSemanticHtml(odiv);
-
-    contentNode.ownerDocument.body.removeChild(odiv);
+    const contentResult = await transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
+    // 移除节点
+    removeBodyChild(cloneEditeNode);
 
     return contentResult;
   },
   getProtoHTML() {
-    const editorNode = util.getEditorInstance();
-
-    if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
-
-    const contentNode = editorNode.cloneNode(true);
-
-    const odiv = document.createElement("div");
-
-    for (const childNode of Array.from(contentNode.childNodes)) {
-      odiv.appendChild(childNode as Node);
-    }
-
-    odiv.setAttribute("hidden", "true");
-
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contentNode.ownerDocument.body.appendChild(odiv);
-
-    const contentResult = transforms.handleEditTransformsProtoHtml(odiv);
-
-    contentNode.ownerDocument.body.removeChild(odiv);
-
+    const cloneEditeNode = getCloneEditeElements();
+    const contentResult = transforms.handleEditTransformsProtoHtml(cloneEditeNode);
+    // 移除节点
+    removeBodyChild(cloneEditeNode);
     return contentResult;
   },
   insertText(contentText, range, callBack, showCursor) {
@@ -173,7 +154,6 @@ export const editor: IEditorInterface = {
       for (let i = 0; i < lines.length; i++) {
         const lineContent = lines[i];
         const childNodes = transforms.transformTextToNodes(lineContent);
-        // console.log(childNodes);
         const node = base.createLineElement();
 
         if (childNodes.length) {
@@ -235,6 +215,7 @@ export const editor: IEditorInterface = {
                 for (let i = 0; i < nodes.length; i++) {
                   fragment.appendChild(nodes[i]);
                 }
+                // 在当前行的--光标之后的第一个节点，的前面插入多个节点
                 rowElementNode.insertBefore(fragment, nextNodeList[0]);
               }
             }

@@ -56,8 +56,6 @@ export default function useEdit(props: IEditableProps) {
     const curDom = clearEditor();
     // 备份光标的位置
     setRangePosition(curDom, 0, true);
-    // ..
-    updateVlue();
   };
 
   /** @name 清空输入框的值 */

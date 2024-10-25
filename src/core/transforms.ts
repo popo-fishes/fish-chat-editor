@@ -53,9 +53,11 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
   // 创建一个p标签, 把字符串转成一个dom节点
   const dom_p = document.createElement("p");
   dom_p.innerHTML = strCont;
+
   // 处理当前节点内容
   if (dom_p.childNodes?.length) {
-    dom_p.childNodes.forEach((cldNode) => {
+    for (const i in dom_p.childNodes) {
+      const cldNode = dom_p.childNodes[i];
       if (isNode.isDOMText(cldNode)) {
         nodes.push(cldNode);
       } else if (isNode.isDOMElement(cldNode) && cldNode.nodeName == "IMG") {
@@ -66,7 +68,7 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
           nodes.push(imgNode);
         }
       }
-    });
+    }
   }
 
   return nodes;
@@ -142,7 +144,7 @@ export const getEditElementContent = (node: HTMLElement): string => {
 export const handleEditTransformsSemanticHtml = async (node: HTMLElement): Promise<string> => {
   if (!node || !node?.childNodes) return "";
 
-  const nodes: any = Array.from(dom.cloneNodes((node as any).childNodes));
+  const nodes: ChildNode[] = Array.from(node.childNodes);
 
   const promiseData: Promise<string>[] = [];
   // 辅助函数：转义正则表达式中的特殊字符
@@ -223,7 +225,8 @@ export const handleEditTransformsSemanticHtml = async (node: HTMLElement): Promi
 export const handleEditTransformsProtoHtml = (node: HTMLElement): string => {
   const result: string[] = [];
   if (!node || !node?.childNodes) return "";
-  const nodes: any = Array.from(dom.cloneNodes((node as any).childNodes));
+
+  const nodes: ChildNode[] = Array.from(node.childNodes);
 
   for (const cld of Array.from(nodes)) {
     if (isEditElement(cld as HTMLElement)) {

@@ -12,4 +12,4 @@ export { contentReplaceEmpty } from "./core/helper";
 export type * from "./types";
 export type { IEditorInterface } from "./core";
 
-export const Version = "1.0.79";
+export const Version = "1.0.8";
