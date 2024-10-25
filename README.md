@@ -24,9 +24,9 @@ import "fish-chat-editor/dist/index.css";
 ```
 
 ```js
-import FbChatEditor from "fish-chat-editor";
+import FishChatEditor from "fish-chat-editor";
 
-<FbChatEditor />;
+<FishChatEditor />;
 ```
 
 ## API
@@ -46,13 +46,12 @@ import FbChatEditor from "fish-chat-editor";
 
 ### Editor Methods
 
-| 名称    | 说明         | 类型                    |
-| ------- | ------------ | ----------------------- |
-| setText | 设置纯文本值 | (val: string) => void   |
-| clear   | 清空输入框值 | () => void              |
-| focus   | 获取焦点     | () => void              |
-| blur    | 失去焦点     | () => void              |
-| editor  | 编辑器 API   | obj as IEditorInterface |
+| 名称   | 说明         | 类型                   |
+| ------ | ------------ | ---------------------- |
+| clear  | 清空输入框值 | () => void             |
+| focus  | 获取焦点     | () => void             |
+| blur   | 失去焦点     | () => void             |
+| editor | 编辑器 API   | obj as IEditorInstance |
 
 ### IEmojiType描述
 

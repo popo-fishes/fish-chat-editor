@@ -1,4 +1,4 @@
-import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
+import { dom, isNode, range as fishRange, util, base } from "../../core";
 
 import type { IEditorElement } from "../../types";
 

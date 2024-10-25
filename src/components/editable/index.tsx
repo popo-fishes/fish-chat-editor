@@ -4,23 +4,19 @@
  */
 import { forwardRef, useImperativeHandle } from "react";
 import type { IEmojiType, IEditableRef, IEditableProps, IEditorElement } from "../../types";
-import { editor, util } from "../../core";
 
 import { onCopy, onCut } from "./core";
-import { amendRangePosition } from "./util";
 
-import useEdit from "./useEdit";
+import useEditable from "./useEditable";
 
-const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
+const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   const { placeholder, ...restProps } = props;
 
   const {
     editNodeRef,
     showTipHolder,
+    editor,
 
-    setEditText,
-
-    clearEditor,
     insertEmoji,
 
     onEditorKeyUp,
@@ -33,26 +29,17 @@ const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
     onCompositionEnd,
     onEditorMouseDown,
     onEditorPaste
-  } = useEdit(props);
+  } = useEditable(props);
 
   useImperativeHandle(
     ref,
     () =>
       ({
-        editor: editor,
+        editor,
         insertEmoji: (item: IEmojiType) => insertEmoji(item),
-        setText: (content) => setEditText(content),
-        clear: () => {
-          // 清除内容
-          clearEditor();
-          // 失去焦点
-          editNodeRef.current?.blur();
-          restProps.onChange?.(editor);
-        },
-        focus: () => {
-          requestAnimationFrame(() => amendRangePosition(editNodeRef.current));
-        },
-        blur: () => editNodeRef.current?.blur()
+        clear: () => editor.current?.clear(),
+        focus: () => editor.current?.focus(),
+        blur: () => editor.current?.blur()
       }) as IEditableRef
   );
 
@@ -62,7 +49,7 @@ const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
         <div
           className="fb-editor"
           id="fa-editor"
-          ref={(instance: IEditorElement | null) => util.setEditorInstance(instance)}
+          ref={(instance: IEditorElement | null) => (editNodeRef.current = instance)}
           contentEditable
           data-fish-editor
           spellCheck
@@ -105,4 +92,4 @@ const Editor = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
   );
 });
 
-export default Editor;
+export default Editable;

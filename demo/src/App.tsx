@@ -43,6 +43,18 @@ function App() {
           }}
         />
       </div>
+      <p style={{ marginTop: "15px" }}>
+        <button
+          onClick={() => {
+            if (editorRef.current && editorRef.current.editor.current) {
+              const editor = editorRef.current.editor.current;
+              editor.setText("hahahah");
+            }
+          }}
+        >
+          设置值
+        </button>
+      </p>
       {/*  显示内容 */}
       <p style={{ marginTop: "15px" }}>富文本内容:</p>
 

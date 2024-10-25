@@ -5,13 +5,13 @@
 import { useRef, useState, useEffect } from "react";
 import type { IEmojiType, IEditableProps, IEditorElement } from "../../types";
 
-import { base, isNode, util, range, editor, IRange, dom, transforms } from "../../core";
+import { base, isNode, util, range, type IRange, positions } from "../../core";
 import { emojiSize } from "../../config";
 
-import { transformsEditNodes } from "./transforms";
-import { handlePasteTransforms, handleLineFeed } from "./core";
+import Editor, { type IEditorInstance } from "../../editor";
 
-import { amendRangePosition } from "./util";
+import { transformsEditNodes } from "./transform";
+import { handlePasteTransforms, handleLineFeed } from "./core";
 
 // 备份当前的光标位置
 let currentRange: IRange = null;
@@ -36,36 +36,32 @@ export default function useEdit(props: IEditableProps) {
   const editNodeRef = useRef<IEditorElement>(null);
   /** 是否显示提示placeholder */
   const [showTipHolder, setTipHolder] = useState<boolean>(true);
+  /** 编辑器实例 */
+  const editor = useRef<IEditorInstance | null>(null);
 
   // 初始化
   useEffect(() => {
-    instantiateEditor();
+    createEditor();
     init();
   }, []);
 
-  const instantiateEditor = (): void => {
-    const node = util.getEditorInstance();
-    editNodeRef.current = node || null;
+  const createEditor = () => {
+    const editorInstance = new Editor(editNodeRef.current, {
+      onChange: () => {
+        updateVlue();
+      }
+    });
+    editor.current = editorInstance;
   };
 
   /** @name 初始化编辑器 */
   const init = async () => {
-    if (!editNodeRef.current) return;
-
     // 清空内容
-    const curDom = clearEditor();
-    // 备份光标的位置
-    setRangePosition(curDom, 0, true);
-  };
-
-  /** @name 清空输入框的值 */
-  const clearEditor = (): HTMLParagraphElement | null => {
-    const node = base.createLineElement();
-    if (!editNodeRef.current) return null;
-    dom.toTargetAddNodes(editNodeRef.current, [node]);
-    // 设置提示
-    setTipHolder(true);
-    return node;
+    const curRow = editor.current.clear(false);
+    if (curRow) {
+      // 备份光标的位置
+      setRangePosition(curRow, 0, true);
+    }
   };
 
   /** @name 备份选区的位置 */
@@ -84,46 +80,20 @@ export default function useEdit(props: IEditableProps) {
     };
   };
 
-  /**
-   * @name 设置编辑器文本
-   */
-  const setEditText = (content: string) => {
-    if (!content || !editNodeRef.current) return;
-    // 修正位置
-    amendRangePosition(editNodeRef.current, (node) => {
-      if (node) {
-        const rangeInfo = range.getRange();
-        editor.insertText(
-          content,
-          rangeInfo,
-          (success) => {
-            if (success) {
-              updateVlue();
-              // 失去焦点
-              editNodeRef.current.blur();
-            }
-          },
-          true
-        );
-      }
-    });
-  };
-
   /** @name 更新值 */
   const updateVlue = () => {
-    const html = editor.getProtoHTML();
-    // console.log(html, JSON.stringify(editor.getText()));
+    const html = editor.current?.getProtoHTML();
+    // console.log(html, JSON.stringify(editor?.getText()));
     // 控制提示,为空就提示placeholder
     setTipHolder(html == base.emptyEditHtmlText);
-    restProps.onChange?.(editor);
+    restProps.onChange?.(editor.current);
   };
 
   /** @name 选择插入表情图片 */
   const insertEmoji = (item: IEmojiType) => {
     const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
     if (!editorElementNode) {
-      // 修正光标位置
-      amendRangePosition(editNodeRef.current, (node) => {
+      positions.setCursorEditorLast(editNodeRef.current, (node) => {
         if (node) {
           const rangeInfo = range.getRange();
           // 备份当前光标位置
@@ -137,7 +107,7 @@ export default function useEdit(props: IEditableProps) {
     // 创建
     const node = base.createChunkEmojiElement(item.url, emojiSize, item.name);
     // , base.createZeroSpaceElement() as any
-    editor.insertNode([node], currentRange, (success) => {
+    editor.current?.insertNode([node], currentRange, (success) => {
       if (success) {
         updateVlue();
       }
@@ -250,7 +220,7 @@ export default function useEdit(props: IEditableProps) {
       event.preventDefault();
       event.stopPropagation();
       // 执行回车事件给父组件
-      restProps.onEnterDown?.(editor);
+      restProps.onEnterDown?.(editor.current);
       return;
     }
 
@@ -263,7 +233,7 @@ export default function useEdit(props: IEditableProps) {
       /**
        * 是没有选定文本 && 当前编辑器是一个空节点
        */
-      if (!range.isSelected() && editor.isEmpty()) {
+      if (!range.isSelected() && editor.current && editor.current?.isEmpty()) {
         event.preventDefault();
         return;
       }
@@ -321,7 +291,7 @@ export default function useEdit(props: IEditableProps) {
     /** 处理粘贴事件的内容转换 */
     handlePasteTransforms(
       e,
-      editNodeRef.current,
+      editor.current,
       (success) => {
         if (success) {
           updateVlue();
@@ -346,10 +316,8 @@ export default function useEdit(props: IEditableProps) {
   return {
     editNodeRef,
     showTipHolder,
+    editor,
 
-    setEditText,
-
-    clearEditor,
     insertEmoji,
 
     onEditorKeyUp,

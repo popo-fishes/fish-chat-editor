@@ -2,7 +2,7 @@
  * @Date: 2024-10-12 21:00:15
  * @Description: Modify here please
  */
-import { base, isNode, dom, helper } from ".";
+import { base, isNode, helper } from ".";
 import { getEmojiData } from "../utils";
 import { emojiSize } from "../config";
 import { isEditElement } from "./isNode";
