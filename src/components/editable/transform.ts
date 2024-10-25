@@ -1,4 +1,4 @@
-import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
+import { dom, isNode, range as fishRange, util, base } from "../../core";
 
 import type { IEditorElement } from "../../types";
 
@@ -107,25 +107,27 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
    * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
    * 兜底处理,防止骚操作
    */
-  if (!util.getNodeOfEditorElementNode(range.startContainer as any)) {
-    // 编辑器存在节点大于1
-    if (editNode.childNodes?.length > 1) {
-      const nodes: any[] = Array.from(editNode.childNodes);
-      // 直接吧br标签替换为行节点
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i] as any;
+  if (range && range?.startContainer) {
+    if (!util.getNodeOfEditorElementNode(range.startContainer as any)) {
+      // 编辑器存在节点大于1
+      if (editNode.childNodes?.length > 1) {
+        const nodes: any[] = Array.from(editNode.childNodes);
+        // 直接吧br标签替换为行节点
+        for (let i = 0; i < nodes.length; i++) {
+          const node = nodes[i] as any;
 
-        if (!isNode.isEditElement(node) && node.nodeName !== "BR") {
-          node?.remove();
-        }
-        if (node.nodeName == "BR") {
-          // 创建一个编辑器--行节点
-          const lineDom = base.createLineElement();
-          node.parentNode?.replaceChild(lineDom, node);
-          // 设置光标为目标行的字节节点
-          const targetRowNode = editNode.childNodes[range.startOffset];
-          if (targetRowNode?.firstChild) {
-            fishRange.setCursorPosition(targetRowNode.firstChild, "before");
+          if (!isNode.isEditElement(node) && node.nodeName !== "BR") {
+            node?.remove();
+          }
+          if (node.nodeName == "BR") {
+            // 创建一个编辑器--行节点
+            const lineDom = base.createLineElement();
+            node.parentNode?.replaceChild(lineDom, node);
+            // 设置光标为目标行的字节节点
+            const targetRowNode = editNode.childNodes[range.startOffset];
+            if (targetRowNode?.firstChild) {
+              fishRange.setCursorPosition(targetRowNode.firstChild, "before");
+            }
           }
         }
       }

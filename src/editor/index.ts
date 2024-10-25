@@ -2,9 +2,8 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { helper, base, dom, isNode, util, range as fishRange, transforms } from ".";
-
-import type { IRange } from "./range";
+import { helper, base, dom, isNode, util, range as fishRange, transforms, positions } from "../core";
+import type { IRange } from "../core";
 
 export interface IEditorInterface {
   /** @name 判断当前编辑器内容是否为空 */
@@ -43,106 +42,132 @@ export interface IEditorInterface {
   getLine: () => number;
   /** @name 检索编辑器内容的长度，不包含图片 */
   getLength: () => number;
+  /** @name 设置编辑器文本, 注意它不会覆盖编辑器内容，而是追加内容 */
+  setText: (content: string) => void;
+  /** @name 清空编辑器内容 */
+  clear: () => HTMLElement | null;
+  /** @name 失去焦点 */
+  blur: () => void;
+  /** @name 获取焦点 */
+  focus: () => void;
 }
-export const editor: IEditorInterface = {
-  isEmpty() {
-    const editorNode = util.getEditorInstance();
+
+export interface IEditorOptions {
+  onChange?: () => void;
+}
+
+/** @name 获取克隆编辑器的行节点 */
+function getCloneEditeElements(): HTMLDivElement | null {
+  if (!this.container || !isNode.isDOMNode(this.container)) return null;
+
+  const contentNode = this.container.cloneNode(true);
+
+  const odiv = document.createElement("div");
+
+  for (const childNode of Array.from(contentNode.childNodes)) {
+    odiv.appendChild(childNode as Node);
+  }
+
+  odiv.setAttribute("hidden", "true");
+
+  contentNode.ownerDocument.body.appendChild(odiv);
+
+  return odiv;
+}
+
+function removeBodyChild(node: HTMLElement) {
+  if (document.body) {
+    // 移除节点
+    document.body.removeChild(node);
+  }
+}
+
+function resolveSelector(selector: string | HTMLElement | null | undefined) {
+  return typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : selector;
+}
+
+class Editor {
+  /** @name 编辑器配置项 */
+  options: IEditorOptions;
+  /** @name 编辑器容器 */
+  container: HTMLElement;
+  constructor(container: HTMLElement | string, options: IEditorOptions = {}) {
+    this.container = resolveSelector(container);
+    this.options = options;
+    if (this.container == null) {
+      console.error("Invalid Editor container", container);
+      return;
+    }
+  }
+  /** @name 判断当前编辑器内容是否为空 */
+  public isEmpty() {
+    const editorNode = this.container;
     if (!editorNode || !editorNode?.childNodes) return true;
     // 子节点大于1返回, 免得去走判断方法。
     if (editorNode?.childNodes && editorNode?.childNodes.length > 1) {
       return false;
     }
     // 获取纯文本内容，有内容返回false，没内容返回true
-    if (editor.getText() == "" && editor.getProtoHTML() == base.emptyEditHtmlText) return true;
+    if (this.getText() == "" && this.getProtoHTML() == base.emptyEditHtmlText) return true;
 
     return false;
-  },
-  getText() {
-    const editorNode = util.getEditorInstance();
-
-    if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
-
-    const contentNode = editorNode.cloneNode(true);
-
-    const odiv = document.createElement("div");
-
-    for (const childNode of Array.from(contentNode.childNodes)) {
-      odiv.appendChild(childNode as Node);
-    }
-
-    odiv.setAttribute("hidden", "true");
-
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contentNode.ownerDocument.body.appendChild(odiv);
-
-    const contentStr = transforms.getNodePlainText(odiv);
-
-    contentNode.ownerDocument.body.removeChild(odiv);
-
+  }
+  /** @name 获取当前编辑器的纯文本内容 */
+  public getText() {
+    const cloneEditeNode = getCloneEditeElements.call(this);
+    const contentStr = transforms.getNodePlainText(cloneEditeNode);
+    // 移除节点
+    removeBodyChild(cloneEditeNode);
+    // 替换
     const result = helper.contentReplaceEmpty(helper.removeTailLineFeed(contentStr));
 
     return result;
-  },
-  async getSemanticHTML() {
-    const editorNode = util.getEditorInstance();
+  }
+  /**
+   * @name 获取编辑器内容的语义HTML
+   * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
+   * @returns 返回Promise
+   */
+  public async getSemanticHTML() {
+    const cloneEditeNode = getCloneEditeElements.call(this);
 
-    if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
-
-    const contentNode = editorNode.cloneNode(true);
-
-    const odiv = document.createElement("div");
-
-    for (const childNode of Array.from(contentNode.childNodes)) {
-      odiv.appendChild(childNode as Node);
-    }
-
-    odiv.setAttribute("hidden", "true");
-
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contentNode.ownerDocument.body.appendChild(odiv);
-
-    const contentResult = await transforms.handleEditTransformsSemanticHtml(odiv);
-
-    contentNode.ownerDocument.body.removeChild(odiv);
+    const contentResult = await transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
+    // 移除节点
+    removeBodyChild(cloneEditeNode);
 
     return contentResult;
-  },
-  getProtoHTML() {
-    const editorNode = util.getEditorInstance();
-
-    if (!editorNode || !isNode.isDOMNode(editorNode)) return "";
-
-    const contentNode = editorNode.cloneNode(true);
-
-    const odiv = document.createElement("div");
-
-    for (const childNode of Array.from(contentNode.childNodes)) {
-      odiv.appendChild(childNode as Node);
-    }
-
-    odiv.setAttribute("hidden", "true");
-
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
-    contentNode.ownerDocument.body.appendChild(odiv);
-
-    const contentResult = transforms.handleEditTransformsProtoHtml(odiv);
-
-    contentNode.ownerDocument.body.removeChild(odiv);
-
+  }
+  /**
+   * @name 获取编辑器内容的原始html，主要用于判断存在场景 or 富文本内部使用
+   * @desc 它不会转换img图片的src，还是blob格式
+   * @returns 返回一个html标签字符串
+   */
+  public getProtoHTML() {
+    const cloneEditeNode = getCloneEditeElements.call(this);
+    const contentResult = transforms.handleEditTransformsProtoHtml(cloneEditeNode);
+    // 移除节点
+    removeBodyChild(cloneEditeNode);
     return contentResult;
-  },
-  insertText(contentText, range, callBack, showCursor) {
+  }
+  /**
+   * @name 在选区插入文本
+   * @param contentText 内容
+   * @param range 光标信息
+   * @param callBack 回调（success?）=> void
+   * @param showCursor 插入成功后是否需要设置光标
+   */
+  public insertText(contentText: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean): void {
     if (!contentText || !range) {
       callBack?.(false);
       return;
     }
 
-    const splitNodes = (startContainer: any, node) => {
+    const splitNodes = (startContainer: HTMLElement, node: HTMLElement) => {
       dom.toTargetAfterInsertNodes(startContainer, [node]);
     };
 
     // 获取当前光标的行编辑节点
-    const rowElementNode: any = util.getNodeOfEditorElementNode(range.startContainer);
+    const rowElementNode: HTMLElement = util.getNodeOfEditorElementNode(range.startContainer);
 
     if (!rowElementNode) {
       console.warn("无编辑行节点，不可插入");
@@ -173,7 +198,6 @@ export const editor: IEditorInterface = {
       for (let i = 0; i < lines.length; i++) {
         const lineContent = lines[i];
         const childNodes = transforms.transformTextToNodes(lineContent);
-        // console.log(childNodes);
         const node = base.createLineElement();
 
         if (childNodes.length) {
@@ -235,6 +259,7 @@ export const editor: IEditorInterface = {
                 for (let i = 0; i < nodes.length; i++) {
                   fragment.appendChild(nodes[i]);
                 }
+                // 在当前行的--光标之后的第一个节点，的前面插入多个节点
                 rowElementNode.insertBefore(fragment, nextNodeList[0]);
               }
             }
@@ -271,11 +296,18 @@ export const editor: IEditorInterface = {
         focusNode?.remove();
 
         callBack?.(true);
+        return;
       }
     }
-    return;
-  },
-  insertNode(nodes, range, callBack) {
+  }
+  /**
+   * @name 在目标位置插入节点（目前是图片）
+   * @param nodes 节点集合
+   * @param range 光标信息
+   * @param callBack 回调（success?）=> void
+   * @returns
+   */
+  public insertNode(nodes: HTMLElement[], range: IRange, callBack?: (success: boolean) => void): void {
     if (!nodes || nodes?.length == 0) return callBack?.(false);
 
     // 不存在光标
@@ -338,13 +370,58 @@ export const editor: IEditorInterface = {
         return;
       }
     }
-  },
-  getLine() {
-    const editorNode = util.getEditorInstance();
-    if (!editorNode || !editorNode?.childNodes) return 0;
-    return editorNode.childNodes.length;
-  },
-  getLength() {
-    return editor.getText()?.length;
   }
-};
+  /** @name 获取行数 */
+  public getLine() {
+    if (!this.container || !this.container?.childNodes) return 0;
+    return this.container.childNodes.length;
+  }
+
+  /** @name 检索编辑器内容的长度，不包含图片 */
+  public getLength() {
+    return this.getText()?.length;
+  }
+  /** @name 设置编辑器文本, 注意它不会覆盖编辑器内容，而是追加内容 */
+  public setText(content: string) {
+    if (!content || !this.container) return;
+    positions.setCursorEditorLast(this.container, (node) => {
+      if (node) {
+        const rangeInfo = fishRange.getRange();
+        this.insertText(
+          content,
+          rangeInfo,
+          (success) => {
+            if (success) {
+              this.options?.onChange?.();
+              this.blur();
+            }
+          },
+          true
+        );
+      }
+    });
+  }
+  /** @name 清空编辑器内容 */
+  public clear(isUpdate = true) {
+    const node = base.createLineElement();
+    if (!this.container) return null;
+    dom.toTargetAddNodes(this.container, [node]);
+    this.blur();
+    // 执行更新
+    isUpdate && this.options?.onChange?.();
+    // 返回当前编辑器的行节点
+    return node;
+  }
+  /** @name 失去焦点 */
+  public blur() {
+    this.container?.blur?.();
+  }
+  /** @name 获取焦点 */
+  public focus() {
+    requestAnimationFrame(() => positions.setCursorEditorLast(this.container));
+  }
+}
+
+export type IEditorInstance = InstanceType<typeof Editor>;
+
+export { Editor as default };

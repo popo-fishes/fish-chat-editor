@@ -3,29 +3,8 @@
  * @LastEditors: Please set LastEditors
  */
 import { isNode } from ".";
-import { IEditorElement } from "../types";
 
 const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditInline, isEditElement } = isNode;
-
-const editorNode = { current: null };
-
-/**
- * @name 设置编辑器节点
- */
-export const setEditorInstance = (instance: IEditorElement | null): boolean => {
-  if (instance) {
-    editorNode.current = instance;
-    return true;
-  }
-  return false;
-};
-
-/**
- * @name 获取编辑器节点
- */
-export const getEditorInstance = (): IEditorElement | null => {
-  return editorNode.current || null;
-};
 
 /**
  * @name 传入一个节点--获取行属性节点，如果没有，最多找5级父节点

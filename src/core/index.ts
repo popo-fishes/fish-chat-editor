@@ -5,7 +5,6 @@
 /**
  * 注意导出的顺序，不要变化
  */
-
 export * as base from "./base";
 
 export * as helper from "./helper";
@@ -18,9 +17,8 @@ export * as range from "./range";
 
 export * as dom from "./dom";
 
+export * as positions from "./positions";
+
 export * as transforms from "./transforms";
 
-export * from "./editor";
-
 export type { IRange } from "./range";
-export type { IEditorInterface } from "./editor";

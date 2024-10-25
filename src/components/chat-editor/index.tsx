@@ -6,9 +6,9 @@ import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
-import Editor from "../editor";
+import Editable from "../editable";
 import { useClickAway } from "../../hooks";
-import type { IEditorInterface } from "../../core";
+import type { IEditorInstance } from "../../editor";
 
 import { setEmojiData } from "../../utils";
 import { emoji as defaultEmojiData } from "../../config";
@@ -71,7 +71,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
 
   /** @name 点击回车事件 */
   const onEnterDownEvent = useCallback(
-    (editor: IEditorInterface) => {
+    (editor: IEditorInstance) => {
       if (!isSend) return;
       onEnterDown?.(editor);
     },
@@ -80,7 +80,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
 
   /** @name 富文本值变化时 */
   const onEditableChange = useCallback(
-    (editor: IEditorInterface) => {
+    (editor: IEditorInstance) => {
       setSend(!editor.isEmpty());
       onChange?.(editor);
     },
@@ -98,9 +98,9 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     // 没有输入值
     if (!isSend) return;
     const editor = editInputRef.current?.editor;
-    if (editor) {
+    if (editor?.current) {
       // 发送消息
-      onSend?.(editor);
+      onSend?.(editor.current);
     }
   }, [onSend, isSend]);
 
@@ -130,7 +130,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
         {props?.toolbarRender?.()}
       </div>
       {/* 编辑框 */}
-      <Editor
+      <Editable
         placeholder={placeholder}
         ref={editInputRef}
         beforePasteImage={restProps.beforePasteImage}

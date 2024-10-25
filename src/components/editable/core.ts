@@ -2,11 +2,13 @@ import isObject from "lodash/isObject";
 import isFunction from "lodash/isFunction";
 import isArray from "lodash/isArray";
 
-import { dom, isNode, range as fishRange, editor, helper, util, base, transforms } from "../../core";
+import { dom, isNode, range as fishRange, helper, util, base, positions, transforms } from "../../core";
 
-import { amendRangePosition, getEditImageAmount } from "./util";
+import { getEditImageAmount } from "./util";
 
 import type { IEditorElement, IEditableProps } from "../../types";
+
+import type { IEditorInstance } from "../../editor";
 
 /** 是否正在处理粘贴内容 */
 let isPasteLock = false;
@@ -61,7 +63,7 @@ export const onCut = (event: React.ClipboardEvent<HTMLDivElement>) => {
 /**
  * @name 处理换行
  */
-export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: boolean) => void) => {
+export const handleLineFeed = (editNode: IEditorElement, callBack: (success: boolean) => void) => {
   const range = fishRange.getRange();
   // 必须存在光标
   if (!range) return callBack(false);
@@ -73,7 +75,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
   const rowElementNode = util.getNodeOfEditorElementNode(rangeStartContainer);
 
   if (!rowElementNode) {
-    amendRangePosition(editNode, (node) => {
+    positions.setCursorEditorLast(editNode, (node) => {
       if (node) {
         // 在调用自己一次
         handleLineFeed(editNode, callBack);
@@ -81,10 +83,9 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
     });
     return callBack(false);
   }
+  console.time("editor插入换行耗时");
 
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
-
-  console.time("editor插入换行耗时");
 
   /**
    * 创建换行节点
@@ -121,33 +122,32 @@ export const handleLineFeed = (editNode: IEditorElement, callBack?: (success: bo
 
   dom.toTargetAfterInsertNodes(rowElementNode, [lineDom]);
 
-  // 第一个节点是一个文本节点
-  if (lineDom.firstChild) {
+  if (isNode.isDOMNode(lineDom.firstChild)) {
     fishRange.setCursorPosition(lineDom.firstChild, "before");
-    lineDom?.scrollIntoView(true);
+    lineDom?.scrollIntoView({ block: "end", inline: "end" });
 
     console.timeEnd("editor插入换行耗时");
 
     // 执行回调
-    callBack?.(true);
+    callBack(true);
     return;
   }
 
   console.timeEnd("editor插入换行耗时");
 
-  callBack?.(false);
+  callBack(false);
 };
 
 /**
  * @name 处理粘贴事件的内容转换
  * @param e 粘贴事件
- * @param editNode 编辑器节点
+ * @param editor 实例
  * @param callBack 成功回调
  * @param beforePasteImage 粘贴图片之前的钩子
  */
 export const handlePasteTransforms = async (
   e: ClipboardEventWithOriginalEvent,
-  editNode: IEditorElement,
+  editor: IEditorInstance,
   callBack: (success: boolean) => void,
   beforePasteImage?: IEditableProps["beforePasteImage"]
 ) => {
@@ -158,6 +158,11 @@ export const handlePasteTransforms = async (
   const isPlain = clp?.types?.includes("text/plain");
 
   const range = fishRange.getRange();
+
+  if (!editor?.container) {
+    callBack(false);
+    return;
+  }
 
   /**
    * @name 如果是文件
@@ -170,16 +175,20 @@ export const handlePasteTransforms = async (
 
     if (!range) {
       isPasteLock = false;
+      callBack(false);
       return;
     }
 
-    if (isPasteLock) return;
+    if (isPasteLock) {
+      callBack(false);
+      return;
+    }
 
     // 截取前面10个文件
     let filtratefiles = vfiles.slice(0, 10);
 
     if (isFunction(beforePasteImage)) {
-      const amount = getEditImageAmount(editNode);
+      const amount = getEditImageAmount(editor.container);
       const result = await beforePasteImage(vfiles.slice(0, 10), amount);
       if (isArray(result) && result?.length) {
         filtratefiles = result;
@@ -190,6 +199,7 @@ export const handlePasteTransforms = async (
 
     // 如果是一个空文件直接返回
     if (filtratefiles.length == 0) {
+      callBack(false);
       return;
     }
 
@@ -230,9 +240,8 @@ export const handlePasteTransforms = async (
             // 行属性节点
             const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
 
-            // 修正光标节点，在插入
             if (!rowElementNode) {
-              amendRangePosition(editNode, (node) => {
+              positions.setCursorEditorLast(editor.container, (node) => {
                 if (node) {
                   // update range
                   const resetRange = fishRange.getRange();
@@ -273,10 +282,14 @@ export const handlePasteTransforms = async (
 
     if (!content || !range) {
       isPasteLock = false;
+      callBack(false);
       return;
     }
 
-    if (isPasteLock) return;
+    if (isPasteLock) {
+      callBack(false);
+      return;
+    }
 
     // 存在选区
     if (fishRange.isSelected()) {
@@ -292,9 +305,8 @@ export const handlePasteTransforms = async (
       // 行属性节点
       const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
 
-      // 修正光标节点
       if (!rowElementNode) {
-        amendRangePosition(editNode, (node) => {
+        positions.setCursorEditorLast(editor.container, (node) => {
           if (node) {
             // update range
             const resetRange = fishRange.getRange();

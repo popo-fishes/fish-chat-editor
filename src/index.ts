@@ -1,15 +1,16 @@
 /*
  * @Date: 2024-03-19 09:43:43
  */
-export { default } from "./components/chat-wrapper";
+export { default } from "./components/chat-editor";
 
 export { useClickAway } from "./hooks";
 
 export { replaceMsgText, labelRep } from "./utils";
 
-export { contentReplaceEmpty } from "./core/helper";
+export { default as Emitter } from "./editor/emitter";
 
 export type * from "./types";
-export type { IEditorInterface } from "./core";
+export type * from "./editor";
+export type { IEmitter } from "./editor/emitter";
 
-export const Version = "1.0.79";
+export const Version = "1.0.8";

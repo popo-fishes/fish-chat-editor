@@ -120,9 +120,11 @@ export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElemen
     if (childNodes && childNodes.length && clear) {
       targetNode.innerHTML = "";
     }
+    const fragment = new DocumentFragment();
     for (let i = 0; i < childNodes.length; i++) {
-      targetNode.appendChild(childNodes[i]);
+      fragment.appendChild(childNodes[i]);
     }
+    targetNode.appendChild(fragment);
   }
   return targetNode;
 };

@@ -2,10 +2,10 @@
  * @Date: 2024-3-14 15:40:27
  * @Description: file content
  */
-import type { ReactNode } from "react";
-import type { IEditorInterface } from "../core";
+import type { ReactNode, MutableRefObject } from "react";
+import type { IEditorInstance } from "../editor";
 
-export type IEditorElement = HTMLDivElement;
+export type IEditorElement = HTMLElement;
 
 export type IEmojiType = {
   /** 表情的url地址 */
@@ -28,11 +28,15 @@ export interface IChatEditorProps extends Omit<IEditableProps, "onClick"> {
   /** 自定义工具栏内容 */
   toolbarRender?: () => ReactNode;
   /** 点击发送按钮事件 */
-  onSend?: (editor: IEditorInterface) => void;
+  onSend?: (editor: IEditorInstance) => void;
 }
 
 /** 编辑器输入框ref */
 export interface IEditableRef {
+  /**
+   * editor
+   */
+  editor: MutableRefObject<IEditorInstance | null>;
   /**
    * @添加表情方法
    */
@@ -49,14 +53,6 @@ export interface IEditableRef {
    * @失去焦点
    */
   blur: () => void;
-  /**
-   * @设置纯文本值
-   */
-  setText: (val: string) => void;
-  /**
-   * editor
-   */
-  editor: IEditorInterface;
 }
 
 /** 编辑器输入框Props */
@@ -66,9 +62,9 @@ export interface IEditableProps {
   /** 输入框点击事件 */
   onClick?: () => void;
   /** 键盘回车事件 */
-  onEnterDown?: (editor: IEditorInterface) => void;
+  onEnterDown?: (editor: IEditorInstance) => void;
   /** 输入框内容变化时的回调 */
-  onChange?: (editor: IEditorInterface) => void;
+  onChange?: (editor: IEditorInstance) => void;
   /**
    * 粘贴图片之前的钩子, 参数为粘贴的文件，若返回为空数组则停止粘贴，若返回为文件数组则继续处理
    * @param files 粘贴的文件数组

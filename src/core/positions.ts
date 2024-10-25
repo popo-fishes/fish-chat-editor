@@ -1,19 +1,20 @@
 /*
- * @Date: 2024-10-19 13:10:56
+ * @Date: 2024-10-25 10:45:48
  * @Description: Modify here please
  */
-import type { IEditorElement } from "../../types";
-import { isNode, range } from "../../core";
+import { isNode, range } from ".";
+import type { IEditorElement } from "../types";
 /**
- * @name 修正光标的位置，把当前光标设置在最后一个编辑行节点下面的最后子节点
+ * @name 把光标设置在编辑器的最后一个行节点下面的最后子节点
  */
-export const amendRangePosition = (editNode: IEditorElement, callBack?: (node?: HTMLElement) => void) => {
-  if (!editNode || !editNode.childNodes) return callBack?.();
+export const setCursorEditorLast = (editorNode: IEditorElement, callBack?: (node?: HTMLElement) => void) => {
+  if (!editorNode || !editorNode.childNodes) return callBack?.();
 
-  let lastRowElement = editNode.childNodes[editNode.childNodes.length - 1];
+  let lastRowElement = editorNode.childNodes[editorNode.childNodes.length - 1];
 
   if (!lastRowElement) {
     console.warn("富文本不存在节点，请排查问题");
+    callBack?.();
     return;
   }
   // 最后一行编辑节点是一个节点块
@@ -41,20 +42,9 @@ export const amendRangePosition = (editNode: IEditorElement, callBack?: (node?: 
       return;
     }
   }
+
   console.warn("富文本不存在节点，请排查问题");
-};
+  callBack?.();
 
-/** 获取当前编辑器中有多少个图片文件（不包含表情） */
-export const getEditImageAmount = (node: IEditorElement): number => {
-  let amount = 0;
-  if (isNode.isDOMElement(node)) {
-    for (let i = 0; i < node.childNodes.length; i++) {
-      amount += getEditImageAmount((node as any).childNodes[i]);
-    }
-
-    if (isNode.isEditInline(node) && isNode.isImageNode(node)) {
-      amount += 1;
-    }
-  }
-  return amount;
+  return;
 };
