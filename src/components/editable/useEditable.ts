@@ -224,6 +224,15 @@ export default function useEditable(props: IEditableProps) {
     }
 
     /**
+     * 处理ctrl+a事件，如果没有内容不能进行选中行的br节点
+     */
+    if (event.ctrlKey && event.key == "a") {
+      if (!range.isSelected() && editor.current && editor.current?.isEditorEmptyNode()) {
+        event.preventDefault();
+        return;
+      }
+    }
+    /**
      * bug2:
      * 按下删除按键：如果编辑器已经是一个空节点 就 阻止删除按键。不然会把空文本节点给删除了导致BUG
      * 兜底处理,防止骚操作
