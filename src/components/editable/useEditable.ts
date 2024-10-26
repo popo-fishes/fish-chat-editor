@@ -30,7 +30,7 @@ let isLock = false;
 // 表示正在操作换行，需要等等结束
 let isLineFeedLock = false;
 
-export default function useEdit(props: IEditableProps) {
+export default function useEditable(props: IEditableProps) {
   const { ...restProps } = props;
   /** 编辑区域的元素 */
   const editNodeRef = useRef<IEditorElement>(null);
