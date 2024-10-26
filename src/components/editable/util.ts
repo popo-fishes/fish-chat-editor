@@ -5,7 +5,7 @@
 import type { IEditorElement } from "../../types";
 import { isNode } from "../../core";
 
-/** 获取当前编辑器中有多少个图片文件（不包含表情） */
+/** 获取编辑器中有多少个图片文件（不包含表情） */
 export const getEditImageAmount = (node: IEditorElement): number => {
   let amount = 0;
   if (isNode.isDOMElement(node)) {

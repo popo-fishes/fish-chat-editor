@@ -34,12 +34,11 @@ function App() {
           onEnterDown={onSend}
           onSend={onSend}
           ref={editorRef}
-          onChange={(editor) => {
-            console.time("editor获取内容耗时");
-            const html = editor.getProtoHTML();
-            console.timeEnd("editor获取内容耗时");
+          onChange={async (editor) => {
+            const html = await editor.getSemanticHTML();
+            console.log(JSON.stringify(html));
             // const text = editor.getText();
-            setHtml(html);
+            // setHtml(html);
           }}
         />
       </div>

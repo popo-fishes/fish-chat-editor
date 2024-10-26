@@ -54,7 +54,7 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
   const dom_p = document.createElement("p");
   dom_p.innerHTML = strCont;
 
-  // 处理当前节点内容
+  // 处理节点内容
   if (dom_p.childNodes?.length) {
     for (const i in dom_p.childNodes) {
       const cldNode = dom_p.childNodes[i];
@@ -157,39 +157,38 @@ export const handleEditTransformsSemanticHtml = async (node: HTMLElement): Promi
       const content = getEditElementContent(cld as any);
       // 主要处理把图片的blob转成base64
       if (content) {
-        // 判断当前行内容是否存在图片，存在图片就需要转换src。
+        // 判断行内容是否存在图片，存在图片就需要转换src。
         if (content.includes(`blob:http://`) || content.includes(`blob:https://`)) {
-          const promise = new Promise<string>((resolve) => {
-            const imgElements = (cld as HTMLElement).querySelectorAll("img") as any;
-            const urls = Array.from(imgElements).map((img: HTMLImageElement) => img.src);
-
-            if (!urls.length) resolve("");
-            // 获取图片的base64
-            Promise.allSettled(urls.map(helper.fetchBlobAsBase64))
-              .then((res) => {
-                const datas: { base64: string; blobUrl: string }[] = [];
-                res.forEach((result) => {
-                  if (result.status == "fulfilled" && result.value) {
-                    datas.push(result.value);
-                  }
-                });
-                // 替换原始字符串，把图标的src路径替换为base64
-                let repAfterContent = content;
-                for (const i in datas) {
-                  const item = datas[i];
-                  const reg = new RegExp(`src="${escapeRegExp(item.blobUrl)}"`, "g");
-                  // 替换
-                  repAfterContent = repAfterContent?.replace(reg, `src="${item.base64}"`);
-                }
-                // console.log(repAfterContent);
-                resolve(`<p>${repAfterContent}</p>`);
-              })
-              .catch((error) => {
-                resolve("");
-                console.error("Error converting URLs to Base64:", error);
-              });
-          });
-          promiseData.push(promise);
+          // const promise = new Promise<string>((resolve) => {
+          //   const imgElements = (cld as HTMLElement).querySelectorAll("img") as any;
+          //   const urls = Array.from(imgElements).map((img: HTMLImageElement) => img.src);
+          //   if (!urls.length) resolve("");
+          //   // 获取图片的base64
+          //   Promise.allSettled(urls.map(helper.fetchBlobAsBase64))
+          //     .then((res) => {
+          //       const datas: { base64: string; blobUrl: string }[] = [];
+          //       res.forEach((result) => {
+          //         if (result.status == "fulfilled" && result.value) {
+          //           datas.push(result.value);
+          //         }
+          //       });
+          //       // 替换原始字符串，把图标的src路径替换为base64
+          //       let repAfterContent = content;
+          //       for (const i in datas) {
+          //         const item = datas[i];
+          //         const reg = new RegExp(`src="${escapeRegExp(item.blobUrl)}"`, "g");
+          //         // 替换
+          //         repAfterContent = repAfterContent?.replace(reg, `src="${item.base64}"`);
+          //       }
+          //       // console.log(repAfterContent);
+          //       resolve(`<p>${repAfterContent}</p>`);
+          //     })
+          //     .catch((error) => {
+          //       resolve("");
+          //       console.error("Error converting URLs to Base64:", error);
+          //     });
+          // });
+          // promiseData.push(promise);
         } else {
           promiseData.push(
             (async () => {

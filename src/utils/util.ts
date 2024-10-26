@@ -14,7 +14,7 @@ let globalEmojiList: IEmojiType[] = [];
 export const labelRep = (str: string) => transforms.labelRep(str);
 
 /**
- * @name 设置当前表情图片数据
+ * @name 设置表情图片数据
  */
 export const setEmojiData = (emojiData: IEmojiType[]) => {
   globalEmojiList = [...emojiData];
@@ -75,7 +75,7 @@ export const replaceMsgText = (msgText?: string, size?: number): string => {
     // 筛选出所有的img
     const imgArr = msgStr.match(imgReg);
     const key = getElementAttributeKey("emojiNode");
-    // 代表当前存在图片表情，继续匹配
+    // 代表存在图片表情，继续匹配
     if (msgStr?.indexOf(key) !== -1 && imgArr?.length) {
       let cMsg = msgStr; // 最新的字符串
       // 发现图片, 循环添加
@@ -99,9 +99,9 @@ export const replaceMsgText = (msgText?: string, size?: number): string => {
             str += `<span>${labelRep(msgImgList[0])}</span>`;
           }
 
-          // (isFlag 必须是最后一次截取，且结尾的字符是空，才代表当前图片已经是最后一个字符，就需要换行)
+          // (isFlag 必须是最后一次截取，且结尾的字符是空，才代表图片已经是最后一个字符，就需要换行)
           const isFlag = imgArr.length - 1 == i && !msgImgList[1];
-          // 把当前图片装进去
+          // 把图片装进去
           str += isFlag ? `${imgArr[i]}<br>` : `${imgArr[i]}`;
 
           // 如果循环到最后一个，就把最后一个结尾的字符装进去，加上br换行

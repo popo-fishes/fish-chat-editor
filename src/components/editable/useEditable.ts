@@ -13,7 +13,7 @@ import Editor, { type IEditorInstance } from "../../editor";
 import { transformsEditNodes } from "./transform";
 import { handlePasteTransforms, handleLineFeed } from "./core";
 
-// 备份当前的光标位置
+// 备份的光标位置
 let currentRange: IRange = null;
 
 /**
@@ -22,7 +22,7 @@ let currentRange: IRange = null;
  * 1.有些输入法输入中文 || 输入特殊字符时我还在输入拼音时，输入还没结束；会不停的触发onInput事件。导致onInput事件方法里面出现bug
  * 2. 而有些输入框中文时不会触发onInput：如搜狗输入法
  * 3. 我们需要做个判断 1.onCompositionStart： 启动新的合成会话时，会触发该事件。 例如，可以在用户开始使用拼音IME 输入中文字符后触发此事件
- * 4. 2. onCompositionEnd 完成或取消当前合成会话时，将触发该事件。例如，可以在用户使用拼音IME 完成输入中文字符后触发此事件
+ * 4. 2. onCompositionEnd 完成或取消合成会话时，将触发该事件。例如，可以在用户使用拼音IME 完成输入中文字符后触发此事件
  * 我们在onCompositionStart：是标记正在输入中，必须等onCompositionEnd结束后主动去触发onInput
  */
 let isLock = false;
@@ -82,10 +82,9 @@ export default function useEditable(props: IEditableProps) {
 
   /** @name 更新值 */
   const updateVlue = () => {
-    const html = editor.current?.getProtoHTML();
-    // console.log(html, JSON.stringify(editor?.getText()));
+    const hasEmpty = editor.current?.isEditorEmptyNode();
     // 控制提示,为空就提示placeholder
-    setTipHolder(html == base.emptyEditHtmlText);
+    setTipHolder(hasEmpty);
     restProps.onChange?.(editor.current);
   };
 
@@ -96,7 +95,7 @@ export default function useEditable(props: IEditableProps) {
       positions.setCursorEditorLast(editNodeRef.current, (node) => {
         if (node) {
           const rangeInfo = range.getRange();
-          // 备份当前光标位置
+          // 备份光标位置
           setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
           // 再次执行
           insertEmoji(item);
@@ -119,7 +118,7 @@ export default function useEditable(props: IEditableProps) {
     const rangeInfo = range.getRange();
     // console.log(rangeInfo);
     if (rangeInfo) {
-      // 备份当前光标位置
+      // 备份光标位置
       setRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
     }
     // 如果有选中
@@ -164,7 +163,7 @@ export default function useEditable(props: IEditableProps) {
 
     /**
      * 如果存在光标
-     * 点击了输入框后，如果当前光标位置节点是一个 块节点，且是一个图片节点，就把当前光标移动到它的前面的一个兄弟节点身上。
+     * 点击了输入框后，如果光标位置节点是一个 块节点，且是一个图片节点，就把光标移动到它的前面的一个兄弟节点身上。
      * 1：要保证图片的块节点不可以输入内容
      * 2：粘贴图片时，我们会在图片节点前面插入了一个文本输入节点。
      */
@@ -174,7 +173,7 @@ export default function useEditable(props: IEditableProps) {
     //   const pnode = getNodeOfEditorInlineNode(target);
 
     //   if (pnode) {
-    //     // 用户选择的文本范围或光标的当前位置
+    //     // 用户选择的文本范围或光标的位置
     //     const selection = window.getSelection();
     //     // 清除选定对象的所有光标对象
     //     selection?.removeAllRanges();
@@ -226,14 +225,14 @@ export default function useEditable(props: IEditableProps) {
 
     /**
      * bug2:
-     * 按下删除按键：如果当前编辑器已经是一个空节点 就 阻止删除按键。不然会把空文本节点给删除了导致BUG
+     * 按下删除按键：如果编辑器已经是一个空节点 就 阻止删除按键。不然会把空文本节点给删除了导致BUG
      * 兜底处理,防止骚操作
      */
     if (event.keyCode === 8) {
       /**
-       * 是没有选定文本 && 当前编辑器是一个空节点
+       * 是没有选定文本 && 编辑器是一个空节点
        */
-      if (!range.isSelected() && editor.current && editor.current?.isEmpty()) {
+      if (!range.isSelected() && editor.current && editor.current?.isEditorEmptyNode()) {
         event.preventDefault();
         return;
       }
@@ -274,7 +273,7 @@ export default function useEditable(props: IEditableProps) {
     // if (isDOMElement(target) && findNodeWithImg(target) && getNodeOfEditorInlineNode(target)) {
     //   e.preventDefault();
     // }
-    // 获取当前文档的选区
+    // 获取文档的选区
 
     // if (selection && selection.rangeCount > 0) {
     //   const range = selection.getRangeAt(0);

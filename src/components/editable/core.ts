@@ -68,7 +68,7 @@ export const handleLineFeed = (editNode: IEditorElement, callBack: (success: boo
   // 必须存在光标
   if (!range) return callBack(false);
 
-  // 获取当前光标的节点
+  // 获取光标的节点
   const rangeStartContainer: any = range.startContainer;
 
   // 行属性节点
@@ -173,7 +173,7 @@ export const handlePasteTransforms = async (
     // 必须是图片
     const vfiles = files?.filter((item) => item.type.includes("image/"));
 
-    if (!range) {
+    if (!range || vfiles.length == 0) {
       isPasteLock = false;
       callBack(false);
       return;
@@ -205,10 +205,13 @@ export const handlePasteTransforms = async (
 
     const promiseData: Promise<{ blobUrl: string; base64: string }>[] = [];
 
+    console.time("图片转换耗时");
+
     for (let i = 0; i < filtratefiles.length; i++) {
       const file = filtratefiles[i];
       promiseData.push(helper.imageFileToBlob(file));
     }
+    console.timeEnd("图片转换耗时");
 
     // 标记
     isPasteLock = true;
