@@ -8,12 +8,12 @@ import { hasEditorExistInlineNode, getCloneEditeElements, removeBodyChild, resol
 
 export interface IEditorInterface {
   /**
-   * @name 判断编辑器内容是否为空
+   * @name 判断编辑器是否空内容
    * @desc 仅存在换行or输入空格，都算是空内容
    */
   isEmpty: () => boolean;
   /**
-   * @name 判断编辑器是否为空节点
+   * @name 判断编辑器是否空节点
    * @desc 存在换行or输入空格，都算是有内容
    * @desc 仅存在一个“<p><br></p>”代表是空。
    */
@@ -80,7 +80,7 @@ class Editor {
     }
   }
   /**
-   * @name 判断编辑器内容是否为空
+   * @name 判断编辑器是否空内容
    * @desc 仅存在换行or输入空格，都算是空内容
    */
   public isEmpty() {
@@ -95,7 +95,7 @@ class Editor {
     return false;
   }
   /**
-   * @name 判断编辑器是否为空节点
+   * @name 判断编辑器是否空节点
    * @desc 存在换行or输入空格，都算是有内容
    * @desc 仅存在一个“<p><br></p>”代表是空。
    */

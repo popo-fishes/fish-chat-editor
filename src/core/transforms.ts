@@ -2,7 +2,7 @@
  * @Date: 2024-10-12 21:00:15
  * @Description: Modify here please
  */
-import { base, isNode, helper } from ".";
+import { base, isNode } from ".";
 import { getEmojiData } from "../utils";
 import { emojiSize } from "../config";
 import { isEditElement } from "./isNode";
@@ -82,7 +82,7 @@ export const getNodePlainText = (node: HTMLElement) => {
   let text = "";
 
   if (isNode.isDOMText(node) && node.nodeValue) {
-    return node.nodeValue;
+    return labelRep(node.nodeValue);
   }
 
   if (isNode.isDOMElement(node)) {
@@ -114,7 +114,7 @@ export const getEditElementContent = (node: HTMLElement): string => {
   let content = "";
 
   if (isNode.isDOMText(node) && node.nodeValue) {
-    return node.nodeValue;
+    return labelRep(node.nodeValue);
   }
 
   if (isNode.isDOMElement(node)) {
