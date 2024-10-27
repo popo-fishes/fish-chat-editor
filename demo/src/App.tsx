@@ -13,11 +13,13 @@ function App() {
   const editorRef = useRef<IChatEditorRef>(null);
 
   // 发送文本消息
-  const onSend = async (_) => {
+  const onSend = async (editor) => {
     // 清空输入框
-    editorRef.current?.clear();
+    // editorRef.current?.clear();
 
-    editorRef.current?.focus();
+    // editorRef.current?.focus();
+    const html = editor.getSemanticHTML();
+    console.log(html);
   };
 
   return (
@@ -34,11 +36,10 @@ function App() {
           onEnterDown={onSend}
           onSend={onSend}
           ref={editorRef}
-          onChange={async (editor) => {
-            const html = await editor.getSemanticHTML();
-            console.log(JSON.stringify(html));
+          onChange={(editor) => {
+            const html = editor.getProtoHTML();
             // const text = editor.getText();
-            // setHtml(html);
+            setHtml(html);
           }}
         />
       </div>

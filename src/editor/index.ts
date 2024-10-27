@@ -23,9 +23,9 @@ export interface IEditorInterface {
   /**
    * @name 获取编辑器内容的语义HTML
    * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
-   * @returns 返回Promise
+   * @returns 返回一个html标签字符串
    */
-  getSemanticHTML: () => Promise<string>;
+  getSemanticHTML: () => string;
   /**
    * @name 获取编辑器内容的原始html，主要用于判断存在场景 or 富文本内部使用
    * @desc 它不会转换img图片的src，还是blob格式
@@ -131,12 +131,11 @@ class Editor {
    * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
    * @returns 返回Promise
    */
-  public async getSemanticHTML() {
+  public getSemanticHTML() {
+    console.time("getSemanticHTML:获取内容耗时");
     const cloneEditeNode = getCloneEditeElements.call(this);
-    console.time("editor获取内容耗时");
-    const contentResult = await transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
-    console.timeEnd("editor获取内容耗时");
-
+    const contentResult = transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
+    console.timeEnd("getSemanticHTML:获取内容耗时");
     // 移除节点
     removeBodyChild(cloneEditeNode);
 
@@ -148,8 +147,10 @@ class Editor {
    * @returns 返回一个html标签字符串
    */
   public getProtoHTML() {
+    console.time("getProtoHTML:获取内容耗时");
     const cloneEditeNode = getCloneEditeElements.call(this);
     const contentResult = transforms.handleEditTransformsProtoHtml(cloneEditeNode);
+    console.timeEnd("getProtoHTML:获取内容耗时");
     // 移除节点
     removeBodyChild(cloneEditeNode);
     return contentResult;

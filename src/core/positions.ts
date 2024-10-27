@@ -27,7 +27,7 @@ export const setCursorEditorLast = (editorNode: IEditorElement, callBack?: (node
        * 特别是在清空输入内容时：然后在次获取焦点，再次输入就会有BUG
        * 比如： 发送文本消息
          const onSend = async (_) => {
-           // 清空输入框
+           // 清空编辑器
            editorRef.current?.clear();
 
            editorRef.current?.focus();

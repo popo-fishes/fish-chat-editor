@@ -33,9 +33,13 @@
   line-height: 18px;
   color: #333;
   font-size: 14px;
-  white-space: pre-wrap;
-  // 解决输入英文 数字换行问题
-  word-break: break-all;
+  // https://blog.csdn.net/weixin_40329396/article/details/137924560
+  white-space: break-spaces;
+  // https://developer.mozilla.org/zh-CN/docs/Web/CSS/overflow-wrap
+  overflow-wrap: break-word;
+  // word-break: break-all;
+  // webkit
+  -webkit-font-smoothing: antialiased;
   p {
     line-height: 1.5;
   }

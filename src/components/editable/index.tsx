@@ -52,7 +52,7 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
           ref={(instance: IEditorElement | null) => (editNodeRef.current = instance)}
           contentEditable
           data-fish-editor
-          spellCheck
+          spellCheck={false}
           onPaste={onEditorPaste}
           onBlur={onEditorBlur}
           onFocus={onEditorFocus}
@@ -70,12 +70,12 @@ const Editable = forwardRef<IEditableRef, IEditableProps>((props, ref) => {
             restProps.onClick?.();
           }}
           onDrop={(e) => {
-            // 禁用拖放操作, 如果拖动输入框内的图片，会导致吧图片的地址输入到 富文本中
+            // 禁用拖放操作, 如果拖动编辑器内的图片，会导致吧图片的地址输入到 富文本中
             e.preventDefault();
             return false;
           }}
           onDragOver={(e) => {
-            // 禁用拖放操作， 如果拖动输入框内的图片，会导致吧图片的地址输入到 富文本中
+            // 禁用拖放操作， 如果拖动编辑器内的图片，会导致吧图片的地址输入到 富文本中
             e.preventDefault();
             return false;
           }}

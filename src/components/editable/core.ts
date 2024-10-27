@@ -171,7 +171,7 @@ export const handlePasteTransforms = async (
     const files = isObject(clp.files) ? Object.values(clp.files) : clp.files;
     // console.log(files);
     // 必须是图片
-    const vfiles = files?.filter((item) => item.type.includes("image/"));
+    const vfiles = files?.filter((item: File) => item.type.includes("image/"));
 
     if (!range || vfiles.length == 0) {
       isPasteLock = false;
@@ -231,6 +231,7 @@ export const handlePasteTransforms = async (
           datas.forEach((item) => {
             // const zeroSpaceNode = base.createZeroSpaceElement() as any;
             nodes.push(...[base.createChunkImgElement(item.blobUrl)]);
+            base.editorImageBase64Map.set(item.blobUrl, item.base64);
           });
 
           if (nodes.length) {

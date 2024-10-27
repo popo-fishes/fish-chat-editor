@@ -40,8 +40,8 @@ import FishChatEditor from "fish-chat-editor";
 | emojiList        | 表情列表数据,请看下面的IEmojiType描述                                                                                          | IEmojiType[]                                    | ——     |
 | toolbarRender    | 自定义工具栏内容                                                                                                               | () => ReactNode                                 | ——     |
 | onSend           | 点击发送按钮事件                                                                                                               | (editor) => void                                | ——     |
-| onEnterDown      | 键盘回车事件                                                                                                                   | (editor) => void                                | ——     |
-| onChange         | 输入框内容变化时                                                                                                               | (editor) => void                                | ——     |
+| onEnterDown      | 编辑器键盘回车事件                                                                                                             | (editor) => void                                | ——     |
+| onChange         | 编辑器内容变化时                                                                                                               | (editor) => void                                | ——     |
 | beforePasteImage | 粘贴图片之前的钩子, 参数files为粘贴的文件,amount为富文本中已有的图片个数; 若返回为空数组则停止粘贴，若返回为文件数组则继续处理 | (files: File[], amount: number) => File[] or [] | ——     |
 
 ### Editor Methods
