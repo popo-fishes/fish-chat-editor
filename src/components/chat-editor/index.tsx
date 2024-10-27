@@ -18,7 +18,7 @@ import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from 
 const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
   const { placeholder, onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
-  // 输入框控制器
+  // 编辑器控制器
   const editInputRef = useRef<IEditableRef>(null);
   // 表情的弹窗
   const modalRef = useRef<HTMLDivElement>(null);

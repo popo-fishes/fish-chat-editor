@@ -4,20 +4,30 @@
  */
 import { helper, base, dom, isNode, util, range as fishRange, transforms, positions } from "../core";
 import type { IRange } from "../core";
+import { hasEditorExistInlineNode, getCloneEditeElements, removeBodyChild, resolveSelector } from "./util";
 
 export interface IEditorInterface {
-  /** @name 判断当前编辑器内容是否为空 */
+  /**
+   * @name 判断编辑器是否空内容
+   * @desc 仅存在换行or输入空格，都算是空内容
+   */
   isEmpty: () => boolean;
-  /** @name 获取当前编辑器的纯文本内容 */
+  /**
+   * @name 判断编辑器是否空节点
+   * @desc 存在换行or输入空格，都算是有内容
+   * @desc 仅存在一个“<p><br></p>”代表是空。
+   */
+  isEditorEmptyNode: () => boolean;
+  /** @name 获取编辑器的纯文本内容 */
   getText: () => string;
   /**
    * @name 获取编辑器内容的语义HTML
    * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
-   * @returns 返回Promise
+   * @returns 返回一个html标签字符串
    */
-  getSemanticHTML: () => Promise<string>;
+  getSemanticHTML: () => string;
   /**
-   * @name 获取编辑器内容的原始html，主要用于判断存在场景 or 富文本内部使用
+   * @name 获取编辑器内容的原始HTML，主要用于判断值场景 or 富文本内部使用
    * @desc 它不会转换img图片的src，还是blob格式
    * @returns 返回一个html标签字符串
    */
@@ -56,36 +66,6 @@ export interface IEditorOptions {
   onChange?: () => void;
 }
 
-/** @name 获取克隆编辑器的行节点 */
-function getCloneEditeElements(): HTMLDivElement | null {
-  if (!this.container || !isNode.isDOMNode(this.container)) return null;
-
-  const contentNode = this.container.cloneNode(true);
-
-  const odiv = document.createElement("div");
-
-  for (const childNode of Array.from(contentNode.childNodes)) {
-    odiv.appendChild(childNode as Node);
-  }
-
-  odiv.setAttribute("hidden", "true");
-
-  contentNode.ownerDocument.body.appendChild(odiv);
-
-  return odiv;
-}
-
-function removeBodyChild(node: HTMLElement) {
-  if (document.body) {
-    // 移除节点
-    document.body.removeChild(node);
-  }
-}
-
-function resolveSelector(selector: string | HTMLElement | null | undefined) {
-  return typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : selector;
-}
-
 class Editor {
   /** @name 编辑器配置项 */
   options: IEditorOptions;
@@ -99,20 +79,43 @@ class Editor {
       return;
     }
   }
-  /** @name 判断当前编辑器内容是否为空 */
+  /**
+   * @name 判断编辑器是否空内容
+   * @desc 仅存在换行or输入空格，都算是空内容
+   */
   public isEmpty() {
     const editorNode = this.container;
     if (!editorNode || !editorNode?.childNodes) return true;
-    // 子节点大于1返回, 免得去走判断方法。
+    /**
+     * 没有纯文本内容，并且没有内联块节点。代表是一个空内容
+     * hasEditorExistInlineNode方法主要判断，有可能编辑器存在图片节点。等等内联块节点
+     */
+    if (this.getText() == "" && !hasEditorExistInlineNode(editorNode)) return true;
+
+    return false;
+  }
+  /**
+   * @name 判断编辑器是否空节点
+   * @desc 存在换行or输入空格，都算是有内容
+   * @desc 仅存在一个“<p><br></p>”代表是空。
+   */
+  public isEditorEmptyNode() {
+    const editorNode = this.container;
+    if (!editorNode || !editorNode?.childNodes) return true;
+    /**
+     * 代表有多个编辑行，不是空
+     */
     if (editorNode?.childNodes && editorNode?.childNodes.length > 1) {
       return false;
     }
-    // 获取纯文本内容，有内容返回false，没内容返回true
+    /**
+     * 没有纯文本内容，并且仅存在一个“<p><br></p>”。代表是空
+     */
     if (this.getText() == "" && this.getProtoHTML() == base.emptyEditHtmlText) return true;
 
     return false;
   }
-  /** @name 获取当前编辑器的纯文本内容 */
+  /** @name 获取编辑器的纯文本内容 */
   public getText() {
     const cloneEditeNode = getCloneEditeElements.call(this);
     const contentStr = transforms.getNodePlainText(cloneEditeNode);
@@ -128,17 +131,18 @@ class Editor {
    * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
    * @returns 返回Promise
    */
-  public async getSemanticHTML() {
+  public getSemanticHTML() {
+    console.time("getSemanticHTML:获取内容耗时");
     const cloneEditeNode = getCloneEditeElements.call(this);
-
-    const contentResult = await transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
+    const contentResult = transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
+    console.timeEnd("getSemanticHTML:获取内容耗时");
     // 移除节点
     removeBodyChild(cloneEditeNode);
 
     return contentResult;
   }
   /**
-   * @name 获取编辑器内容的原始html，主要用于判断存在场景 or 富文本内部使用
+   * @name 获取编辑器内容的原始html，主要用于判断值场景 or 富文本内部使用
    * @desc 它不会转换img图片的src，还是blob格式
    * @returns 返回一个html标签字符串
    */
@@ -166,7 +170,7 @@ class Editor {
       dom.toTargetAfterInsertNodes(startContainer, [node]);
     };
 
-    // 获取当前光标的行编辑节点
+    // 获取光标的行编辑节点
     const rowElementNode: HTMLElement = util.getNodeOfEditorElementNode(range.startContainer);
 
     if (!rowElementNode) {
@@ -181,7 +185,7 @@ class Editor {
 
     /** 处理内容插入 */
     {
-      // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 当前光标的节点元素的值
+      // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 光标的节点元素的值
       const semanticContent = transforms.labelRep(contentText);
 
       const lines = semanticContent?.split(/\r\n|\r|\n/) || [];
@@ -233,13 +237,13 @@ class Editor {
         // 空文本??
         if (content == "\n" || content == "") {
           if (isNode.isDOMElement(firstNode)) {
-            // 直接把第一个插入的节点内容 赋值给 当前光标节点的顶级富文本节点
+            // 直接把第一个插入的节点内容 赋值给 光标节点的顶级富文本节点
             dom.toTargetAddNodes(rowElementNode, dom.cloneNodes(firstNode.childNodes));
           }
         } else {
           // 不是空！！
           /**
-           * 1. 在当前光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
+           * 1. 在光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
            */
           // 获取第一个插入节点的文本内容
           const firstContent = transforms.getEditElementContent(firstNode);
@@ -259,7 +263,7 @@ class Editor {
                 for (let i = 0; i < nodes.length; i++) {
                   fragment.appendChild(nodes[i]);
                 }
-                // 在当前行的--光标之后的第一个节点，的前面插入多个节点
+                // 在行的--光标之后的第一个节点，的前面插入多个节点
                 rowElementNode.insertBefore(fragment, nextNodeList[0]);
               }
             }
@@ -325,7 +329,7 @@ class Editor {
     }
     console.time("editor插入节点耗时");
 
-    // 获取当前光标位置的元素节点 前面的节点 和 后面的节点
+    // 获取光标位置的元素节点 前面的节点 和 后面的节点
     const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
 
     if (nodes.length == 0) {
@@ -336,7 +340,7 @@ class Editor {
 
     /** 处理内容 */
     {
-      // 当前行编辑节点没有节点
+      // 行编辑节点没有节点
       if (behindNodeList.length == 0 && nextNodeList.length == 0) {
         dom.toTargetAddNodes(rowElementNode, nodes);
       } else if (behindNodeList.length) {
@@ -409,7 +413,7 @@ class Editor {
     this.blur();
     // 执行更新
     isUpdate && this.options?.onChange?.();
-    // 返回当前编辑器的行节点
+    // 返回编辑器的行节点
     return node;
   }
   /** @name 失去焦点 */

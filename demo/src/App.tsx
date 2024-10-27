@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 // 正式使用时应该：
 // import FbChatEditor, { IChatEditorRef } from "fish-chat-editor";
-import FbChatEditor, { IChatEditorRef } from "../../src";
+import FbChatEditor, { IChatEditorRef, IEditorInstance } from "../../src";
 import "./App.css";
 
 function App() {
@@ -13,7 +13,9 @@ function App() {
   const editorRef = useRef<IChatEditorRef>(null);
 
   // 发送文本消息
-  const onSend = async (_) => {
+  const onSend = async (editor: IEditorInstance) => {
+    const html = editor.getSemanticHTML();
+    console.log(html);
     // 清空输入框
     editorRef.current?.clear();
 
@@ -35,9 +37,7 @@ function App() {
           onSend={onSend}
           ref={editorRef}
           onChange={(editor) => {
-            console.time("editor获取内容耗时");
             const html = editor.getProtoHTML();
-            console.timeEnd("editor获取内容耗时");
             // const text = editor.getText();
             setHtml(html);
           }}

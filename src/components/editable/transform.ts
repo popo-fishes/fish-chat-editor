@@ -23,7 +23,7 @@ function hasTransparentBackgroundColor(node: HTMLElement) {
 }
 
 /**
- * @name 当前行节点下面是否具有异常的节点
+ * @name 行节点下面是否具有异常的节点
  */
 function hasNotSatisfiedNode(node: HTMLElement) {
   if (!node) return false;
@@ -32,11 +32,16 @@ function hasNotSatisfiedNode(node: HTMLElement) {
   if (node.childNodes.length == 1) {
     if (hasParentOnlyBr(node)) return false;
   }
-
+  const nodes: any[] = Array.from(node.childNodes);
   let exist = false;
-  for (const cld of node.childNodes) {
+  for (const cld of nodes) {
+    // 存在BR节点，但是子节点有很多个
+    if (cld.nodeName === "BR" && nodes.length > 1) {
+      exist = true;
+      break;
+    }
     // 节点不是内联块属性节点 || 节点有背景色属性
-    if ((!isNode.isEditInline(cld as any) && node.nodeName == "SPAN") || hasTransparentBackgroundColor(cld as any)) {
+    if ((!isNode.isEditInline(cld as any) && cld.nodeName == "SPAN") || hasTransparentBackgroundColor(cld as any)) {
       exist = true;
       break;
     }
@@ -51,14 +56,13 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
 
   /**
    * bug1:
-   * 获取当前光标的行编辑节点，查询是否存在不符合编辑节点格式的节点，然后重写它。
+   * 获取光标的行编辑节点，查询是否存在不符合编辑节点格式的节点，然后重写它。
    * 这种情况常出现在： 按键 删除行-富文本自动合并行时，会主动创建一些自定义标签
    * 比如：<span style="background-color: transparent;">345</span>
    */
   if (range && range?.startContainer) {
     // 获取行编辑节点
     const editorRowNode = util.getNodeOfEditorElementNode(range.startContainer);
-
     if (editorRowNode && hasNotSatisfiedNode(editorRowNode)) {
       // console.log(editorRowNode.childNodes);
       /**
@@ -98,7 +102,7 @@ export const transformsEditNodes = (editNode: IEditorElement) => {
     dom.toTargetAddNodes(editNode as any, [lineDom]);
     // 设置光标
     if (lineDom.firstChild) {
-      fishRange.setCursorPosition(lineDom.firstChild, "after");
+      fishRange.setCursorPosition(lineDom.firstChild, "before");
     }
   }
 

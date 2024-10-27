@@ -31,7 +31,7 @@ export interface IChatEditorProps extends Omit<IEditableProps, "onClick"> {
   onSend?: (editor: IEditorInstance) => void;
 }
 
-/** 编辑器输入框ref */
+/** 编辑器ref */
 export interface IEditableRef {
   /**
    * editor
@@ -42,7 +42,7 @@ export interface IEditableRef {
    */
   insertEmoji: (item: IEmojiType) => void;
   /**
-   * @清空输入框值
+   * @清空编辑器内容
    */
   clear: () => void;
   /**
@@ -55,15 +55,15 @@ export interface IEditableRef {
   blur: () => void;
 }
 
-/** 编辑器输入框Props */
+/** 编辑器Props */
 export interface IEditableProps {
   /** 提示占位符 */
   placeholder?: string;
-  /** 输入框点击事件 */
+  /** 编辑器点击事件 */
   onClick?: () => void;
-  /** 键盘回车事件 */
+  /** 编辑器键盘回车事件 */
   onEnterDown?: (editor: IEditorInstance) => void;
-  /** 输入框内容变化时的回调 */
+  /** 编辑器内容变化时的回调 */
   onChange?: (editor: IEditorInstance) => void;
   /**
    * 粘贴图片之前的钩子, 参数为粘贴的文件，若返回为空数组则停止粘贴，若返回为文件数组则继续处理

@@ -48,13 +48,13 @@ export const setCursorPosition = (referenceNode: Node, type?: "before" | "after"
 
     return range;
   } catch (err) {
-    console.error(err);
+    console.warn(err);
     return null;
   }
 };
 
 /**
- * @name 获取当前文档中用户选择的文本范围（range）对象
+ * @name 获取文档中用户选择的文本范围（range）对象
  */
 export const getRange = (): IRange | null => {
   // 光标的信息
@@ -75,7 +75,7 @@ export const getRange = (): IRange | null => {
   }
 
   try {
-    // 获取当前光标
+    // 获取光标
     const range = selection.getRangeAt(0);
     if (!range) return null;
 
@@ -103,7 +103,7 @@ export const getSelection = () => {
 
 /**
  * @name 是否有选中的文本 和 元素
- *  Selection.isCollapsed 只读属性返回一个布尔值，表示当前是否有任何文本被选中。
+ *  Selection.isCollapsed 只读属性返回一个布尔值，表示是否有任何文本被选中。
  * 当选定内容的起点和终点位于内容中的同一位置时，没有选定文本
  * 如果返回true，表示选择范围折叠；如果返回false，表示选择范围没有折叠，有一定的文本被选中
  */

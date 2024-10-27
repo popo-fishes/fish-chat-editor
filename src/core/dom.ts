@@ -7,7 +7,7 @@ import type { IRange } from "./range";
 const { isDOMText, isDOMElement, isDOMNode, isEditElement, isNodeNotTtxt } = isNode;
 
 /**
- * @name 获取当前节点的 前面全部兄弟节点 和后面全部兄弟节点
+ * @name 获取节点的 前面全部兄弟节点 和后面全部兄弟节点
  * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/nextSibling
  * @param targetElement
  * @returns [previousNodes, nextNodes]
@@ -131,8 +131,8 @@ export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElemen
 
 /**
  * @name 获取节点的前面的节点和后面的节点
- * @desc: 默认当前光标位置节点作为目标
- * 返回的数组中都是从近到远的 排序，距离当前光标节点越近的排在第一个
+ * @desc: 默认光标位置节点作为目标
+ * 返回的数组中都是从近到远的 排序，距离光标节点越近的排在第一个
  * [behindNodeList:[], nextNodeList: []]
  * @param range光标对象
  * @return 返回的都是真实的dom节点
@@ -174,20 +174,20 @@ export const getRangeAroundNode = (range: IRange) => {
       nextNodeList = anchorNode?.childNodes ? [...anchorNode?.childNodes] : [];
     } else {
       /**
-       * 获取当前节点的前后全部兄弟节点
+       * 获取节点的前后全部兄弟节点
        * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/nextSibling
        */
       const currentNode = anchorNode?.childNodes?.[anchorOffset - 1] || null;
 
       if (currentNode) {
-        /** 找出当前光标节点的前后兄弟节点 */
+        /** 找出光标节点的前后兄弟节点 */
         const [pNode, nNode] = getDomPreviousOrnextSibling(currentNode);
         behindNodeList = [currentNode, ...pNode];
         nextNodeList = [...nNode];
       }
     }
     /**
-     * 如果当前光标节点是一个编辑块节点
+     * 如果光标节点是一个编辑块节点
      * 这种情况呢，需要再找出父节点的前后 兄弟节点
      */
     // console.log(behindNodeList, nextNodeList);
@@ -210,7 +210,7 @@ export const getRangeAroundNode = (range: IRange) => {
 
     // 拆分文本节点--返回的是一个偏移量之后的文本
     const afterNode = (anchorNode as any)?.splitText?.(anchorOffset) || null;
-    /** 找出当前光标节点的前后兄弟节点 */
+    /** 找出光标节点的前后兄弟节点 */
     const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode);
 
     behindNodeList = [...pNode];
@@ -220,7 +220,7 @@ export const getRangeAroundNode = (range: IRange) => {
 
     // console.log(behindNodeList, nextNodeList, afterNode);
     /**
-     * 如果当前光标节点是一个编辑文本节点
+     * 如果光标节点是一个编辑文本节点
      * 这种情况呢，需要再找出父节点的前后 兄弟节点
      */
     const parentElement = targetNode.parentNode;
