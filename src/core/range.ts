@@ -48,7 +48,7 @@ export const setCursorPosition = (referenceNode: Node, type?: "before" | "after"
 
     return range;
   } catch (err) {
-    console.error(err);
+    console.warn(err);
     return null;
   }
 };

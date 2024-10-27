@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 // 正式使用时应该：
 // import FbChatEditor, { IChatEditorRef } from "fish-chat-editor";
-import FbChatEditor, { IChatEditorRef } from "../../src";
+import FbChatEditor, { IChatEditorRef, IEditorInstance } from "../../src";
 import "./App.css";
 
 function App() {
@@ -13,13 +13,13 @@ function App() {
   const editorRef = useRef<IChatEditorRef>(null);
 
   // 发送文本消息
-  const onSend = async (editor) => {
-    // 清空输入框
-    // editorRef.current?.clear();
-
-    // editorRef.current?.focus();
+  const onSend = async (editor: IEditorInstance) => {
     const html = editor.getSemanticHTML();
     console.log(html);
+    // 清空输入框
+    editorRef.current?.clear();
+
+    editorRef.current?.focus();
   };
 
   return (

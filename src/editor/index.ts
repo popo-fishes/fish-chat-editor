@@ -27,7 +27,7 @@ export interface IEditorInterface {
    */
   getSemanticHTML: () => string;
   /**
-   * @name 获取编辑器内容的原始html，主要用于判断存在场景 or 富文本内部使用
+   * @name 获取编辑器内容的原始HTML，主要用于判断值场景 or 富文本内部使用
    * @desc 它不会转换img图片的src，还是blob格式
    * @returns 返回一个html标签字符串
    */
@@ -142,15 +142,13 @@ class Editor {
     return contentResult;
   }
   /**
-   * @name 获取编辑器内容的原始html，主要用于判断存在场景 or 富文本内部使用
+   * @name 获取编辑器内容的原始html，主要用于判断值场景 or 富文本内部使用
    * @desc 它不会转换img图片的src，还是blob格式
    * @returns 返回一个html标签字符串
    */
   public getProtoHTML() {
-    console.time("getProtoHTML:获取内容耗时");
     const cloneEditeNode = getCloneEditeElements.call(this);
     const contentResult = transforms.handleEditTransformsProtoHtml(cloneEditeNode);
-    console.timeEnd("getProtoHTML:获取内容耗时");
     // 移除节点
     removeBodyChild(cloneEditeNode);
     return contentResult;
