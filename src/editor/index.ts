@@ -185,7 +185,7 @@ class Editor {
 
     /** 处理内容插入 */
     {
-      // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;", newCurrentText 光标的节点元素的值
+      // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;"
       const semanticContent = transforms.labelRep(contentText);
 
       const lines = semanticContent?.split(/\r\n|\r|\n/) || [];
