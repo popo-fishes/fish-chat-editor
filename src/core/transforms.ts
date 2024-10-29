@@ -23,10 +23,12 @@ export const labelRep = (str: string, reversal?: boolean) => {
 };
 
 /**
- *  @name 把插入的文本转成节点
- * 主要是把文本转成表情节点
+ * @name 把插入的文本转成节点, 主要是把文本转成表情节点
+ * @param content 文本内容
+ * @param size? 表情的尺寸
+ * @returns
  */
-export const transformTextToNodes = (content: string): Node[] | [] => {
+export const transformTextToNodes = (content: string, size?: number): Node[] | [] => {
   if (!content) return [];
   const emojiList = getEmojiData();
   const nodes: Node[] = [];
@@ -64,7 +66,7 @@ export const transformTextToNodes = (content: string): Node[] | [] => {
         const attrName = base.getElementAttributeDatasetName("emojiNode");
         const elementAttrVal = (cldNode as any)?.dataset?.[attrName] || "";
         if (elementAttrVal && (cldNode as any).src) {
-          const imgNode = base.createChunkEmojiElement((cldNode as any).src, emojiSize, elementAttrVal);
+          const imgNode = base.createChunkEmojiElement((cldNode as any).src, size || emojiSize, elementAttrVal);
           nodes.push(imgNode);
         }
       }
