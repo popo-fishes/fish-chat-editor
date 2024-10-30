@@ -2,7 +2,7 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { helper, base, dom, isNode, util, range as fishRange, transforms, positions } from "../core";
+import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../core";
 import type { IRange } from "../core";
 import { hasEditorExistInlineNode, getCloneEditeElements, removeBodyChild, resolveSelector } from "./util";
 
@@ -55,7 +55,7 @@ export interface IEditorInterface {
   /** @name 设置编辑器文本, 注意它不会覆盖编辑器内容，而是追加内容 */
   setText: (content: string) => void;
   /** @name 清空编辑器内容 */
-  clear: () => HTMLElement | null;
+  clear: () => void;
   /** @name 失去焦点 */
   blur: () => void;
   /** @name 获取焦点 */
@@ -71,13 +71,47 @@ class Editor {
   options: IEditorOptions;
   /** @name 编辑器容器 */
   container: HTMLElement;
+  /** @name 当前选区信息 */
+  rangeInfo: IRange;
   constructor(container: HTMLElement | string, options: IEditorOptions = {}) {
     this.container = resolveSelector(container);
     this.options = options;
+    // 选区信息
+    this.rangeInfo = {
+      startContainer: null,
+      startOffset: 0,
+      endContainer: null,
+      endOffset: 0,
+      anchorNode: null
+    };
+
     if (this.container == null) {
       console.error("Invalid Editor container", container);
       return;
     }
+
+    if (this.container) {
+      this.createEditor();
+    }
+  }
+  private createEditor() {
+    const node = base.createLineElement();
+    dom.toTargetAddNodes(this.container, [node]);
+    this.backupRangePosition(node, 0, true);
+  }
+  /** @name 备份选区的位置 */
+  public backupRangePosition(node: HTMLElement, startOffset: number, isReset?: boolean) {
+    let targetDom = node;
+    if (isNode.isEditElement(node) && isReset) {
+      targetDom = (node as any).firstChild;
+    }
+    this.rangeInfo = {
+      startContainer: targetDom,
+      startOffset: startOffset || 0,
+      endContainer: targetDom,
+      endOffset: 0,
+      anchorNode: targetDom
+    };
   }
   /**
    * @name 判断编辑器是否空内容
@@ -388,7 +422,7 @@ class Editor {
   /** @name 设置编辑器文本, 注意它不会覆盖编辑器内容，而是追加内容 */
   public setText(content: string) {
     if (!content || !this.container) return;
-    positions.setCursorEditorLast(this.container, (node) => {
+    this.setCursorEditorLast((node) => {
       if (node) {
         const rangeInfo = fishRange.getRange();
         this.insertText(
@@ -406,15 +440,16 @@ class Editor {
     });
   }
   /** @name 清空编辑器内容 */
-  public clear(isUpdate = true) {
-    const node = base.createLineElement();
+  public clear() {
     if (!this.container) return null;
+    const node = base.createLineElement();
     dom.toTargetAddNodes(this.container, [node]);
-    this.blur();
-    // 执行更新
-    isUpdate && this.options?.onChange?.();
-    // 返回编辑器的行节点
-    return node;
+    this.setCursorEditorLast((targetNode) => {
+      if (targetNode) {
+        this.blur();
+        this.options?.onChange?.();
+      }
+    });
   }
   /** @name 失去焦点 */
   public blur() {
@@ -422,8 +457,56 @@ class Editor {
   }
   /** @name 获取焦点 */
   public focus() {
-    requestAnimationFrame(() => positions.setCursorEditorLast(this.container));
+    requestAnimationFrame(() => this.setCursorEditorLast());
   }
+  /**
+   * @name 把光标设置在编辑器的最后一个行节点下面的最后子节点
+   */
+  public setCursorEditorLast = (callBack?: (node?: HTMLElement) => void) => {
+    if (!this.container || !this.container.childNodes) {
+      callBack?.();
+      return;
+    }
+
+    // 编辑器--行
+    const lastRowElement = this.container.childNodes[this.container.childNodes.length - 1];
+
+    if (!lastRowElement) {
+      console.warn("富文本不存在节点，请排查问题");
+      callBack?.();
+      return;
+    }
+    // 最后一行编辑节点是一个节点块
+    if (isNode.isEditElement(lastRowElement as HTMLElement)) {
+      // 获取编辑行的最后一个子节点
+      const referenceElement = lastRowElement.childNodes[lastRowElement.childNodes.length - 1];
+      if (referenceElement) {
+        /**
+       * 解决在初始化时，当富文本中只有一个br时，光标点不能设置在BR结束位置.不然会有输入中文时，不生效
+       * 特别是在清空输入内容时：然后在次获取焦点，再次输入就会有BUG
+       * 比如： 发送文本消息
+         const onSend = async (_) => {
+           // 清空编辑器
+           editorRef.current?.clear();
+
+           editorRef.current?.focus();
+          };
+       */
+        if (referenceElement.nodeName == "BR") {
+          fishRange.setCursorPosition(referenceElement, "before");
+        } else {
+          fishRange.setCursorPosition(referenceElement, "after");
+        }
+        callBack?.(referenceElement as HTMLElement);
+        return;
+      }
+    }
+
+    console.warn("富文本不存在节点，请排查问题");
+    callBack?.();
+
+    return;
+  };
 }
 
 export type IEditorInstance = InstanceType<typeof Editor>;

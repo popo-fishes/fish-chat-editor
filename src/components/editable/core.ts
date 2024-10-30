@@ -2,11 +2,11 @@ import isObject from "lodash/isObject";
 import isFunction from "lodash/isFunction";
 import isArray from "lodash/isArray";
 
-import { dom, isNode, range as fishRange, helper, util, base, positions, transforms } from "../../core";
+import { dom, isNode, range as fishRange, helper, util, base, transforms } from "../../core";
 
 import { getEditImageAmount } from "./util";
 
-import type { IEditorElement, IEditableProps } from "../../types";
+import type { IEditableProps } from "../../types";
 
 import type { IEditorInstance } from "../../editor";
 
@@ -63,10 +63,10 @@ export const onCut = (event: React.ClipboardEvent<HTMLDivElement>) => {
 /**
  * @name 处理换行
  */
-export const handleLineFeed = (editNode: IEditorElement, callBack: (success: boolean) => void) => {
+export const handleLineFeed = (editor: IEditorInstance, callBack: (success: boolean) => void) => {
   const range = fishRange.getRange();
-  // 必须存在光标
-  if (!range) return callBack(false);
+  // 不存在 光标 和 实例
+  if (!range || !editor?.container) return callBack(false);
 
   // 获取光标的节点
   const rangeStartContainer: any = range.startContainer;
@@ -75,10 +75,10 @@ export const handleLineFeed = (editNode: IEditorElement, callBack: (success: boo
   const rowElementNode = util.getNodeOfEditorElementNode(rangeStartContainer);
 
   if (!rowElementNode) {
-    positions.setCursorEditorLast(editNode, (node) => {
+    editor.setCursorEditorLast((node) => {
       if (node) {
         // 在调用自己一次
-        handleLineFeed(editNode, callBack);
+        handleLineFeed(editor, callBack);
       }
     });
     return callBack(false);
@@ -142,14 +142,14 @@ export const handleLineFeed = (editNode: IEditorElement, callBack: (success: boo
  * @name 处理粘贴事件的内容转换
  * @param e 粘贴事件
  * @param editor 实例
- * @param callBack 成功回调
  * @param beforePasteImage 粘贴图片之前的钩子
+ * @param callBack 成功回调
  */
 export const handlePasteTransforms = async (
   e: ClipboardEventWithOriginalEvent,
   editor: IEditorInstance,
-  callBack: (success: boolean) => void,
-  beforePasteImage?: IEditableProps["beforePasteImage"]
+  beforePasteImage: IEditableProps["beforePasteImage"],
+  callBack: (success: boolean) => void
 ) => {
   // 获取粘贴的内容
   const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
@@ -245,7 +245,7 @@ export const handlePasteTransforms = async (
             const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
 
             if (!rowElementNode) {
-              positions.setCursorEditorLast(editor.container, (node) => {
+              editor.setCursorEditorLast((node) => {
                 if (node) {
                   // update range
                   const resetRange = fishRange.getRange();
@@ -310,7 +310,7 @@ export const handlePasteTransforms = async (
       const rowElementNode = util.getNodeOfEditorElementNode(range.startContainer);
 
       if (!rowElementNode) {
-        positions.setCursorEditorLast(editor.container, (node) => {
+        editor.setCursorEditorLast((node) => {
           if (node) {
             // update range
             const resetRange = fishRange.getRange();

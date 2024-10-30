@@ -7,8 +7,13 @@ import { getEmojiData } from "../utils";
 import { emojiSize } from "../config";
 import { isEditElement } from "./isNode";
 
-/** @name 字符串标签转换 */
-export const labelRep = (str: string, reversal?: boolean) => {
+/**
+ * @name 字符串标签转义
+ * @param str 转换的字符串 把：`<h1>` ==> `&lt;h1&gt;`
+ * @param reversal 是否反转回去? 比如：把`&lt;h1&gt;`==> `<h1>`
+ * @returns
+ */
+export const labelRep = (str: string, reversal?: boolean): string => {
   if (!str) return "";
   // 反转回去
   if (reversal) {

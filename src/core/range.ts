@@ -57,15 +57,6 @@ export const setCursorPosition = (referenceNode: Node, type?: "before" | "after"
  * @name 获取文档中用户选择的文本范围（range）对象
  */
 export const getRange = (): IRange | null => {
-  // 光标的信息
-  let currentRange: IRange = {
-    startContainer: null,
-    startOffset: 0,
-    endContainer: null,
-    endOffset: 0,
-    anchorNode: null
-  };
-
   // 获取页面的选择区域
   const selection = window.getSelection();
 
@@ -77,18 +68,17 @@ export const getRange = (): IRange | null => {
   try {
     // 获取光标
     const range = selection.getRangeAt(0);
+
     if (!range) return null;
 
-    currentRange = {
+    return {
       // Range起始节点
       startContainer: range.startContainer || null,
       startOffset: range.startOffset || 0,
       endContainer: range.endContainer || null,
       endOffset: range.endOffset || 0,
       anchorNode: selection.anchorNode
-    };
-
-    return currentRange;
+    } as IRange;
   } catch (err) {
     return null;
   }
