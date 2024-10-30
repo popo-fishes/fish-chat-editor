@@ -15,4 +15,4 @@ export type * from "./types";
 export type * from "./editor";
 export type { IEmitter } from "./editor/emitter";
 
-export const Version = "1.1.2";
+export const Version = "1.1.3";
