@@ -2,9 +2,8 @@
  * @Date: 2024-10-19 13:10:56
  * @Description: Modify here please
  */
-import { base } from "../../core";
+import { base, isNode } from "../../core";
 import type { IEditorElement } from "../../types";
-import { isNode } from "../../core";
 
 /** 获取编辑器中有多少个图片文件（不包含表情） */
 export const getEditImageAmount = (node: IEditorElement): number => {

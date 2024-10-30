@@ -17,8 +17,6 @@ export * as range from "./range";
 
 export * as dom from "./dom";
 
-export * as positions from "./positions";
-
 export * as transforms from "./transforms";
 
 export type { IRange } from "./range";
