@@ -2,7 +2,7 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
+import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo, useEffect } from "react";
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
@@ -14,6 +14,8 @@ import { setEmojiData } from "../../utils";
 import { emoji as defaultEmojiData } from "../../config";
 
 import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
+
+import FishEditor from "../../fish-editor";
 
 const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
@@ -28,6 +30,8 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   const [openEmoji, setOpen] = useState<boolean>(false);
   // 可以点击发送按钮？?
   const [isSend, setSend] = useState<boolean>(false);
+
+  const demoref = useRef(null);
 
   const mergeEmojiList = useMemo(() => {
     // 如果外面传递了表情数据用外面的
@@ -49,6 +53,10 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     setEmojiData(data);
     return data;
   }, [emojiList]);
+
+  useEffect(() => {
+    new FishEditor(demoref.current);
+  }, []);
 
   /** @name 暴露方法 */
   useImperativeHandle(ref, () => {
@@ -106,9 +114,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
 
   return (
     <div className={classNames("fb-chat-editor", restProps.className)}>
-      {/* 功能区 */}
-      <div className="fb-chat-toolbar">
-        {/* 默认工具栏 */}
+      {/* <div className="fb-chat-toolbar">
         <Tooltip
           title="表情包"
           overlayStyle={{ pointerEvents: "none" }}
@@ -126,27 +132,27 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
             }}
           />
         </Tooltip>
-        {/* 可扩展 */}
         {props?.toolbarRender?.()}
-      </div>
+      </div> */}
+      <div ref={demoref}></div>
       {/* 编辑框 */}
-      <Editable
+      {/* <Editable
         placeholder={placeholder}
         ref={editInputRef}
         beforePasteImage={restProps.beforePasteImage}
         onChange={onEditableChange}
         onEnterDown={onEnterDownEvent}
         onClick={onEditableClick}
-      />
+      /> */}
       {/* 发送区 */}
-      <div className="fb-chat-footer">
+      {/* <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
         <button className={classNames("btn-send", isSend && "activate")} onClick={onSubmit}>
           发送
         </button>
-      </div>
+      </div> */}
       {/* 表情选择列表 */}
-      <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
+      {/* <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
             {mergeEmojiList.map((item, index) => (
@@ -164,7 +170,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 });
