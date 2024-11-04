@@ -8,7 +8,7 @@ class Clipboard extends Module {
     super(fishEditor, options);
     this.fishEditor.root.addEventListener("copy", (e) => this.onCaptureCopy(e, false));
     this.fishEditor.root.addEventListener("cut", (e) => this.onCaptureCopy(e, true));
-    // this.fishEditor.root.addEventListener("paste", this.onCapturePaste.bind(this));
+    this.fishEditor.root.addEventListener("paste", this.onCapturePaste.bind(this));
   }
   onCaptureCopy(event: ClipboardEvent, isCut = false) {
     if (event.defaultPrevented) return;
@@ -42,5 +42,6 @@ class Clipboard extends Module {
       document.execCommand("delete", false, undefined);
     }
   }
+  onCapturePaste() {}
 }
 export default Clipboard;
