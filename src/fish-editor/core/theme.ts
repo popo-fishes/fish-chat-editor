@@ -5,7 +5,7 @@
 import type FishEditor from "./fish-editor";
 
 export interface ThemeOptions {
-  modules: Record<string, boolean>;
+  modules: Record<string, unknown>;
 }
 
 class Theme {
@@ -13,10 +13,18 @@ class Theme {
   constructor(
     protected fishEditor: FishEditor,
     protected options: ThemeOptions
-  ) {}
+  ) {
+    this.init();
+  }
 
   init() {
-    Object.keys(this.options.modules).forEach((name) => {
+    const baseModule = {
+      input: {},
+      "other-event": {},
+      uploader: {}
+    };
+
+    Object.keys({ ...this.options.modules, ...baseModule }).forEach((name) => {
       if (this.modules[name] == null) {
         this.addModule(name);
       }
@@ -26,14 +34,9 @@ class Theme {
   addModule(name: string) {
     // @ts-expect-error
     const ModuleClass = this.fishEditor.constructor.import(`modules/${name}`);
-    const value = this.options.modules[name];
-    this.modules[name] = new ModuleClass(this.fishEditor, value === true || !value ? {} : value);
+    this.modules[name] = new ModuleClass(this.fishEditor, this.options.modules[name]);
     return this.modules[name];
   }
-}
-
-export interface ThemeConstructor {
-  new (fishEditor: FishEditor, options: unknown): Theme;
 }
 
 export default Theme;

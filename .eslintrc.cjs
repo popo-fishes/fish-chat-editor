@@ -21,6 +21,7 @@ module.exports = {
     "no-undef": "off", // 不允许使用未定义的变量
 
     "no-mixed-spaces-and-tabs": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     quotes: "off",
     "no-unsafe-optional-chaining": "off",
     "prefer-const": "off",

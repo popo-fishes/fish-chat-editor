@@ -9,9 +9,10 @@ import type { IRange } from "../../core";
 import Emitter from "./emitter";
 import Composition from "./composition";
 import Theme from "./theme";
+import Editor from "./editor";
 
 export interface ExpandedFishEditorOptions {
-  modules: Record<string, boolean>;
+  modules: Record<string, unknown>;
   placeholder: string;
   readOnly: boolean;
 }
@@ -23,14 +24,15 @@ export interface IFishEditorOptions {
    */
   readOnly?: boolean;
   placeholder?: string;
-  modules?: Record<string, boolean>;
+  modules?: Record<string, unknown>;
 }
 
 class FishEditor {
   static DEFAULTS = {
     modules: {
       clipboard: true,
-      keyboard: true
+      keyboard: true,
+      uploader: true
     },
     placeholder: "",
     readOnly: false
@@ -56,7 +58,6 @@ class FishEditor {
       this.imports[path] = target;
     }
   }
-  /** @name 编辑器配置项 */
   options: ExpandedFishEditorOptions;
   /** @name 编辑器最外层容器 */
   container: HTMLElement;
@@ -65,7 +66,7 @@ class FishEditor {
   composition: Composition;
   emitter: Emitter;
   theme: Theme;
-  /** @name 当前选区信息 */
+  editor: Editor;
   rangeInfo: IRange;
   constructor(container: HTMLElement | string, options: IFishEditorOptions = {}) {
     this.container = resolveSelector(container);
@@ -85,27 +86,19 @@ class FishEditor {
     }
     this.container.classList.add("fb-editor-container");
     this.root = this.addContainer("fb-editor");
-    this.init();
+    this.editor = new Editor(this);
     this.emitter = new Emitter();
     this.composition = new Composition(this.root, this.emitter);
 
     this.theme = new Theme(this, this.options);
-    this.theme.addModule("input");
-    this.theme.addModule("other-event");
-    // this.theme.init();
+
     if (this.options.readOnly) {
-      this.disable();
+      this.editor.disable();
     } else {
-      this.enable();
+      this.editor.enable();
     }
   }
-  private init() {
-    if (this.root) {
-      const node = base.createLineElement();
-      dom.toTargetAddNodes(this.root, [node]);
-      this.backupRangePosition(node, 0, true);
-    }
-  }
+
   addContainer(container: string): HTMLDivElement {
     let editor: HTMLDivElement = null;
     if (typeof container === "string") {
@@ -121,11 +114,12 @@ class FishEditor {
     this.container.insertBefore(scroll, null);
     return editor;
   }
-  enable(enabled = true) {
-    this.root.setAttribute("contenteditable", enabled ? "true" : "false");
+  isEnabled() {
+    return this.editor.isEnabled();
   }
-  disable() {
-    this.enable(false);
+
+  getModule(name: string) {
+    return this.theme.modules[name];
   }
 
   off(...args: Parameters<(typeof Emitter)["prototype"]["off"]>) {
@@ -138,7 +132,7 @@ class FishEditor {
     return this.emitter.once(...args);
   }
   /** @name 备份选区的位置 */
-  public backupRangePosition(node: HTMLElement, startOffset: number, isReset?: boolean) {
+  backupRangePosition(node: HTMLElement, startOffset: number, isReset?: boolean) {
     let targetDom = node;
     if (isNode.isEditElement(node) && isReset) {
       targetDom = (node as any).firstChild;
@@ -156,7 +150,7 @@ class FishEditor {
 function expandConfig(options: IFishEditorOptions): ExpandedFishEditorOptions {
   const { modules: moduleDefaults, ...restDefaults } = FishEditor.DEFAULTS;
 
-  const modules: ExpandedFishEditorOptions["modules"] = merge({}, moduleDefaults, options.modules);
+  const modules: ExpandedFishEditorOptions["modules"] = merge({}, expandModuleConfig(moduleDefaults), expandModuleConfig(options.modules));
 
   const config = {
     ...restDefaults,
@@ -169,13 +163,16 @@ function expandConfig(options: IFishEditorOptions): ExpandedFishEditorOptions {
       if (!value) return modulesWithDefaults;
 
       const moduleClass = FishEditor.import(`modules/${name}`);
+
       if (moduleClass == null) {
         console.warn(`无法导入${name}。你确定它已经注册了吗？`);
         return modulesWithDefaults;
       }
+
       return {
         ...modulesWithDefaults,
-        [name]: value
+        // @ts-expect-error
+        [name]: merge({}, moduleClass.DEFAULTS || {}, value)
       };
     }, {})
   };
@@ -185,7 +182,17 @@ function omitUndefinedValuesFromOptions(obj: IFishEditorOptions) {
   return Object.fromEntries(Object.entries(obj).filter((entry) => entry[1] !== undefined));
 }
 
-export function resolveSelector(selector: string | HTMLElement | null | undefined) {
+function expandModuleConfig(config: Record<string, unknown> | undefined) {
+  return Object.entries(config ?? {}).reduce(
+    (expanded, [key, value]) => ({
+      ...expanded,
+      [key]: value === true ? {} : value
+    }),
+    {} as Record<string, unknown>
+  );
+}
+
+function resolveSelector(selector: string | HTMLElement | null | undefined) {
   return typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : selector;
 }
 

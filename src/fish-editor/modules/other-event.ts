@@ -8,7 +8,7 @@ import type FishEditor from "../core/fish-editor";
 import { helper, base, dom, isNode, util, range, transforms } from "../../core";
 
 class OtherEvent extends Module {
-  root: HTMLDivElement;
+  root: (typeof FishEditor)["prototype"]["root"];
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
     super(fishEditor, options);
     this.root = this.fishEditor.root;

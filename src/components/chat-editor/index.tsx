@@ -55,7 +55,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   }, [emojiList]);
 
   useEffect(() => {
-    new FishEditor(demoref.current);
+    new FishEditor(demoref.current, {});
   }, []);
 
   /** @name 暴露方法 */

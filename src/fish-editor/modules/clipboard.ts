@@ -1,9 +1,15 @@
+/*
+ * @Date: 2024-11-04 18:58:37
+ * @Description: Modify here please
+ */
+import isObject from "lodash/isObject";
 import Module from "../core/module";
-import Emitter from "../core/emitter";
+import type Uploader from "./uploader";
 import type FishEditor from "../core/fish-editor";
-import { helper, base, dom, isNode, util, range, transforms } from "../../core";
+import { range, transforms } from "../../core";
 
 class Clipboard extends Module {
+  isPasteLock = false;
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
     super(fishEditor, options);
     this.fishEditor.root.addEventListener("copy", (e) => this.onCaptureCopy(e, false));
@@ -42,6 +48,65 @@ class Clipboard extends Module {
       document.execCommand("delete", false, undefined);
     }
   }
-  onCapturePaste() {}
+  onCapturePaste(e: ClipboardEvent) {
+    if (e.defaultPrevented || !this.fishEditor.isEnabled()) return;
+    e.preventDefault();
+
+    const rangeInfo = range.getRange();
+
+    if (rangeInfo == null || !this.fishEditor.root || this.isPasteLock) return;
+
+    // @ts-expect-error
+    const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
+    const isFile = clp?.types?.includes("Files");
+    const isHtml = clp?.types?.includes("text/html");
+    const isPlain = clp?.types?.includes("text/plain");
+
+    if (isFile) {
+      const files = isObject(clp.files) ? Object.values(clp.files) : clp.files;
+      const vfiles = Array.from(files || []);
+      if (vfiles.length > 0) {
+        const uploader = this.fishEditor.getModule("uploader") as Uploader;
+        this.isPasteLock = true;
+        // @ts-expect-error
+        uploader.upload(rangeInfo, vfiles, (success) => {
+          if (success) {
+            //  updateValue();
+          }
+          this.isPasteLock = false;
+        });
+        return;
+      }
+    }
+
+    if ((isHtml || isPlain) && !isFile) {
+      const content = clp.getData("text/plain");
+
+      if (!content) {
+        return;
+      }
+
+      if (range.isSelected()) {
+        // 后续可以拓展删除节点方法，先原生的
+        document.execCommand("delete", false, undefined);
+      }
+
+      this.isPasteLock = true;
+
+      {
+        this.fishEditor.editor.insertText(
+          content,
+          rangeInfo,
+          (success) => {
+            if (success) {
+              // updateValue();
+            }
+            this.isPasteLock = false;
+          },
+          true
+        );
+      }
+    }
+  }
 }
 export default Clipboard;
