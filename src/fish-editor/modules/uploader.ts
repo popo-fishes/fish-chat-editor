@@ -1,6 +1,6 @@
 import isFunction from "lodash/isFunction";
 import isArray from "lodash/isArray";
-import { isNode, base, type IRange, range } from "../../core";
+import { isNode, base, type IRange, range } from "../utils";
 import type FishEditor from "../core/fish-editor";
 import store from "../core/store";
 import Module from "../core/module.js";

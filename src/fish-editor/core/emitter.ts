@@ -18,6 +18,7 @@ export interface IEmitter {
 class Emitter {
   static events = {
     EDITOR_CHANGE: "editor-change",
+    EDITOR_ENTER_DOWN: "editor-enter-down",
     COMPOSITION_START: "composition-start",
     COMPOSITION_END: "composition-end"
   } as const;
@@ -50,10 +51,9 @@ class Emitter {
    */
   emit(type: string, ...args: Array<any>) {
     const sub = this.subscribes.get(type) || [];
-    const context = this;
 
     sub.forEach(({ fn }) => {
-      fn.call(context, ...args);
+      fn.call(this, ...args);
     });
 
     const newSub = sub.filter((item) => !item.once);

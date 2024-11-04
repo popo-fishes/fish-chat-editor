@@ -2,8 +2,8 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../../core";
-import type { IRange } from "../../core";
+import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../utils";
+import type { IRange } from "../utils";
 import type FishEditor from "./fish-editor";
 
 class Editor {

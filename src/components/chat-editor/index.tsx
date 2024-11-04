@@ -114,7 +114,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
 
   return (
     <div className={classNames("fb-chat-editor", restProps.className)}>
-      {/* <div className="fb-chat-toolbar">
+      <div className="fb-chat-toolbar">
         <Tooltip
           title="表情包"
           overlayStyle={{ pointerEvents: "none" }}
@@ -133,7 +133,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
           />
         </Tooltip>
         {props?.toolbarRender?.()}
-      </div> */}
+      </div>
       <div ref={demoref}></div>
       {/* 编辑框 */}
       {/* <Editable
@@ -152,7 +152,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
         </button>
       </div> */}
       {/* 表情选择列表 */}
-      {/* <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
+      <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
             {mergeEmojiList.map((item, index) => (
@@ -170,7 +170,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
             ))}
           </div>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 });

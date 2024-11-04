@@ -6,7 +6,7 @@ import isObject from "lodash/isObject";
 import Module from "../core/module";
 import type Uploader from "./uploader";
 import type FishEditor from "../core/fish-editor";
-import { range, transforms } from "../../core";
+import { range, transforms } from "../utils";
 
 class Clipboard extends Module {
   isPasteLock = false;

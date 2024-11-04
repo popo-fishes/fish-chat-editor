@@ -3,8 +3,8 @@
  * @LastEditors: Please set LastEditors
  */
 import merge from "lodash/merge";
-import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../../core";
-import type { IRange } from "../../core";
+import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../utils";
+import type { IRange } from "../utils";
 
 import Emitter from "./emitter";
 import Composition from "./composition";

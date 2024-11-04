@@ -7,12 +7,14 @@ import Input from "./modules/input";
 import OtherEvent from "./modules/other-event";
 import Clipboard from "./modules/clipboard";
 import Uploader from "./modules/uploader";
+import Keyboard from "./modules/keyboard";
 
 FishEditor.register({
   "modules/input": Input,
   "modules/other-event": OtherEvent,
   "modules/clipboard": Clipboard,
-  "modules/uploader": Uploader
+  "modules/uploader": Uploader,
+  "modules/keyboard": Keyboard
 });
 
 export default FishEditor;

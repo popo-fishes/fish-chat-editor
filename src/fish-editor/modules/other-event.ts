@@ -5,7 +5,7 @@
 import Module from "../core/module";
 import type FishEditor from "../core/fish-editor";
 
-import { helper, base, dom, isNode, util, range, transforms } from "../../core";
+import { helper, base, dom, isNode, util, range, transforms } from "../utils";
 
 class OtherEvent extends Module {
   root: (typeof FishEditor)["prototype"]["root"];
@@ -19,6 +19,7 @@ class OtherEvent extends Module {
       e.preventDefault();
       this.onClick(e);
     });
+    this.root.addEventListener("blur", this.onBlur.bind(this));
 
     this.root.addEventListener("drop", (e) => {
       // 禁用拖放操作, 如果拖动编辑器内的图片，会导致吧图片的地址输入到 富文本中
@@ -32,6 +33,20 @@ class OtherEvent extends Module {
       // 禁止鼠标右键
       e.preventDefault();
     });
+  }
+
+  /** @name 失去焦点 */
+  onBlur(e: FocusEvent) {
+    const rangeInfo = range.getRange();
+    // console.log(rangeInfo);
+    if (rangeInfo) {
+      this.fishEditor.backupRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
+    }
+    // 如果有选中
+    if (range.isSelected()) {
+      // 清除选定对象的所有光标对象
+      range?.removeAllRanges();
+    }
   }
 
   /** @name 点击编辑器事件（点击时） */

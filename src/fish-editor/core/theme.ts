@@ -19,6 +19,8 @@ class Theme {
 
   init() {
     const baseModule = {
+      clipboard: {},
+      keyboard: {},
       input: {},
       "other-event": {},
       uploader: {}
