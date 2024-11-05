@@ -4,8 +4,8 @@
  */
 import { useRef, useState } from "react";
 // 正式使用时应该：
-// import FbChatEditor, { IChatEditorRef } from "fish-chat-editor";
-import FbChatEditor, { IChatEditorRef, IEditorInstance } from "../../src";
+// import FbChatEditor, { type IChatEditorRef, type FishEditor } from "fish-chat-editor";
+import FbChatEditor, { type IChatEditorRef, type FishEditor } from "../../src";
 import "./App.css";
 
 function App() {
@@ -13,13 +13,13 @@ function App() {
   const editorRef = useRef<IChatEditorRef>(null);
 
   // 发送文本消息
-  const onSend = async (editor: IEditorInstance) => {
+  const onSend = async (editor: FishEditor["editor"]) => {
     const html = editor.getSemanticHTML();
     console.log(html);
     // 清空输入框
-    editorRef.current?.clear();
+    // editorRef.current?.clear();
 
-    editorRef.current?.focus();
+    // editorRef.current?.focus();
   };
 
   return (
@@ -36,9 +36,10 @@ function App() {
           onEnterDown={onSend}
           onSend={onSend}
           ref={editorRef}
-          onChange={(editor) => {
+          onChange={(editor: FishEditor["editor"]) => {
             const html = editor.getProtoHTML();
             // const text = editor.getText();
+            console.log(html);
             setHtml(html);
           }}
         />

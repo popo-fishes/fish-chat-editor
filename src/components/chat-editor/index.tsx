@@ -11,15 +11,13 @@ import { useClickAway } from "../../hooks";
 import { setEmojiData } from "../../utils";
 import { emoji as defaultEmojiData } from "../../config";
 
-import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
+import type { IChatEditorProps, IChatEditorRef, IEmojiType } from "../../types";
 
 import FishEditor from "../../fish-editor";
 
 const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
-  const { placeholder, onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
-  // 编辑器控制器
-  const editInputRef = useRef<IEditableRef>(null);
+  const { onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
   // 表情的弹窗
   const modalRef = useRef<HTMLDivElement>(null);
   // 触发器
@@ -54,17 +52,53 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   }, [emojiList]);
 
   useEffect(() => {
-    fishEditor.current = new FishEditor(demoref.current, {});
+    fishEditor.current = new FishEditor(demoref.current, {
+      placeholder: restProps.placeholder,
+      modules: {
+        uploader: {
+          beforeUpload: restProps.beforePasteImage || null
+        }
+      }
+    });
+    return () => {
+      fishEditor.current?.destroy();
+      fishEditor.current = null;
+    };
   }, []);
+
+  /** @name 富文本值变化时 */
+  const onEditableChange = (fishEditor: FishEditor) => {
+    setSend(!fishEditor.isEmpty());
+    onChange?.(fishEditor.editor);
+  };
+
+  useEffect(() => {
+    fishEditor.current.on(FishEditor.events.EDITOR_CHANGE, onEditableChange);
+    return () => {
+      fishEditor.current.off(FishEditor.events.EDITOR_CHANGE, onEditableChange);
+    };
+  }, []);
+
+  /** @name 点击回车事件 */
+  const onEnterDownEvent = (fishEditor: FishEditor) => {
+    if (!isSend) return;
+    onEnterDown?.(fishEditor.editor);
+  };
+
+  useEffect(() => {
+    fishEditor.current.on(FishEditor.events.EDITOR_ENTER_DOWN, onEnterDownEvent);
+    return () => {
+      fishEditor.current.off(FishEditor.events.EDITOR_ENTER_DOWN, onEnterDownEvent);
+    };
+  }, [isSend, onEnterDown]);
 
   /** @name 暴露方法 */
   useImperativeHandle(ref, () => {
     return {
-      ...editInputRef.current
-      /**
-       *  额外的部分
-       *  ...
-       */
+      clear: () => fishEditor.current?.clear(),
+      focus: () => fishEditor.current?.focus(),
+      blur: () => fishEditor.current?.blur(),
+      fishEditor
     };
   });
 
@@ -76,43 +110,19 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   /** @name 点击外面元素隐藏弹窗 */
   useClickAway(closeEmojiPop, [modalRef, emotionTarget]);
 
-  /** @name 点击回车事件 */
-  const onEnterDownEvent = useCallback(
-    (fishEditor: FishEditor) => {
-      if (!isSend) return;
-      onEnterDown?.(fishEditor);
-    },
-    [onEnterDown, isSend]
-  );
-
-  /** @name 富文本值变化时 */
-  const onEditableChange = useCallback(
-    (fishEditor: FishEditor) => {
-      setSend(!fishEditor.editor.isEmpty());
-      onChange?.(fishEditor);
-    },
-    [onChange]
-  );
-
-  /** @name 点击富文本时 */
-  const onEditableClick = useCallback(() => {
-    // 关闭菜单
-    setOpen(false);
-  }, []);
-
   /** @name 发送消息 */
   const onSubmit = useCallback(() => {
     // 没有输入值
     if (!isSend) return;
     if (fishEditor?.current) {
       // 发送消息
-      onSend?.(fishEditor.current);
+      onSend?.(fishEditor.current.editor);
     }
   }, [onSend, isSend]);
 
   return (
     <div className={classNames("fb-chat-editor", restProps.className)}>
-      {/* <div className="fb-chat-toolbar">
+      <div className="fb-chat-toolbar">
         <Tooltip
           title="表情包"
           overlayStyle={{ pointerEvents: "none" }}
@@ -130,19 +140,18 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
             }}
           />
         </Tooltip>
-        {props?.toolbarRender?.()}
-      </div> */}
-      {/* 编辑框 */}
+        {restProps?.toolbarRender?.()}
+      </div>
+
       <div ref={demoref}></div>
 
-      {/* 发送区 */}
-      {/* <div className="fb-chat-footer">
+      <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
         <button className={classNames("btn-send", isSend && "activate")} onClick={onSubmit}>
           发送
         </button>
-      </div> */}
-      {/* 表情选择列表 */}
+      </div>
+
       <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
@@ -153,7 +162,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
                 key={`emoji-item-${index}`}
                 onClick={() => {
                   setOpen(false);
-                  editInputRef.current?.insertEmoji(item);
+                  fishEditor.current?.insertEmoji(item);
                 }}
               >
                 <Image src={item.url} preview={false} width={22} height={22} />

@@ -2,10 +2,8 @@
  * @Date: 2024-3-14 15:40:27
  * @Description: file content
  */
-import type { ReactNode, MutableRefObject } from "react";
-import type { IEditorInstance } from "../editor";
-
-export type IEditorElement = HTMLElement;
+import type { ReactNode } from "react";
+import type { default as FishEditor } from "../fish-editor";
 
 export type IEmojiType = {
   /** 表情的url地址 */
@@ -17,54 +15,29 @@ export type IEmojiType = {
 };
 
 /** 聊天组件的ref */
-export interface IChatEditorRef extends IEditableRef {}
+export interface IChatEditorRef {
+  focus: () => void;
+  clear: () => void;
+  blur: () => void;
+  fishEditor: React.MutableRefObject<FishEditor>;
+}
 
 /** 聊天组件的props */
-export interface IChatEditorProps extends Omit<IEditableProps, "onClick"> {
+export interface IChatEditorProps {
   /** 扩展类名 */
   className?: string;
   /** 表情列表数据 */
   emojiList?: IEmojiType[];
+  /** 提示占位符 */
+  placeholder?: string;
   /** 自定义工具栏内容 */
   toolbarRender?: () => ReactNode;
   /** 点击发送按钮事件 */
-  onSend?: (editor: IEditorInstance) => void;
-}
-
-/** 编辑器ref */
-export interface IEditableRef {
-  /**
-   * editor
-   */
-  editor: MutableRefObject<IEditorInstance | null>;
-  /**
-   * @添加表情方法
-   */
-  insertEmoji: (item: IEmojiType) => void;
-  /**
-   * @清空编辑器内容
-   */
-  clear: () => void;
-  /**
-   * @获取焦点
-   */
-  focus: () => void;
-  /**
-   * @失去焦点
-   */
-  blur: () => void;
-}
-
-/** 编辑器Props */
-export interface IEditableProps {
-  /** 提示占位符 */
-  placeholder?: string;
-  /** 编辑器点击事件 */
-  onClick?: () => void;
+  onSend?: (editor: FishEditor["editor"]) => void;
   /** 编辑器键盘回车事件 */
-  onEnterDown?: (editor: IEditorInstance) => void;
+  onEnterDown?: (editor: FishEditor["editor"]) => void;
   /** 编辑器内容变化时的回调 */
-  onChange?: (editor: IEditorInstance) => void;
+  onChange?: (editor: FishEditor["editor"]) => void;
   /**
    * 粘贴图片之前的钩子, 参数为粘贴的文件，若返回为空数组则停止粘贴，若返回为文件数组则继续处理
    * @param files 粘贴的文件数组

@@ -158,13 +158,26 @@ class FishEditor {
   getModule(name: string) {
     return this.theme.modules[name];
   }
+  clear() {
+    this.editor.clear();
+  }
+  blur() {
+    this.editor.blur();
+  }
+  focus() {
+    this.editor.focus();
+  }
+  setText(value: string) {
+    return this.editor.setText(value);
+  }
+  isEmpty() {
+    return this.editor.isEmpty();
+  }
 
   off(...args: Parameters<(typeof Emitter)["prototype"]["off"]>) {
     return this.emitter.off(...args);
   }
-  on(...args: Parameters<(typeof Emitter)["prototype"]["on"]>) {
-    return this.emitter.on(...args);
-  }
+  on(...args: Parameters<(typeof Emitter)["prototype"]["on"]>) {}
   once(...args: Parameters<(typeof Emitter)["prototype"]["once"]>) {
     return this.emitter.once(...args);
   }
