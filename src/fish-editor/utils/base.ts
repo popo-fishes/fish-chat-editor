@@ -52,9 +52,6 @@ export const prefixNmae = "fb-e-";
 /** 零宽度非换行空格 */
 export const zeroWidthNoBreakSpace = "\u200B";
 
-/** 保存图片的base64 map数据 */
-export const editorImageBase64Map: Map<string, string> = new Map();
-
 /** @name 获取编辑器节点属性key */
 export const getElementAttributeKey = (name: keyof typeof elementAttributeData) => {
   return elementAttributeData[name]?.key || "";

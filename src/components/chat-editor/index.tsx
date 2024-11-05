@@ -2,24 +2,22 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
+import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo, useEffect } from "react";
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
-import Editable from "../editable";
 import { useClickAway } from "../../hooks";
-import type { IEditorInstance } from "../../editor";
 
 import { setEmojiData } from "../../utils";
 import { emoji as defaultEmojiData } from "../../config";
 
-import type { IChatEditorProps, IChatEditorRef, IEditableRef, IEmojiType } from "../../types";
+import type { IChatEditorProps, IChatEditorRef, IEmojiType } from "../../types";
+
+import FishEditor from "../../fish-editor";
 
 const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   // 解析值
-  const { placeholder, onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
-  // 编辑器控制器
-  const editInputRef = useRef<IEditableRef>(null);
+  const { onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
   // 表情的弹窗
   const modalRef = useRef<HTMLDivElement>(null);
   // 触发器
@@ -28,6 +26,9 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   const [openEmoji, setOpen] = useState<boolean>(false);
   // 可以点击发送按钮？?
   const [isSend, setSend] = useState<boolean>(false);
+
+  const fishEditor = useRef<FishEditor>(null);
+  const demoref = useRef<HTMLDivElement>(null);
 
   const mergeEmojiList = useMemo(() => {
     // 如果外面传递了表情数据用外面的
@@ -50,14 +51,56 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     return data;
   }, [emojiList]);
 
+  useEffect(() => {
+    fishEditor.current = new FishEditor(demoref.current, {
+      placeholder: restProps.placeholder,
+      modules: {
+        uploader: {
+          beforeUpload: restProps.beforePasteImage || null
+        }
+      }
+    });
+    return () => {
+      if (fishEditor.current == null) return;
+      fishEditor.current.destroy();
+      fishEditor.current = null;
+    };
+  }, []);
+
+  /** @name 富文本值变化时 */
+  const onEditableChange = (fishEditor: FishEditor) => {
+    setSend(!fishEditor.isEmpty());
+    onChange?.(fishEditor.editor);
+  };
+
+  useEffect(() => {
+    fishEditor.current.on(FishEditor.events.EDITOR_CHANGE, onEditableChange);
+    return () => {
+      fishEditor.current.off(FishEditor.events.EDITOR_CHANGE, onEditableChange);
+    };
+  }, []);
+
+  /** @name 点击回车事件 */
+  const onEnterDownEvent = (fishEditor: FishEditor) => {
+    if (!isSend) return;
+    onEnterDown?.(fishEditor.editor);
+  };
+
+  useEffect(() => {
+    fishEditor.current.on(FishEditor.events.EDITOR_ENTER_DOWN, onEnterDownEvent);
+    return () => {
+      fishEditor.current.off(FishEditor.events.EDITOR_ENTER_DOWN, onEnterDownEvent);
+    };
+  }, [isSend, onEnterDown]);
+
   /** @name 暴露方法 */
   useImperativeHandle(ref, () => {
     return {
-      ...editInputRef.current
-      /**
-       *  额外的部分
-       *  ...
-       */
+      clear: () => fishEditor.current?.clear(),
+      focus: () => fishEditor.current?.focus(),
+      blur: () => fishEditor.current?.blur(),
+      setText: (value: string) => fishEditor.current?.setText(value),
+      fishEditor
     };
   });
 
@@ -69,46 +112,19 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   /** @name 点击外面元素隐藏弹窗 */
   useClickAway(closeEmojiPop, [modalRef, emotionTarget]);
 
-  /** @name 点击回车事件 */
-  const onEnterDownEvent = useCallback(
-    (editor: IEditorInstance) => {
-      if (!isSend) return;
-      onEnterDown?.(editor);
-    },
-    [onEnterDown, isSend]
-  );
-
-  /** @name 富文本值变化时 */
-  const onEditableChange = useCallback(
-    (editor: IEditorInstance) => {
-      setSend(!editor.isEmpty());
-      onChange?.(editor);
-    },
-    [onChange]
-  );
-
-  /** @name 点击富文本时 */
-  const onEditableClick = useCallback(() => {
-    // 关闭菜单
-    setOpen(false);
-  }, []);
-
   /** @name 发送消息 */
   const onSubmit = useCallback(() => {
     // 没有输入值
     if (!isSend) return;
-    const editor = editInputRef.current?.editor;
-    if (editor?.current) {
+    if (fishEditor?.current) {
       // 发送消息
-      onSend?.(editor.current);
+      onSend?.(fishEditor.current.editor);
     }
   }, [onSend, isSend]);
 
   return (
     <div className={classNames("fb-chat-editor", restProps.className)}>
-      {/* 功能区 */}
       <div className="fb-chat-toolbar">
-        {/* 默认工具栏 */}
         <Tooltip
           title="表情包"
           overlayStyle={{ pointerEvents: "none" }}
@@ -126,26 +142,18 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
             }}
           />
         </Tooltip>
-        {/* 可扩展 */}
-        {props?.toolbarRender?.()}
+        {restProps?.toolbarRender?.()}
       </div>
-      {/* 编辑框 */}
-      <Editable
-        placeholder={placeholder}
-        ref={editInputRef}
-        beforePasteImage={restProps.beforePasteImage}
-        onChange={onEditableChange}
-        onEnterDown={onEnterDownEvent}
-        onClick={onEditableClick}
-      />
-      {/* 发送区 */}
+
+      <div ref={demoref}></div>
+
       <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
         <button className={classNames("btn-send", isSend && "activate")} onClick={onSubmit}>
           发送
         </button>
       </div>
-      {/* 表情选择列表 */}
+
       <div className="fb-chat-emote-pop" ref={modalRef} style={{ display: openEmoji ? "block" : "none" }}>
         <div className="emoji-panel-scroller">
           <div className="emoji-container">
@@ -156,7 +164,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
                 key={`emoji-item-${index}`}
                 onClick={() => {
                   setOpen(false);
-                  editInputRef.current?.insertEmoji(item);
+                  fishEditor.current?.insertEmoji(item);
                 }}
               >
                 <Image src={item.url} preview={false} width={22} height={22} />

@@ -2,117 +2,34 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../core";
-import type { IRange } from "../core";
-import { hasEditorExistInlineNode, getCloneEditeElements, removeBodyChild, resolveSelector } from "./util";
-
-export interface IEditorInterface {
-  /**
-   * @name 判断编辑器是否空内容
-   * @desc 仅存在换行or输入空格，都算是空内容
-   */
-  isEmpty: () => boolean;
-  /**
-   * @name 判断编辑器是否空节点
-   * @desc 存在换行or输入空格，都算是有内容
-   * @desc 仅存在一个“<p><br></p>”代表是空。
-   */
-  isEditorEmptyNode: () => boolean;
-  /** @name 获取编辑器的纯文本内容 */
-  getText: () => string;
-  /**
-   * @name 获取编辑器内容的语义HTML
-   * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
-   * @returns 返回一个html标签字符串
-   */
-  getSemanticHTML: () => string;
-  /**
-   * @name 获取编辑器内容的原始HTML，主要用于判断值场景 or 富文本内部使用
-   * @desc 它不会转换img图片的src，还是blob格式
-   * @returns 返回一个html标签字符串
-   */
-  getProtoHTML: () => string;
-  /**
-   * @name 在选区插入文本
-   * @param contentText 内容
-   * @param range 光标信息
-   * @param callBack 回调（success?）=> void
-   * @param showCursor 插入成功后是否需要设置光标
-   */
-  insertText: (contentText: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean) => void;
-  /**
-   * @name 在目标位置插入节点（目前是图片）
-   * @param nodes 节点集合
-   * @param range 光标信息
-   * @param callBack 回调（success?）=> void
-   * @returns
-   */
-  insertNode: (nodes: HTMLElement[], range: IRange, callBack?: (success: boolean) => void) => void;
-  /** @name 获取行数 */
-  getLine: () => number;
-  /** @name 检索编辑器内容的长度，不包含图片 */
-  getLength: () => number;
-  /** @name 设置编辑器文本, 注意它不会覆盖编辑器内容，而是追加内容 */
-  setText: (content: string) => void;
-  /** @name 清空编辑器内容 */
-  clear: () => void;
-  /** @name 失去焦点 */
-  blur: () => void;
-  /** @name 获取焦点 */
-  focus: () => void;
-}
-
-export interface IEditorOptions {
-  onChange?: () => void;
-}
+import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../utils";
+import type { IRange } from "../utils";
+import type FishEditor from "./fish-editor";
+import Emitter from "../core/emitter";
 
 class Editor {
-  /** @name 编辑器配置项 */
-  options: IEditorOptions;
-  /** @name 编辑器容器 */
+  /** @name 编辑器节点 */
   container: HTMLElement;
-  /** @name 当前选区信息 */
-  rangeInfo: IRange;
-  constructor(container: HTMLElement | string, options: IEditorOptions = {}) {
-    this.container = resolveSelector(container);
-    this.options = options;
-    // 选区信息
-    this.rangeInfo = {
-      startContainer: null,
-      startOffset: 0,
-      endContainer: null,
-      endOffset: 0,
-      anchorNode: null
-    };
+  constructor(protected fishEditor: FishEditor) {
+    this.container = fishEditor.root;
+    this.init();
+  }
 
-    if (this.container == null) {
-      console.error("Invalid Editor container", container);
-      return;
-    }
-
+  private init() {
     if (this.container) {
-      this.createEditor();
+      const node = base.createLineElement();
+      dom.toTargetAddNodes(this.container, [node]);
+      this.fishEditor.backupRangePosition(node, 0, true);
     }
   }
-  private createEditor() {
-    const node = base.createLineElement();
-    dom.toTargetAddNodes(this.container, [node]);
-    this.backupRangePosition(node, 0, true);
+  enable(enabled = true) {
+    this.container.setAttribute("contenteditable", enabled ? "true" : "false");
   }
-  /** @name 备份选区的位置 */
-  public backupRangePosition(node: HTMLElement, startOffset: number, isReset?: boolean) {
-    let targetDom = node;
-    if (isNode.isEditElement(node) && isReset) {
-      targetDom = (node as any).firstChild;
-    }
-    this.rangeInfo = {
-      startContainer: targetDom,
-      startOffset: startOffset || 0,
-      endContainer: targetDom,
-      endOffset: 0,
-      anchorNode: targetDom
-    };
+
+  isEnabled() {
+    return this.container.getAttribute("contenteditable") === "true";
   }
+
   /**
    * @name 判断编辑器是否空内容
    * @desc 仅存在换行or输入空格，都算是空内容
@@ -430,7 +347,7 @@ class Editor {
           rangeInfo,
           (success) => {
             if (success) {
-              this.options?.onChange?.();
+              this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
               this.blur();
             }
           },
@@ -446,8 +363,8 @@ class Editor {
     dom.toTargetAddNodes(this.container, [node]);
     this.setCursorEditorLast((targetNode) => {
       if (targetNode) {
+        this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
         this.blur();
-        this.options?.onChange?.();
       }
     });
   }
@@ -507,6 +424,47 @@ class Editor {
 
     return;
   };
+}
+
+/**
+ * @name 传入编辑器，判断是否存在内联块属性节点
+ */
+function hasEditorExistInlineNode(node: HTMLElement): boolean {
+  if (isNode.isEditInline(node)) {
+    return true;
+  }
+  for (let i = 0; i < node.childNodes.length; i++) {
+    if (hasEditorExistInlineNode(node.childNodes[i] as HTMLElement)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** @name 获取克隆编辑器的行节点 */
+function getCloneEditeElements(): HTMLDivElement | null {
+  if (!this.container || !isNode.isDOMNode(this.container)) return null;
+
+  const contentNode = this.container.cloneNode(true);
+
+  const odiv = document.createElement("div");
+
+  for (const childNode of Array.from(contentNode.childNodes)) {
+    odiv.appendChild(childNode as Node);
+  }
+
+  odiv.setAttribute("hidden", "true");
+
+  contentNode.ownerDocument.body.appendChild(odiv);
+
+  return odiv;
+}
+
+function removeBodyChild(node: HTMLElement) {
+  if (document.body) {
+    // 移除节点
+    document.body.removeChild(node);
+  }
 }
 
 export type IEditorInstance = InstanceType<typeof Editor>;

@@ -3,9 +3,10 @@
  * @Description: Modify here please
  */
 import { base, isNode } from ".";
-import { getEmojiData } from "../utils";
-import { emojiSize } from "../config";
+import { getEmojiData } from "../../utils";
+import { emojiSize } from "../../config";
 import { isEditElement } from "./isNode";
+import store from "../core/store";
 
 /**
  * @name 字符串标签转义
@@ -163,7 +164,7 @@ export const handleEditTransformsSemanticHtml = (node: HTMLElement): string => {
           if (isNode.isImageNode(cimg as HTMLElement)) {
             const blobUrl = (cimg as HTMLImageElement).src;
             if (blobUrl.includes(`blob:http://`) || blobUrl.includes(`blob:https://`)) {
-              const base64 = base.editorImageBase64Map.get(blobUrl);
+              const base64 = store.editorImageBase64Map.get(blobUrl);
               if (base64) {
                 (cimg as HTMLImageElement).src = base64;
               }

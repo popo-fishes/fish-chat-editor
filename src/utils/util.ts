@@ -5,7 +5,7 @@
  */
 import type { IEmojiType } from "../types";
 
-import { transforms, dom } from "../core";
+import { transforms, dom } from "../fish-editor/utils";
 
 let globalEmojiList: IEmojiType[] = [];
 /**
