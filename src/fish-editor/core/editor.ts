@@ -25,9 +25,7 @@ class Editor {
   enable(enabled = true) {
     this.container.setAttribute("contenteditable", enabled ? "true" : "false");
   }
-  disable() {
-    this.enable(false);
-  }
+
   isEnabled() {
     return this.container.getAttribute("contenteditable") === "true";
   }

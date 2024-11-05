@@ -10,8 +10,8 @@ import Uploader from "./modules/uploader";
 import Keyboard from "./modules/keyboard";
 
 export { labelRep } from "./utils/transforms";
-
 export { default as Emitter } from "./core/emitter";
+
 export type { IEmitter } from "./core/emitter";
 
 FishEditor.register({

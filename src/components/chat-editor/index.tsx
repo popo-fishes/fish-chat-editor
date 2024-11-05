@@ -98,6 +98,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
       clear: () => fishEditor.current?.clear(),
       focus: () => fishEditor.current?.focus(),
       blur: () => fishEditor.current?.blur(),
+      setText: (value: string) => fishEditor.current?.setText(value),
       fishEditor
     };
   });

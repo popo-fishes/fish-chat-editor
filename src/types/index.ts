@@ -19,6 +19,7 @@ export interface IChatEditorRef {
   focus: () => void;
   clear: () => void;
   blur: () => void;
+  setText: (v: string) => void;
   fishEditor: React.MutableRefObject<FishEditor>;
 }
 

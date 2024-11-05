@@ -121,9 +121,9 @@ class FishEditor {
     });
 
     if (this.options.readOnly) {
-      this.editor.disable();
+      this.disable();
     } else {
-      this.editor.enable();
+      this.enable();
     }
   }
 
@@ -155,6 +155,13 @@ class FishEditor {
     return this.editor.isEnabled();
   }
 
+  disable() {
+    this.editor.enable(false);
+  }
+  enable() {
+    this.editor.enable();
+  }
+
   getModule(name: string) {
     return this.theme.modules[name];
   }
@@ -177,7 +184,9 @@ class FishEditor {
   off(...args: Parameters<(typeof Emitter)["prototype"]["off"]>) {
     return this.emitter.off(...args);
   }
-  on(...args: Parameters<(typeof Emitter)["prototype"]["on"]>) {}
+  on(...args: Parameters<(typeof Emitter)["prototype"]["on"]>) {
+    return this.emitter.on(...args);
+  }
   once(...args: Parameters<(typeof Emitter)["prototype"]["once"]>) {
     return this.emitter.once(...args);
   }
@@ -206,33 +215,32 @@ class FishEditor {
 
   /** @name 插入表情图片 */
   insertEmoji(item: IEmojiType) {
-    if (this.editor) {
-      // 创建
-      const imgNode = base.createChunkEmojiElement(item.url, emojiSize, item.name);
+    if (!this.editor) return;
+    // 创建
+    const imgNode = base.createChunkEmojiElement(item.url, emojiSize, item.name);
 
-      const currentRange = this.rangeInfo;
+    const currentRange = this.rangeInfo;
 
-      const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
+    const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
 
-      if (!editorElementNode) {
-        this.editor.setCursorEditorLast((rowNode) => {
-          if (rowNode) {
-            const rangeInfo = range.getRange();
-            this.editor.insertNode([imgNode], rangeInfo, (success) => {
-              if (success) {
-                this.emit(Emitter.events.EDITOR_CHANGE, this);
-              }
-            });
-          }
-        });
-        return;
-      } else {
-        this.editor.insertNode([imgNode], currentRange, (success) => {
-          if (success) {
-            this.emit(Emitter.events.EDITOR_CHANGE, this);
-          }
-        });
-      }
+    if (!editorElementNode) {
+      this.editor.setCursorEditorLast((rowNode) => {
+        if (rowNode) {
+          const rangeInfo = range.getRange();
+          this.editor.insertNode([imgNode], rangeInfo, (success) => {
+            if (success) {
+              this.emit(Emitter.events.EDITOR_CHANGE, this);
+            }
+          });
+        }
+      });
+      return;
+    } else {
+      this.editor.insertNode([imgNode], currentRange, (success) => {
+        if (success) {
+          this.emit(Emitter.events.EDITOR_CHANGE, this);
+        }
+      });
     }
   }
 
