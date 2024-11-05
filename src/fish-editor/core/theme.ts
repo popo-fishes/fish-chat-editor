@@ -3,6 +3,9 @@
  * @Description: Modify here please
  */
 import type FishEditor from "./fish-editor";
+import type Clipboard from "../modules/clipboard";
+import type Uploader from "../modules/uploader";
+import type Keyboard from "../modules/keyboard";
 
 export interface ThemeOptions {
   modules: Record<string, unknown>;
@@ -18,21 +21,16 @@ class Theme {
   }
 
   init() {
-    const baseModule = {
-      clipboard: {},
-      keyboard: {},
-      input: {},
-      "other-event": {},
-      uploader: {}
-    };
-
-    Object.keys({ ...this.options.modules, ...baseModule }).forEach((name) => {
+    Object.keys({ ...this.options.modules }).forEach((name) => {
       if (this.modules[name] == null) {
         this.addModule(name);
       }
     });
   }
-
+  addModule(name: "clipboard"): Clipboard;
+  addModule(name: "keyboard"): Keyboard;
+  addModule(name: "uploader"): Uploader;
+  addModule(name: string): unknown;
   addModule(name: string) {
     // @ts-expect-error
     const ModuleClass = this.fishEditor.constructor.import(`modules/${name}`);

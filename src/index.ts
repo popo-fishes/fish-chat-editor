@@ -7,12 +7,9 @@ export { useClickAway } from "./hooks";
 
 export { replaceMsgText } from "./utils";
 
-export { labelRep } from "./core/transforms";
-
-export { default as Emitter } from "./editor/emitter";
+export { labelRep, Emitter } from "./fish-editor";
+export type { IEmitter } from "./fish-editor";
 
 export type * from "./types";
-export type * from "./editor";
-export type { IEmitter } from "./editor/emitter";
 
-export const Version = "1.1.3";
+export const Version = "1.2.0";

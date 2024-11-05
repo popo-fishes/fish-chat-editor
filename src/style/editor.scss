@@ -5,6 +5,9 @@
   background-color: #fff;
   flex: 1;
   position: relative;
+  &.is-placeholder-visible .fb-placeholder {
+    display: block;
+  }
 }
 
 .fb-editor-scroll {
@@ -55,6 +58,7 @@
   color: #8f959e;
   cursor: text;
   font-style: italic;
+  display: none;
   font-size: 14px;
   left: 0;
   top: -1px;

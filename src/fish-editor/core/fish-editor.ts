@@ -3,13 +3,16 @@
  * @LastEditors: Please set LastEditors
  */
 import merge from "lodash/merge";
-import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../utils";
+import { helper, base, dom, isNode, util, range, transforms } from "../utils";
 import type { IRange } from "../utils";
-
+import type { IEmojiType } from "../../types";
+import { emojiSize } from "../../config";
 import Emitter from "./emitter";
 import Composition from "./composition";
 import Theme from "./theme";
 import Editor from "./editor";
+import store from "./store";
+import { removeEditorImageBse64Map } from "./helper";
 
 export interface ExpandedFishEditorOptions {
   modules: Record<string, unknown>;
@@ -34,7 +37,7 @@ class FishEditor {
       keyboard: true,
       uploader: true
     },
-    placeholder: "",
+    placeholder: "请输入内容",
     readOnly: false
   } satisfies Partial<IFishEditorOptions>;
   static events = Emitter.events;
@@ -68,9 +71,11 @@ class FishEditor {
   theme: Theme;
   editor: Editor;
   rangeInfo: IRange;
+  isDestroyed: boolean;
   constructor(container: HTMLElement | string, options: IFishEditorOptions = {}) {
     this.container = resolveSelector(container);
     this.options = expandConfig(options);
+    this.isDestroyed = false;
     // 选区信息
     this.rangeInfo = {
       startContainer: null,
@@ -84,13 +89,36 @@ class FishEditor {
       console.error("Invalid Editor container", container);
       return;
     }
-    this.container.classList.add("fb-editor-container");
-    this.root = this.addContainer("fb-editor");
+    // add instance
+    store.instances.set(this.container, this);
+    // add root dom
+    this.root = this.addContainer();
     this.editor = new Editor(this);
     this.emitter = new Emitter();
     this.composition = new Composition(this.root, this.emitter);
-
     this.theme = new Theme(this, this.options);
+    this.theme.addModule("keyboard");
+    this.theme.addModule("clipboard");
+    this.theme.addModule("other-event");
+    this.theme.addModule("uploader");
+    this.theme.addModule("input");
+    this.theme.init();
+
+    this.emitter.on(Emitter.events.EDITOR_CHANGE, ({ editor }) => {
+      // console.log(editor);
+      const hasEmpty = (editor as Editor).isEditorEmptyNode();
+      this.container.classList.toggle("is-placeholder-visible", hasEmpty);
+      // 将 removeEditorImageBse64Map 包装成Promise异步执行
+      return new Promise((resolve, reject) => {
+        removeEditorImageBse64Map(hasEmpty, this.root)
+          .then(() => {
+            resolve(true);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    });
 
     if (this.options.readOnly) {
       this.editor.disable();
@@ -99,21 +127,30 @@ class FishEditor {
     }
   }
 
-  addContainer(container: string): HTMLDivElement {
-    let editor: HTMLDivElement = null;
-    if (typeof container === "string") {
-      const className = container;
-      editor = document.createElement("div");
-      editor.classList.add(className);
-      editor.setAttribute("data-fish-editor", "true");
-      editor.setAttribute("spellCheck", "false");
+  addContainer(): HTMLDivElement {
+    this.container.classList.add(...["fb-editor-container", "is-placeholder-visible"]);
+
+    // add editor dom
+    let editorDom = document.createElement("div");
+    editorDom.classList.add("fb-editor");
+    editorDom.setAttribute("data-fish-editor", "true");
+    editorDom.setAttribute("spellCheck", "false");
+
+    // add scroll dom
+    const scrollDom = document.createElement("div");
+    scrollDom.classList.add("fb-editor-scroll");
+    dom.toTargetAddNodes(scrollDom, [editorDom], false);
+
+    // add placeholder dom
+    const placeholderDom = document.createElement("div");
+    placeholderDom.classList.add("fb-placeholder");
+    if (this.options.placeholder) {
+      placeholderDom.innerHTML = this.options.placeholder;
     }
-    const scroll = document.createElement("div");
-    scroll.classList.add("fb-editor-scroll");
-    scroll.insertBefore(editor, null);
-    this.container.insertBefore(scroll, null);
-    return editor;
+    dom.toTargetAddNodes(this.container, [scrollDom, placeholderDom], false);
+    return editorDom;
   }
+
   isEnabled() {
     return this.editor.isEnabled();
   }
@@ -131,6 +168,14 @@ class FishEditor {
   once(...args: Parameters<(typeof Emitter)["prototype"]["once"]>) {
     return this.emitter.once(...args);
   }
+  /**
+   * @name 不要使用，它是内部方法
+   * @param args
+   * @returns
+   */
+  emit(...args: Parameters<(typeof Emitter)["prototype"]["emit"]>) {
+    return this.emitter.emit(...args);
+  }
   /** @name 备份选区的位置 */
   backupRangePosition(node: HTMLElement, startOffset: number, isReset?: boolean) {
     let targetDom = node;
@@ -144,6 +189,47 @@ class FishEditor {
       endOffset: 0,
       anchorNode: targetDom
     };
+  }
+
+  /** @name 插入表情图片 */
+  insertEmoji(item: IEmojiType) {
+    if (this.editor) {
+      // 创建
+      const imgNode = base.createChunkEmojiElement(item.url, emojiSize, item.name);
+
+      const currentRange = this.rangeInfo;
+
+      const editorElementNode = util.getNodeOfEditorElementNode(currentRange.startContainer);
+
+      if (!editorElementNode) {
+        this.editor.setCursorEditorLast((rowNode) => {
+          if (rowNode) {
+            const rangeInfo = range.getRange();
+            this.editor.insertNode([imgNode], rangeInfo, (success) => {
+              if (success) {
+                this.emit(Emitter.events.EDITOR_CHANGE, this);
+              }
+            });
+          }
+        });
+        return;
+      } else {
+        this.editor.insertNode([imgNode], currentRange, (success) => {
+          if (success) {
+            this.emit(Emitter.events.EDITOR_CHANGE, this);
+          }
+        });
+      }
+    }
+  }
+
+  destroy() {
+    if (this.isDestroyed) return;
+    this.root?.remove();
+    this.container?.remove();
+    this.isDestroyed = true;
+    // 触发自定义事件
+    this.emit("destroyed");
   }
 }
 

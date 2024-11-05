@@ -12,7 +12,7 @@ class Input extends Module {
     fishEditor.root.addEventListener("input", this.handleInput.bind(this));
   }
   private handleComposition() {
-    this.fishEditor.emitter.on(Emitter.events.COMPOSITION_END, () => {
+    this.fishEditor.on(Emitter.events.COMPOSITION_END, () => {
       this.handleInput();
     });
   }
@@ -23,7 +23,7 @@ class Input extends Module {
      */
     if (this.fishEditor.composition.isComposing) return;
 
-    // updateValue();
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
   }
   private handleBeforeInput(event: InputEvent) {
     // 后面会做很多逻辑

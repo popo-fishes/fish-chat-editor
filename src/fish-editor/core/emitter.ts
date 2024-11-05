@@ -58,6 +58,11 @@ class Emitter {
 
     const newSub = sub.filter((item) => !item.once);
     this.subscribes.set(type, newSub);
+
+    // editor 销毁时，off 掉 destroyed listeners
+    if (type === "destroyed") {
+      this.subscribes.clear();
+    }
   }
 
   /**

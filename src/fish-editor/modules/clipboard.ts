@@ -4,6 +4,7 @@
  */
 import isObject from "lodash/isObject";
 import Module from "../core/module";
+import Emitter from "../core/emitter";
 import type Uploader from "./uploader";
 import type FishEditor from "../core/fish-editor";
 import { range, transforms } from "../utils";
@@ -71,7 +72,7 @@ class Clipboard extends Module {
         // @ts-expect-error
         uploader.upload(rangeInfo, vfiles, (success) => {
           if (success) {
-            //  updateValue();
+            this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
           }
           this.isPasteLock = false;
         });
@@ -99,7 +100,7 @@ class Clipboard extends Module {
           rangeInfo,
           (success) => {
             if (success) {
-              // updateValue();
+              this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
             }
             this.isPasteLock = false;
           },

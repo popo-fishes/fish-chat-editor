@@ -26,7 +26,7 @@ class Keyboard extends Module {
         // 插入换行符
         this.handleLineFeed((success) => {
           if (success) {
-            // updateValue();
+            this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
           }
           this.isLineFeedLock = false;
         });
@@ -37,7 +37,7 @@ class Keyboard extends Module {
         // Enter发生消息
         evt.preventDefault();
         evt.stopPropagation();
-        this.fishEditor.emitter.emit(Emitter.events.EDITOR_ENTER_DOWN, this.fishEditor.editor);
+        this.fishEditor.emit(Emitter.events.EDITOR_ENTER_DOWN, this.fishEditor);
         return;
       }
 

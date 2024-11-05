@@ -1,4 +1,4 @@
-import Emitter from "./emitter.js";
+import Emitter from "./emitter";
 
 class Composition {
   isComposing = false;
@@ -25,13 +25,13 @@ class Composition {
   }
 
   private handleCompositionStart(event: CompositionEvent) {
-    this.emitter.emit(Emitter.events.COMPOSITION_START, event);
     this.isComposing = true;
+    this.emitter.emit(Emitter.events.COMPOSITION_START, event);
   }
 
   private handleCompositionEnd(event: CompositionEvent) {
-    this.emitter.emit(Emitter.events.COMPOSITION_END, event);
     this.isComposing = false;
+    this.emitter.emit(Emitter.events.COMPOSITION_END, event);
   }
 }
 

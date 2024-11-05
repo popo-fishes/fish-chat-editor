@@ -6,9 +6,7 @@ import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo
 import classNames from "classnames";
 
 import { Tooltip, Image } from "antd";
-import Editable from "../editable";
 import { useClickAway } from "../../hooks";
-import type { IEditorInstance } from "../../editor";
 
 import { setEmojiData } from "../../utils";
 import { emoji as defaultEmojiData } from "../../config";
@@ -31,7 +29,8 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   // 可以点击发送按钮？?
   const [isSend, setSend] = useState<boolean>(false);
 
-  const demoref = useRef(null);
+  const fishEditor = useRef<FishEditor>(null);
+  const demoref = useRef<HTMLDivElement>(null);
 
   const mergeEmojiList = useMemo(() => {
     // 如果外面传递了表情数据用外面的
@@ -55,7 +54,7 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   }, [emojiList]);
 
   useEffect(() => {
-    new FishEditor(demoref.current, {});
+    fishEditor.current = new FishEditor(demoref.current, {});
   }, []);
 
   /** @name 暴露方法 */
@@ -79,18 +78,18 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
 
   /** @name 点击回车事件 */
   const onEnterDownEvent = useCallback(
-    (editor: IEditorInstance) => {
+    (fishEditor: FishEditor) => {
       if (!isSend) return;
-      onEnterDown?.(editor);
+      onEnterDown?.(fishEditor);
     },
     [onEnterDown, isSend]
   );
 
   /** @name 富文本值变化时 */
   const onEditableChange = useCallback(
-    (editor: IEditorInstance) => {
-      setSend(!editor.isEmpty());
-      onChange?.(editor);
+    (fishEditor: FishEditor) => {
+      setSend(!fishEditor.editor.isEmpty());
+      onChange?.(fishEditor);
     },
     [onChange]
   );
@@ -105,16 +104,15 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   const onSubmit = useCallback(() => {
     // 没有输入值
     if (!isSend) return;
-    const editor = editInputRef.current?.editor;
-    if (editor?.current) {
+    if (fishEditor?.current) {
       // 发送消息
-      onSend?.(editor.current);
+      onSend?.(fishEditor.current);
     }
   }, [onSend, isSend]);
 
   return (
     <div className={classNames("fb-chat-editor", restProps.className)}>
-      <div className="fb-chat-toolbar">
+      {/* <div className="fb-chat-toolbar">
         <Tooltip
           title="表情包"
           overlayStyle={{ pointerEvents: "none" }}
@@ -133,17 +131,10 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
           />
         </Tooltip>
         {props?.toolbarRender?.()}
-      </div>
-      <div ref={demoref}></div>
+      </div> */}
       {/* 编辑框 */}
-      {/* <Editable
-        placeholder={placeholder}
-        ref={editInputRef}
-        beforePasteImage={restProps.beforePasteImage}
-        onChange={onEditableChange}
-        onEnterDown={onEnterDownEvent}
-        onClick={onEditableClick}
-      /> */}
+      <div ref={demoref}></div>
+
       {/* 发送区 */}
       {/* <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>

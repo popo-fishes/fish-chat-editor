@@ -5,6 +5,7 @@
 import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../utils";
 import type { IRange } from "../utils";
 import type FishEditor from "./fish-editor";
+import Emitter from "../core/emitter";
 
 class Editor {
   /** @name 编辑器节点 */
@@ -348,6 +349,7 @@ class Editor {
           rangeInfo,
           (success) => {
             if (success) {
+              this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
               this.blur();
             }
           },
@@ -363,8 +365,8 @@ class Editor {
     dom.toTargetAddNodes(this.container, [node]);
     this.setCursorEditorLast((targetNode) => {
       if (targetNode) {
+        this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
         this.blur();
-        this.options?.onChange?.();
       }
     });
   }
