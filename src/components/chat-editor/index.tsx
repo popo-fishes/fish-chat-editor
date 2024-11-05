@@ -61,7 +61,8 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
       }
     });
     return () => {
-      fishEditor.current?.destroy();
+      if (fishEditor.current == null) return;
+      fishEditor.current.destroy();
       fishEditor.current = null;
     };
   }, []);
