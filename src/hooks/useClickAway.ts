@@ -2,7 +2,7 @@
  * @Date: 2024-03-27 14:11:27
  * @Description: Modify here please
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import type { MutableRefObject } from "react";
 // 定义默认事件 鼠标click
 const defaultEvent = "click";
@@ -51,9 +51,10 @@ export default function useClickAway(
   capture: boolean = true
 ) {
   const onClickAwayRef = useRef(onClickAway);
+  onClickAwayRef.current = onClickAway;
 
-  useEffect(() => {
-    const handler = (event: any) => {
+  const handler = useCallback(
+    (event: any) => {
       const targetArray = Array.isArray(target) ? target : [target];
       if (
         targetArray.some((item) => {
@@ -67,15 +68,20 @@ export default function useClickAway(
       }
 
       onClickAwayRef.current(event);
-    };
+    },
+    [target]
+  );
 
+  useEffect(() => {
     document.addEventListener(eventName, handler, {
       passive: true,
       capture
     });
     // 删除事件委托，避免内存泄漏
     return () => {
-      document.removeEventListener(eventName, handler);
+      document.removeEventListener(eventName, handler, {
+        capture: capture
+      });
     };
-  }, [eventName, target]);
+  }, [eventName, capture, handler]);
 }

@@ -74,9 +74,10 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   };
 
   useEffect(() => {
+    if (!fishEditor.current) return;
     fishEditor.current.on(FishEditor.events.EDITOR_CHANGE, onEditableChange);
     return () => {
-      fishEditor.current.off(FishEditor.events.EDITOR_CHANGE, onEditableChange);
+      fishEditor.current?.off(FishEditor.events.EDITOR_CHANGE, onEditableChange);
     };
   }, []);
 
@@ -87,9 +88,10 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   };
 
   useEffect(() => {
+    if (!fishEditor.current) return;
     fishEditor.current.on(FishEditor.events.EDITOR_ENTER_DOWN, onEnterDownEvent);
     return () => {
-      fishEditor.current.off(FishEditor.events.EDITOR_ENTER_DOWN, onEnterDownEvent);
+      fishEditor.current?.off(FishEditor.events.EDITOR_ENTER_DOWN, onEnterDownEvent);
     };
   }, [isSend, onEnterDown]);
 
