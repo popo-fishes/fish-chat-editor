@@ -37,7 +37,7 @@ function App() {
           onChange={(editor: FishEditor["editor"]) => {
             const html = editor.getProtoHTML();
             // const text = editor.getText();
-            console.log(html);
+            // console.log(html);
             setHtml(html);
           }}
         />
@@ -59,7 +59,7 @@ function App() {
       <div style={{ marginTop: "20px" }}>
         <textarea className="editor-textarea-view" readOnly value={html} />
       </div>
-      <div className="editor-content-view" dangerouslySetInnerHTML={{ __html: html }} />
+      {html && html !== "<p><br></p>" && <div className="editor-content-view" dangerouslySetInnerHTML={{ __html: html }} />}
     </>
   );
 }

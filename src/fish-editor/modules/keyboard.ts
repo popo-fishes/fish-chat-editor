@@ -1,3 +1,4 @@
+import throttle from "lodash/throttle";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type FishEditor from "../core/fish-editor";
@@ -5,6 +6,10 @@ import { range as fishRange, transforms, util, dom, base, isNode } from "../util
 
 class Keyboard extends Module {
   isLineFeedLock = false;
+  emitThrottled = throttle(() => {
+    // 300 毫秒的节流间隔，可以根据需要调整
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+  }, 300);
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
     super(fishEditor, options);
     this.listen();
@@ -26,7 +31,9 @@ class Keyboard extends Module {
         // 插入换行符
         this.handleLineFeed((success) => {
           if (success) {
-            this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+            Promise.resolve().then(() => {
+              this.emitThrottled();
+            });
           }
           this.isLineFeedLock = false;
         });
