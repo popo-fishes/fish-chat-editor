@@ -37,7 +37,7 @@ function App() {
           onChange={(editor: FishEditor["editor"]) => {
             const html = editor.getProtoHTML();
             // const text = editor.getText();
-            console.log(html);
+            // console.log(html);
             setHtml(html);
           }}
         />
