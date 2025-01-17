@@ -125,6 +125,8 @@ class FishEditor {
     } else {
       this.enable();
     }
+
+    this.setHtml("<p>hello <span style='color: rgb(231, 95, 51)'>editor</span></p>");
   }
 
   addContainer(): HTMLDivElement {
@@ -176,6 +178,17 @@ class FishEditor {
   }
   setText(value: string) {
     return this.editor.setText(value);
+  }
+  /** @name editor.getHtml() 获取非格式化的 html */
+  getHtml() {
+    return this.editor.getProtoHTML();
+  }
+  /**
+   * @name 设置html
+   * @desc 重置编辑器的 HTML 内容。【注意】只能解析 editor.getProtoHTML() 返回的 HTML 格式，不支持自定义 HTML 格式。
+   */
+  setHtml(value: string) {
+    this.editor.setHtml(value);
   }
   isEmpty() {
     return this.editor.isEmpty();

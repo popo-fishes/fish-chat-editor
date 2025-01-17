@@ -3,6 +3,7 @@
  * @Description: Modify here please
  */
 import throttle from "lodash/throttle";
+import { range as fishRange, transforms, util, dom, base, isNode } from "../utils";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type FishEditor from "../core/fish-editor";
@@ -34,7 +35,8 @@ class Input extends Module {
     this.emitThrottled();
   }
   private handleBeforeInput(event: InputEvent) {
-    // 后面会做很多逻辑
+    const rangeInfo = fishRange.getRange();
+    // console.log(event, rangeInfo);
   }
 }
 

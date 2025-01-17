@@ -160,7 +160,7 @@ export const createChunkImgElement = (url: string): HTMLSpanElement => {
   } else {
     const node = new Image();
     node.src = url || null;
-    node.id = `${prefixNmae}image` + helper.generateRandomString();
+    node.id = `${prefixNmae}image-` + helper.generateRandomString();
     node.classList.add(`${prefixNmae}image`);
 
     const fishInlineKey = getElementAttributeKey("fishInline");
@@ -172,6 +172,19 @@ export const createChunkImgElement = (url: string): HTMLSpanElement => {
 
     return node;
   }
+};
+
+/**
+ * @name 创建一个编辑器内联节点
+ */
+export const createInlineChunkElement = (): HTMLSpanElement => {
+  // 创建一个图片容器节点，这种的方式需要自己去处理合并行时的场景太复杂了
+  const container = document.createElement("span");
+  container.id = `${prefixNmae}leaf-` + helper.generateRandomString();
+  // 标记为内联块节点
+  const fishInlineKey = getElementAttributeKey("fishInline");
+  container.setAttribute(fishInlineKey, "true");
+  return container;
 };
 
 /**

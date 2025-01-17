@@ -19,4 +19,6 @@ export * as dom from "./dom";
 
 export * as transforms from "./transforms";
 
+export * as split from "./split";
+
 export type { IRange } from "./range";

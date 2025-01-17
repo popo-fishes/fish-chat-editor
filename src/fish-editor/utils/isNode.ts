@@ -61,6 +61,7 @@ export const isEditInline = (node: HTMLElement): boolean => {
     }
     return false;
   }
+  return false;
 };
 
 /** @name 判断是否为一个图片属性节点，不包含表情图 */

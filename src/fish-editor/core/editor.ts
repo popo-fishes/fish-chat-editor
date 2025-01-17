@@ -2,7 +2,8 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../utils";
+import cloneDeep from "lodash/cloneDeep";
+import { helper, base, dom, isNode, util, range as fishRange, transforms, split } from "../utils";
 import type { IRange } from "../utils";
 import type FishEditor from "./fish-editor";
 import Emitter from "../core/emitter";
@@ -112,7 +113,9 @@ class Editor {
    * @param showCursor 插入成功后是否需要设置光标
    */
   public insertText(contentText: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean): void {
-    if (!contentText || !range) {
+    let cloneRange = cloneDeep(range) as IRange;
+
+    if (!contentText || !cloneRange) {
       callBack?.(false);
       return;
     }
@@ -122,7 +125,7 @@ class Editor {
     };
 
     // 获取光标的行编辑节点
-    const rowElementNode: HTMLElement = util.getNodeOfEditorElementNode(range.startContainer);
+    const rowElementNode: HTMLElement = util.getNodeOfEditorElementNode(cloneRange.startContainer);
 
     if (!rowElementNode) {
       console.warn("无编辑行节点，不可插入");
@@ -132,7 +135,17 @@ class Editor {
 
     console.time("editor插入内容耗时");
 
-    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
+    // 如果当前节点是一个内联块编辑节点，就需要先分割它
+    if (util.getNodeOfEditorInlineNode(cloneRange.startContainer)) {
+      const result = split.splitInlineNode(cloneRange);
+      cloneRange.startContainer = result.parentNode;
+      cloneRange.anchorNode = result.parentNode;
+      cloneRange.startOffset = result.startOffset;
+    }
+
+    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(cloneRange);
+
+    // console.log(behindNodeList, nextNodeList);
 
     /** 处理内容插入 */
     {
@@ -264,14 +277,14 @@ class Editor {
    */
   public insertNode(nodes: HTMLElement[], range: IRange, callBack?: (success: boolean) => void): void {
     if (!nodes || nodes?.length == 0) return callBack?.(false);
-
+    let cloneRange = cloneDeep(range) as IRange;
     // 不存在光标
-    if (!range) {
+    if (!cloneRange) {
       callBack?.(false);
       return;
     }
 
-    const rowElementNode: any = util.getNodeOfEditorElementNode(range.startContainer);
+    const rowElementNode: any = util.getNodeOfEditorElementNode(cloneRange.startContainer);
 
     if (!rowElementNode) {
       console.warn("无编辑行节点，不可插入");
@@ -280,14 +293,19 @@ class Editor {
     }
     console.time("editor插入节点耗时");
 
-    // 获取光标位置的元素节点 前面的节点 和 后面的节点
-    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
-
-    if (nodes.length == 0) {
-      console.timeEnd("editor插入节点耗时");
-      callBack?.(false);
-      return;
+    // 如果当前节点是一个内联块编辑节点，就需要先分割它
+    if (util.getNodeOfEditorInlineNode(cloneRange.startContainer)) {
+      const result = split.splitInlineNode(cloneRange);
+      cloneRange.startContainer = result.parentNode;
+      cloneRange.anchorNode = result.parentNode;
+      cloneRange.startOffset = result.startOffset;
     }
+
+    // console.log(cloneRange);
+
+    // 获取光标位置的元素节点 前面的节点 和 后面的节点
+    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(cloneRange);
+    // console.log(behindNodeList, nextNodeList);
 
     /** 处理内容 */
     {
@@ -311,16 +329,6 @@ class Editor {
       if (isNode.isDOMElement(referenceNode)) {
         referenceNode?.scrollIntoView({ block: "end", inline: "end" });
         fishRange.setCursorPosition(referenceNode, "after");
-        callBack?.(true);
-        return;
-      } else {
-        const scrollNode = nodes[nodes.length - 2];
-        /**
-         * bug4:
-         * 插入一个内联节点，基本要在节点的后面插入一个文本，解决光标非常高的问题。
-         */
-        fishRange.setCursorPosition(referenceNode, null, 1);
-        scrollNode?.scrollIntoView({ block: "end", inline: "end" });
         callBack?.(true);
         return;
       }
@@ -355,6 +363,53 @@ class Editor {
         );
       }
     });
+  }
+  /**
+   * @name 设置html
+   * @desc 重置编辑器的 HTML 内容。【注意】只能解析 editor.getProtoHTML() 返回的 HTML 格式，不支持自定义 HTML 格式。
+   */
+  public setHtml(html: string) {
+    if (!html) return;
+    // 创建一个临时的 DOM 元素来解析 HTML 字符串
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    // 获取所有的 <p> 元素
+    const pElements = tempDiv.querySelectorAll("p");
+
+    const nodes = Array.from(pElements);
+
+    if (nodes.length == 0) return [];
+
+    const newNode = [];
+    // nodes
+    for (let i = 0; i < nodes.length; i++) {
+      const lineDom = base.createLineElement(true);
+      const pldNode = nodes[i];
+      for (let c = 0; c < pldNode.childNodes.length; c++) {
+        const cldNode = pldNode.childNodes[c] as any;
+        if (isNode.isDOMText(cldNode)) {
+          const textNode = dom.cloneNodes([cldNode])[0];
+          if (textNode) {
+            lineDom.appendChild(textNode);
+          }
+        }
+        if (cldNode.nodeName == "SPAN") {
+          if (cldNode.style.color) {
+            const dom_sapn = base.createInlineChunkElement();
+            dom_sapn.innerText = cldNode.innerText;
+            dom_sapn.style.color = cldNode.style.color;
+            lineDom.appendChild(dom_sapn);
+          } else {
+            const textNode = document.createTextNode(cldNode.innerText || "");
+            lineDom.appendChild(textNode);
+          }
+        }
+      }
+      newNode.push(lineDom);
+    }
+    dom.toTargetAddNodes(this.container, newNode);
+
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
   }
   /** @name 清空编辑器内容 */
   public clear() {

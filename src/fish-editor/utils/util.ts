@@ -21,11 +21,11 @@ export const getNodeOfEditorElementNode = (node: any, level = 0): HTMLElement | 
 };
 
 /**
- * @name 传入一个节点--获取内联块属性节点，如果没有，最多找3级父节点
+ * @name 传入一个节点--获取内联块属性节点，如果没有，最多找2级父节点
  * @returns 如果是内联块属性节点就返回，不是就返回空
  */
 export const getNodeOfEditorInlineNode = (node: any, level = 0): HTMLElement | null => {
-  if (!node || !node?.parentNode || level >= 3) {
+  if (!node || !node?.parentNode || level >= 2) {
     return null; // 如果节点没有父节点，则返回 null
   }
 

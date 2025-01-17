@@ -127,7 +127,13 @@ export const getEditElementContent = (node: HTMLElement): string => {
 
   if (isNode.isDOMElement(node)) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      content += getEditElementContent((node as any).childNodes[i]);
+      if (isNode.isEditInline(node) && !isNode.isEmojiImgNode(node) && !isNode.isImageNode(node)) {
+        const dom_span = (node as any).childNodes[i].parentNode;
+        // console.log(dom_span);
+        content += `<span style="color: ${node.style.color}">${dom_span.innerText}</span>`;
+      } else {
+        content += getEditElementContent((node as any).childNodes[i]);
+      }
     }
 
     if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {

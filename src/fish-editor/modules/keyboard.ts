@@ -2,7 +2,7 @@ import throttle from "lodash/throttle";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type FishEditor from "../core/fish-editor";
-import { range as fishRange, transforms, util, dom, base, isNode } from "../utils";
+import { range as fishRange, split, util, dom, base, isNode } from "../utils";
 
 class Keyboard extends Module {
   isLineFeedLock = false;
@@ -86,7 +86,7 @@ class Keyboard extends Module {
   }
 
   handleLineFeed(callBack: (success: boolean) => void) {
-    const rangeInfo = fishRange.getRange();
+    let rangeInfo = fishRange.getRange();
     // 不存在 光标
     if (!rangeInfo) return callBack(false);
 
@@ -105,8 +105,6 @@ class Keyboard extends Module {
 
     console.time("editor插入换行耗时");
 
-    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(rangeInfo);
-
     /**
      * 创建换行节点
      * @dec 把之前的节点放到需要换行的节点后面
@@ -119,6 +117,16 @@ class Keyboard extends Module {
       return callBack(false);
     }
 
+    // 如果当前节点是一个内联块编辑节点，就需要先分割它
+    if (util.getNodeOfEditorInlineNode(rangeInfo.startContainer)) {
+      const result = split.splitInlineNode(rangeInfo);
+      rangeInfo.startContainer = result.parentNode;
+      rangeInfo.anchorNode = result.parentNode;
+      rangeInfo.startOffset = result.startOffset;
+    }
+
+    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(rangeInfo);
+    // console.log(behindNodeList, nextNodeList);
     /**
      * 把后面的节点放到换行节点的 文本节点中
      */
@@ -231,11 +239,18 @@ function transformsEditNodes() {
       const nodes: any[] = Array.from(editorRowNode.childNodes);
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as any;
-
+        // console.log(isNode.isEditInline(node), node);
         const isFlag = !isNode.isEditInline(node) && node.nodeName == "SPAN";
         if (isFlag) {
-          const textNode = document.createTextNode(node.textContent || "");
-          node.parentNode?.replaceChild(textNode, node);
+          if (node.style.color) {
+            const dom_sapn = base.createInlineChunkElement();
+            dom_sapn.innerText = node.innerText;
+            dom_sapn.style.color = node.style.color;
+            node.parentNode?.replaceChild(dom_sapn, node);
+          } else {
+            const textNode = document.createTextNode(node.textContent || "");
+            node.parentNode?.replaceChild(textNode, node);
+          }
         }
 
         if (hasTransparentBackgroundColor(node) && isNode.isEditInline(node)) {

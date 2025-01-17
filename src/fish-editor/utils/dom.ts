@@ -4,7 +4,7 @@
  */
 import { isNode, util } from ".";
 import type { IRange } from "./range";
-const { isDOMText, isDOMElement, isDOMNode, isEditElement, isNodeNotTtxt } = isNode;
+const { isDOMText, isDOMElement, isDOMNode, isNodeNotTtxt } = isNode;
 
 /**
  * @name 获取节点的 前面全部兄弟节点 和后面全部兄弟节点
@@ -161,7 +161,7 @@ export const getRangeAroundNode = (range: IRange) => {
 
   /** 处理节点类型 */
   if (isDOMElement(targetNode)) {
-    //  只读属性返回选区开始位置所属的节点
+    // 只读属性返回选区开始位置所属的节点
     const anchorNode = range.anchorNode;
     /**
      * 不能使用selection.anchorOffset，Safari 浏览器会不准确
@@ -186,16 +186,6 @@ export const getRangeAroundNode = (range: IRange) => {
         nextNodeList = [...nNode];
       }
     }
-    /**
-     * 如果光标节点是一个编辑块节点
-     * 这种情况呢，需要再找出父节点的前后 兄弟节点
-     */
-    // console.log(behindNodeList, nextNodeList);
-    if (!isEditElement(anchorNode as HTMLElement)) {
-      const [pNode, nNode] = getDomPreviousOrnextSibling(anchorNode);
-      behindNodeList.push(...pNode);
-      nextNodeList.push(...nNode);
-    }
   }
 
   /** 处理文本类型 */
@@ -219,17 +209,6 @@ export const getRangeAroundNode = (range: IRange) => {
     nextNodeList = afterNode ? [afterNode, ...nNode] : [...nNode];
 
     // console.log(behindNodeList, nextNodeList, afterNode);
-    /**
-     * 如果光标节点是一个编辑文本节点
-     * 这种情况呢，需要再找出父节点的前后 兄弟节点
-     */
-    const parentElement = targetNode.parentNode;
-
-    if (!isEditElement(parentElement)) {
-      const [pNode, nNode] = getDomPreviousOrnextSibling(parentElement);
-      behindNodeList.push(...pNode);
-      nextNodeList.push(...nNode);
-    }
   }
 
   /**
