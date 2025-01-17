@@ -2,6 +2,7 @@
  * @Date: 2024-11-04 18:58:37
  * @Description: Modify here please
  */
+import throttle from "lodash/throttle";
 import isObject from "lodash/isObject";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
@@ -11,12 +12,18 @@ import { range, transforms } from "../utils";
 
 class Clipboard extends Module {
   isPasteLock = false;
+
+  emitThrottled = throttle(() => {
+    // 300 毫秒的节流间隔，可以根据需要调整
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+  }, 300);
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
     super(fishEditor, options);
     this.fishEditor.root.addEventListener("copy", (e) => this.onCaptureCopy(e, false));
     this.fishEditor.root.addEventListener("cut", (e) => this.onCaptureCopy(e, true));
     this.fishEditor.root.addEventListener("paste", this.onCapturePaste.bind(this));
   }
+
   onCaptureCopy(event: ClipboardEvent, isCut = false) {
     if (event.defaultPrevented) return;
     event.preventDefault();
@@ -72,7 +79,9 @@ class Clipboard extends Module {
         // @ts-expect-error
         uploader.upload(rangeInfo, vfiles, (success) => {
           if (success) {
-            this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+            Promise.resolve().then(() => {
+              this.emitThrottled();
+            });
           }
           this.isPasteLock = false;
         });
@@ -100,7 +109,9 @@ class Clipboard extends Module {
           rangeInfo,
           (success) => {
             if (success) {
-              this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+              Promise.resolve().then(() => {
+                this.emitThrottled();
+              });
             }
             this.isPasteLock = false;
           },

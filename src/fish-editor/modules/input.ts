@@ -1,8 +1,17 @@
+/*
+ * @Date: 2024-11-05 09:00:23
+ * @Description: Modify here please
+ */
+import throttle from "lodash/throttle";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type FishEditor from "../core/fish-editor";
 
 class Input extends Module {
+  emitThrottled = throttle(() => {
+    // 300 毫秒的节流间隔，可以根据需要调整
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+  }, 300);
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
     super(fishEditor, options);
     this.handleComposition();
@@ -22,8 +31,7 @@ class Input extends Module {
      * isLock变量状态有问题，这里先注释掉，不判断了，直接变化值，就去暴露值
      */
     if (this.fishEditor.composition.isComposing) return;
-
-    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+    this.emitThrottled();
   }
   private handleBeforeInput(event: InputEvent) {
     // 后面会做很多逻辑
