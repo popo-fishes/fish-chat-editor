@@ -59,7 +59,7 @@ function App() {
       <div style={{ marginTop: "20px" }}>
         <textarea className="editor-textarea-view" readOnly value={html} />
       </div>
-      <div className="editor-content-view" dangerouslySetInnerHTML={{ __html: html }} />
+      {html && html !== "<p><br></p>" && <div className="editor-content-view" dangerouslySetInnerHTML={{ __html: html }} />}
     </>
   );
 }
