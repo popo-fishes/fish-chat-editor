@@ -126,7 +126,7 @@ class FishEditor {
       this.enable();
     }
 
-    this.setHtml("<p>hello <span style='color: rgb(231, 95, 51)'>editor</span></p>");
+    this.setHtml("<p>hello <span style='color: rgb(231, 95, 51)'>editor</span><strong>word</strong></p>");
   }
 
   addContainer(): HTMLDivElement {

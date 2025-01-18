@@ -21,4 +21,6 @@ export * as transforms from "./transforms";
 
 export * as split from "./split";
 
+export * as formats from "./formats";
+
 export type { IRange } from "./range";

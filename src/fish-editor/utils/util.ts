@@ -4,10 +4,10 @@
  */
 import { isNode } from ".";
 
-const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditInline, isEditElement } = isNode;
+const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditTextNode, isEditInline, isEditElement } = isNode;
 
 /**
- * @name 传入一个节点--获取行属性节点，如果没有，最多找5级父节点
+ * @name 传入一个节点--获取编辑器行--属性节点，如果没有，最多找5级父节点
  * @returns 如果是行属性节点就返回，不是就返回空
  */
 export const getNodeOfEditorElementNode = (node: any, level = 0): HTMLElement | null => {
@@ -21,17 +21,17 @@ export const getNodeOfEditorElementNode = (node: any, level = 0): HTMLElement | 
 };
 
 /**
- * @name 传入一个节点--获取内联块属性节点，如果没有，最多找2级父节点
- * @returns 如果是内联块属性节点就返回，不是就返回空
+ * @name 传入一个节点--获取编辑器行的文本节点，如果没有，最多找2级父节点
+ * @returns 如果是编辑器行的文本节点就返回，不是就返回空
  */
-export const getNodeOfEditorInlineNode = (node: any, level = 0): HTMLElement | null => {
+export const getNodeOfEditorTextNode = (node: any, level = 0): HTMLElement | null => {
   if (!node || !node?.parentNode || level >= 2) {
     return null; // 如果节点没有父节点，则返回 null
   }
 
-  if (isEditInline(node)) return node;
+  if (isEditTextNode(node)) return node;
 
-  return getNodeOfEditorInlineNode(node.parentNode, level + 1);
+  return getNodeOfEditorTextNode(node.parentNode, level + 1);
 };
 
 /**

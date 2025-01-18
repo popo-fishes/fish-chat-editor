@@ -1,4 +1,4 @@
-import { base, dom, util, type IRange } from ".";
+import { base, dom, util, isNode, type IRange } from ".";
 
 function getNodeIndex(node) {
   if (!node.parentNode) return -1;
@@ -9,8 +9,9 @@ function getNodeIndex(node) {
  * @name 分割内联块节点
  * @returns 返回分割节点在数组中的索引
  */
-export const splitInlineNode = (range: IRange): { target: HTMLElement | null; parentNode: HTMLElement | null; startOffset: number | null } => {
-  const targetElementNode = util.getNodeOfEditorInlineNode(range.startContainer);
+export const splitEditInlineNode = (range: IRange): { target: HTMLElement | null; parentNode: HTMLElement | null; startOffset: number | null } => {
+  // 必须是一个可编辑的内联块节点
+  const targetElementNode = util.getNodeOfEditorTextNode(range.startContainer);
   if (!targetElementNode) {
     return {
       target: null,
@@ -18,21 +19,34 @@ export const splitInlineNode = (range: IRange): { target: HTMLElement | null; pa
       startOffset: null
     };
   }
-
   // 获取光标位置的元素节点 前面的节点 和 后面的节点
-  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
+  const [_, nextNodeList] = dom.getRangeAroundNode(range);
+  // console.log(targetElementNode, nextNodeList);
+  const cNodes = dom.cloneNodes(nextNodeList);
 
   // 如果之前存在节点，就创建一个内联节点包起来
-  if (nextNodeList.length) {
-    const cNodes = dom.cloneNodes(nextNodeList);
-    const domSpan = base.createInlineChunkElement();
-    if (targetElementNode.style.color) {
-      domSpan.style.color = targetElementNode.style.color;
+  if (cNodes.length) {
+    const nodeName = (targetElementNode.nodeName || "").toLowerCase();
+    let container: HTMLElement | null = null;
+    if (nodeName == "span") {
+      const container = base.createChunkTextElement("span");
+      // 原始编辑节点是否存在样式
+      if (targetElementNode.style.color) {
+        container.style.color = targetElementNode.style.color;
+        dom.toTargetAddNodes(container, cNodes);
+        dom.toTargetAfterInsertNodes(targetElementNode, [container]);
+      } else {
+        dom.toTargetAfterInsertNodes(targetElementNode, cNodes);
+      }
+    } else if (nodeName == "strong") {
+      container = base.createChunkTextElement("strong");
+      dom.toTargetAddNodes(container, cNodes);
+      dom.toTargetAfterInsertNodes(targetElementNode, [container]);
     }
-    dom.toTargetAddNodes(domSpan, cNodes);
-    dom.toTargetAfterInsertNodes(targetElementNode, [domSpan]);
+    // 删除分割节点的前面节点
     dom.removeNodes(nextNodeList);
   }
+
   const startOffset = getNodeIndex(targetElementNode);
 
   return {

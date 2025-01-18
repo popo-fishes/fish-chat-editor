@@ -47,6 +47,25 @@ export const isEditElement = (node: HTMLElement): boolean => {
 };
 
 /**
+ * @name 判断节点是否一个编辑器--文本属性节点：text
+ */
+export const isEditTextNode = (node: HTMLElement): boolean => {
+  if (!node) return false;
+  if (!isDOMElement(node)) return false;
+  const key = base.getElementAttributeKey("fishNode");
+  const attrName = base.getElementAttributeDatasetName("fishNode");
+  const hasAttr = node.hasAttribute(key);
+  if (hasAttr) {
+    const elementAttrVal = node?.dataset?.[attrName] || "";
+    if (elementAttrVal == "text") {
+      return true;
+    }
+    return false;
+  }
+  return false;
+};
+
+/**
  * @name 判断节点是否一个编辑器行--内联块属性节点
  */
 export const isEditInline = (node: HTMLElement): boolean => {

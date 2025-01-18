@@ -2,7 +2,7 @@ import throttle from "lodash/throttle";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type FishEditor from "../core/fish-editor";
-import { range as fishRange, split, util, dom, base, isNode } from "../utils";
+import { range as fishRange, split, util, dom, base, isNode, formats } from "../utils";
 
 class Keyboard extends Module {
   isLineFeedLock = false;
@@ -29,7 +29,7 @@ class Keyboard extends Module {
         this.isLineFeedLock = true;
 
         // 插入换行符
-        this.handleLineFeed((success) => {
+        handleLineFeed.call(this, (success) => {
           if (success) {
             Promise.resolve().then(() => {
               this.emitThrottled();
@@ -84,90 +84,91 @@ class Keyboard extends Module {
     });
     this.fishEditor.root.addEventListener("keyup", transformsEditNodes.bind(this));
   }
+}
 
-  handleLineFeed(callBack: (success: boolean) => void) {
-    let rangeInfo = fishRange.getRange();
-    // 不存在 光标
-    if (!rangeInfo) return callBack(false);
+/** @name 处理换行 */
+function handleLineFeed(callBack: (success: boolean) => void) {
+  let rangeInfo = fishRange.getRange();
+  // 不存在 光标
+  if (!rangeInfo) return callBack(false);
 
-    // 行属性节点
-    const rowElementNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
+  // 行属性节点
+  const rowElementNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
 
-    if (!rowElementNode) {
-      this.fishEditor.editor.setCursorEditorLast((node) => {
-        if (node) {
-          // 在调用自己一次
-          this.handleLineFeed(callBack);
-        }
-      });
-      return callBack(false);
-    }
+  if (!rowElementNode) {
+    this.fishEditor.editor.setCursorEditorLast((node) => {
+      if (node) {
+        // 在调用自己一次
+        handleLineFeed(callBack);
+      }
+    });
+    return callBack(false);
+  }
 
-    console.time("editor插入换行耗时");
+  console.time("editor插入换行耗时");
 
-    /**
-     * 创建换行节点
-     * @dec 把之前的节点放到需要换行的节点后面
-     */
-    // 创建换行节点
-    const lineDom = base.createLineElement(true);
+  /**
+   * 创建换行节点
+   * @dec 把之前的节点放到需要换行的节点后面
+   */
+  // 创建换行节点
+  const lineDom = base.createLineElement(true);
 
-    if (!isNode.isEditElement(rowElementNode as HTMLElement)) {
-      console.warn("无编辑行节点，不可插入");
-      return callBack(false);
-    }
+  if (!isNode.isEditElement(rowElementNode as HTMLElement)) {
+    console.warn("无编辑行节点，不可插入");
+    return callBack(false);
+  }
 
-    // 如果当前节点是一个内联块编辑节点，就需要先分割它
-    if (util.getNodeOfEditorInlineNode(rangeInfo.startContainer)) {
-      const result = split.splitInlineNode(rangeInfo);
-      rangeInfo.startContainer = result.parentNode;
-      rangeInfo.anchorNode = result.parentNode;
-      rangeInfo.startOffset = result.startOffset;
-    }
+  // 如果当前节点是一个内联块编辑节点，就需要先分割它
+  if (util.getNodeOfEditorTextNode(rangeInfo.startContainer)) {
+    const result = split.splitEditInlineNode(rangeInfo);
+    rangeInfo.startContainer = result.parentNode;
+    rangeInfo.anchorNode = result.parentNode;
+    rangeInfo.startOffset = result.startOffset;
+  }
 
-    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(rangeInfo);
-    // console.log(behindNodeList, nextNodeList);
-    /**
-     * 把后面的节点放到换行节点的 文本节点中
-     */
-    const clNodes = dom.cloneNodes(nextNodeList);
+  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(rangeInfo);
+  // console.log(behindNodeList, nextNodeList);
+  /**
+   * 把后面的节点放到换行节点的 文本节点中
+   */
+  const clNodes = dom.cloneNodes(nextNodeList);
 
-    // 存在换行元素时
-    if (clNodes.length) {
-      dom.toTargetAddNodes(lineDom, clNodes, false);
+  // 存在换行元素时
+  if (clNodes.length) {
+    dom.toTargetAddNodes(lineDom, clNodes, false);
 
-      dom.removeNodes(nextNodeList);
-    } else {
-      const br = document.createElement("br");
-      dom.toTargetAddNodes(lineDom, [br]);
-    }
+    dom.removeNodes(nextNodeList);
+  } else {
+    const br = document.createElement("br");
+    dom.toTargetAddNodes(lineDom, [br]);
+  }
 
-    // 如果前面的节点不存在，后面的节点存在； 代表换行后，前面的节点是没有内容的
-    if (behindNodeList.length == 0 && nextNodeList.length) {
-      const br = document.createElement("br");
-      dom.toTargetAddNodes(rowElementNode, [br]);
-    }
+  // 如果前面的节点不存在，后面的节点存在； 代表换行后，前面的节点是没有内容的
+  if (behindNodeList.length == 0 && nextNodeList.length) {
+    const br = document.createElement("br");
+    dom.toTargetAddNodes(rowElementNode, [br]);
+  }
 
-    dom.toTargetAfterInsertNodes(rowElementNode, [lineDom]);
+  dom.toTargetAfterInsertNodes(rowElementNode, [lineDom]);
 
-    if (isNode.isDOMNode(lineDom.firstChild)) {
-      fishRange.setCursorPosition(lineDom.firstChild, "before");
-      lineDom?.scrollIntoView({ block: "end", inline: "end" });
-
-      console.timeEnd("editor插入换行耗时");
-
-      // 执行回调
-      callBack(true);
-      return;
-    }
+  if (isNode.isDOMNode(lineDom.firstChild)) {
+    fishRange.setCursorPosition(lineDom.firstChild, "before");
+    lineDom?.scrollIntoView({ block: "end", inline: "end" });
 
     console.timeEnd("editor插入换行耗时");
 
-    callBack(false);
+    // 执行回调
+    callBack(true);
+    return;
   }
+
+  console.timeEnd("editor插入换行耗时");
+
+  callBack(false);
 }
 
-// 子节点是否只有一个br节点
+/** @name 子节点是否只有一个br节点 */
 function hasParentOnlyBr(node: HTMLElement) {
   if (node) {
     if (node.childNodes && node.childNodes?.length == 1) {
@@ -177,7 +178,7 @@ function hasParentOnlyBr(node: HTMLElement) {
   return false;
 }
 
-/** 处理节点带有style属性时，也需要标记 */
+/** @name 处理节点带有style属性时，也需要标记 */
 function hasTransparentBackgroundColor(node: HTMLElement) {
   try {
     if (node.style && node.style?.backgroundColor) return true;
@@ -206,7 +207,7 @@ function hasNotSatisfiedNode(node: HTMLElement) {
       break;
     }
     // 节点不是内联块属性节点 || 节点有背景色属性
-    if ((!isNode.isEditInline(cld as any) && cld.nodeName == "SPAN") || hasTransparentBackgroundColor(cld as any)) {
+    if (hasTransparentBackgroundColor(cld as any)) {
       exist = true;
       break;
     }
@@ -214,6 +215,7 @@ function hasNotSatisfiedNode(node: HTMLElement) {
   return exist;
 }
 
+/** @name 转换器--编辑节点 */
 function transformsEditNodes() {
   const editNode = (this as Keyboard).fishEditor.root;
 
@@ -239,17 +241,10 @@ function transformsEditNodes() {
       const nodes: any[] = Array.from(editorRowNode.childNodes);
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as any;
-        // console.log(isNode.isEditInline(node), node);
-        const isFlag = !isNode.isEditInline(node) && node.nodeName == "SPAN";
-        if (isFlag) {
-          if (node.style.color) {
-            const dom_sapn = base.createInlineChunkElement();
-            dom_sapn.innerText = node.innerText;
-            dom_sapn.style.color = node.style.color;
-            node.parentNode?.replaceChild(dom_sapn, node);
-          } else {
-            const textNode = document.createTextNode(node.textContent || "");
-            node.parentNode?.replaceChild(textNode, node);
+        if (node.nodeName == "SPAN" && !isNode.isEditInline(node)) {
+          const formatNode = formats.createNodeOptimize(node);
+          if (formatNode) {
+            node.parentNode?.replaceChild(formatNode, node);
           }
         }
 

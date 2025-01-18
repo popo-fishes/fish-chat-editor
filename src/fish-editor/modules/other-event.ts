@@ -74,8 +74,6 @@ class OtherEvent extends Module {
     // 是一个DOM元素节点，并且存在图片节点
     // if (isDOMElement(target) && findNodeWithImg(target)) {
 
-    //   const pnode = getNodeOfEditorInlineNode(target);
-
     //   if (pnode) {
     //     // 用户选择的文本范围或光标的位置
     //     const selection = window.getSelection();

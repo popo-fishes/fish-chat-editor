@@ -127,10 +127,11 @@ export const getEditElementContent = (node: HTMLElement): string => {
 
   if (isNode.isDOMElement(node)) {
     for (let i = 0; i < node.childNodes.length; i++) {
+      // 是内联块属性节点，不是图片节点
       if (isNode.isEditInline(node) && !isNode.isEmojiImgNode(node) && !isNode.isImageNode(node)) {
         const dom_span = (node as any).childNodes[i].parentNode;
         // console.log(dom_span);
-        content += `<span style="color: ${node.style.color}">${dom_span.innerText}</span>`;
+        content += node.style.color ? `<span style="color: ${node.style.color}">${dom_span.innerText}</span>` : dom_span.innerText;
       } else {
         content += getEditElementContent((node as any).childNodes[i]);
       }

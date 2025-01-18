@@ -3,7 +3,7 @@
  * @LastEditors: Please set LastEditors
  */
 import cloneDeep from "lodash/cloneDeep";
-import { helper, base, dom, isNode, util, range as fishRange, transforms, split } from "../utils";
+import { helper, base, dom, isNode, util, range as fishRange, transforms, split, formats } from "../utils";
 import type { IRange } from "../utils";
 import type FishEditor from "./fish-editor";
 import Emitter from "../core/emitter";
@@ -136,8 +136,8 @@ class Editor {
     console.time("editor插入内容耗时");
 
     // 如果当前节点是一个内联块编辑节点，就需要先分割它
-    if (util.getNodeOfEditorInlineNode(cloneRange.startContainer)) {
-      const result = split.splitInlineNode(cloneRange);
+    if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
+      const result = split.splitEditInlineNode(cloneRange);
       cloneRange.startContainer = result.parentNode;
       cloneRange.anchorNode = result.parentNode;
       cloneRange.startOffset = result.startOffset;
@@ -294,8 +294,8 @@ class Editor {
     console.time("editor插入节点耗时");
 
     // 如果当前节点是一个内联块编辑节点，就需要先分割它
-    if (util.getNodeOfEditorInlineNode(cloneRange.startContainer)) {
-      const result = split.splitInlineNode(cloneRange);
+    if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
+      const result = split.splitEditInlineNode(cloneRange);
       cloneRange.startContainer = result.parentNode;
       cloneRange.anchorNode = result.parentNode;
       cloneRange.startOffset = result.startOffset;
@@ -387,26 +387,14 @@ class Editor {
       const pldNode = nodes[i];
       for (let c = 0; c < pldNode.childNodes.length; c++) {
         const cldNode = pldNode.childNodes[c] as any;
-        if (isNode.isDOMText(cldNode)) {
-          const textNode = dom.cloneNodes([cldNode])[0];
-          if (textNode) {
-            lineDom.appendChild(textNode);
-          }
-        }
-        if (cldNode.nodeName == "SPAN") {
-          if (cldNode.style.color) {
-            const dom_sapn = base.createInlineChunkElement();
-            dom_sapn.innerText = cldNode.innerText;
-            dom_sapn.style.color = cldNode.style.color;
-            lineDom.appendChild(dom_sapn);
-          } else {
-            const textNode = document.createTextNode(cldNode.innerText || "");
-            lineDom.appendChild(textNode);
-          }
+        const formatNode = formats.createNodeOptimize(cldNode);
+        if (formatNode) {
+          lineDom.appendChild(formatNode);
         }
       }
       newNode.push(lineDom);
     }
+
     dom.toTargetAddNodes(this.container, newNode);
 
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);

@@ -10,7 +10,7 @@ const specialmode = false;
 const elementAttributeData = {
   /**
    * 编辑器节点
-   * 属性值：element 代表是行节点
+   * 属性值：element 代表是行节点 text 代表是块文本节点
    */
   fishNode: {
     key: "data-fish-node",
@@ -80,15 +80,22 @@ export const createLineElement = (isNullNode = false): HTMLParagraphElement => {
     dom_p.innerHTML = "<br/>";
   }
 
-  // const fragment = new DocumentFragment();
-  // for (let i = 0; i < 200; i++) {
-  //   const node = new Image();
-  //   node.src = "https://static107.cdqlkj.cn/r/3a88/107/pb/p/20240628/01be10a6cd484b21b3d38a69ee6d4401.png";
-  //   fragment.appendChild(node);
-  // }
-  // dom_p.appendChild(fragment);
-
   return dom_p;
+};
+
+/**
+ * @name 创建一个编辑器--文本节点
+ * @param nodeName 节点名称
+ * @desc 它是属于编辑器行节点的叶子(leaf)节点
+ */
+export const createChunkTextElement = <K extends keyof HTMLElementTagNameMap>(nodeName: K): HTMLElementTagNameMap[K] | null => {
+  if (!nodeName) return null;
+  const container = document.createElement(nodeName);
+  container.id = `${prefixNmae}leaf-` + helper.generateRandomString();
+  // 标记为编辑器 文本节点
+  const key = getElementAttributeKey("fishNode");
+  container.setAttribute(key, "text");
+  return container;
 };
 
 /**
@@ -172,19 +179,6 @@ export const createChunkImgElement = (url: string): HTMLSpanElement => {
 
     return node;
   }
-};
-
-/**
- * @name 创建一个编辑器内联节点
- */
-export const createInlineChunkElement = (): HTMLSpanElement => {
-  // 创建一个图片容器节点，这种的方式需要自己去处理合并行时的场景太复杂了
-  const container = document.createElement("span");
-  container.id = `${prefixNmae}leaf-` + helper.generateRandomString();
-  // 标记为内联块节点
-  const fishInlineKey = getElementAttributeKey("fishInline");
-  container.setAttribute(fishInlineKey, "true");
-  return container;
 };
 
 /**

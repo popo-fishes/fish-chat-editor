@@ -64,7 +64,8 @@ export const removeNodes = (childNodes: HTMLElement[]) => {
 
 /**
  * @name 传入目标节点，在目标节点之后插入多个节点
- * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
+ * @desc 比如：<p><a></p>, 传入a节点。则在a的后面插入：变成<p><a><b>...</p>
+ * @link https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
  */
 export const toTargetAfterInsertNodes = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
   if (!targetElement || !childNodes || !childNodes?.length) return;
@@ -91,7 +92,8 @@ export const toTargetAfterInsertNodes = (targetElement: HTMLElement, childNodes:
 
 /**
  * @name 传入目标节点，在目标节点之前插入多个节点
- * https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
+ * @desc 比如：<p><a></p>, 传入a节点。则在a的前面插入：变成<p>...<b><a></p>
+ * @link https://developer.mozilla.org/zh-CN/docs/Web/API/Node/insertBefore
  */
 export const toTargetBeforeInsertNodes = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
   if (!targetElement || !childNodes || !childNodes?.length) return;
