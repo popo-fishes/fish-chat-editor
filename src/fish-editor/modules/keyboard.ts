@@ -6,8 +6,8 @@ import { range as fishRange, split, util, dom, base, isNode, formats } from "../
 
 class Keyboard extends Module {
   isLineFeedLock = false;
+  /** 节流 */
   emitThrottled = throttle(() => {
-    // 300 毫秒的节流间隔，可以根据需要调整
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
   }, 300);
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
@@ -32,6 +32,7 @@ class Keyboard extends Module {
         handleLineFeed.call(this, (success) => {
           if (success) {
             Promise.resolve().then(() => {
+              this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE);
               this.emitThrottled();
             });
           }

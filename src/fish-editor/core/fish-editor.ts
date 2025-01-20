@@ -67,10 +67,13 @@ class FishEditor {
     }
   }
   options: ExpandedFishEditorOptions;
-  /** @name 编辑器最外层容器 */
+  /** @name 编辑器最外层容器节点 */
   container: HTMLElement;
   /** @name 编辑器根节点*/
   root: HTMLDivElement;
+  /** @name 滚动条容器节点 */
+  scrollDom: HTMLDivElement;
+  /** @name Composition Event 构成 */
   composition: Composition;
   emitter: Emitter;
   theme: Theme;
@@ -81,6 +84,7 @@ class FishEditor {
     this.container = resolveSelector(container);
     this.options = expandConfig(options);
     this.isDestroyed = false;
+    this.scrollDom = null;
     // 选区信息
     this.rangeInfo = {
       startContainer: null,
@@ -144,9 +148,9 @@ class FishEditor {
     editorDom.setAttribute("spellCheck", "false");
 
     // add scroll dom
-    const scrollDom = document.createElement("div");
-    scrollDom.classList.add("fb-editor-scroll");
-    dom.toTargetAddNodes(scrollDom, [editorDom], false);
+    this.scrollDom = document.createElement("div");
+    this.scrollDom.classList.add("fb-editor-scroll");
+    dom.toTargetAddNodes(this.scrollDom, [editorDom], false);
 
     // add placeholder dom
     const placeholderDom = document.createElement("div");
@@ -154,7 +158,7 @@ class FishEditor {
     if (this.options.placeholder) {
       placeholderDom.innerHTML = this.options.placeholder;
     }
-    dom.toTargetAddNodes(this.container, [scrollDom, placeholderDom], false);
+    dom.toTargetAddNodes(this.container, [this.scrollDom, placeholderDom], false);
     return editorDom;
   }
 

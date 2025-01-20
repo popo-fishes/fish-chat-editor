@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 import throttle from "lodash/throttle";
-import { range as fishRange, transforms, util, dom, base, isNode, helper } from "../utils";
+import { range as fishRange, dom } from "../utils";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type FishEditor from "../core/fish-editor";
@@ -13,34 +13,67 @@ interface InputOptions {
   highlightColor?: string;
   /** 需要匹配高亮词的文字数组 */
   matchWordsList?: string[];
+  throttleTime?: number;
 }
 
 class Input extends Module<InputOptions> {
   static DEFAULTS: InputOptions = {
-    highlightColor: "red"
+    highlightColor: "red",
+    throttleTime: 300
   };
-
+  /** @name 蒙层节点*/
+  coverDom: HTMLElement;
+  /** 节流 */
   emitThrottled = throttle(async () => {
-    if (this.options.matchWordsList?.length) {
-      await handleInputTransforms.call(this);
-    }
-    // 300 毫秒的节流间隔，可以根据需要调整
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
-  }, 300);
+  }, this.options.throttleTime);
   constructor(fishEditor: FishEditor, options: Partial<InputOptions>) {
     super(fishEditor, options);
     this.handleComposition();
+
+    // add cover-mask dom
+    if (this.options.matchWordsList?.length && this.fishEditor.container) {
+      this.coverDom = document.createElement("div");
+      this.coverDom.classList.add("fb-cover-mask-box");
+      this.fishEditor.container.classList.add("is-highlight");
+      this.fishEditor.container.appendChild(this.coverDom);
+      this.fishEditor.scrollDom.addEventListener("scroll", () => {
+        const scrollTop = this.fishEditor.scrollDom.scrollTop;
+        this.coverDom.scrollTop = scrollTop;
+      });
+
+      // 监听值变化时，我们主动触发文本转换
+      this.fishEditor.on(Emitter.events.EDITOR_CHANGE, () => {
+        // 包装成Promise异步执行
+        Promise.resolve().then(() => {
+          handleInputTransforms.call(this);
+        });
+      });
+
+      this.fishEditor.on(Emitter.events.EDITOR_INPUT_CHANGE, () => {
+        // 包装成Promise异步执行
+        Promise.resolve().then(() => {
+          handleInputTransforms.call(this);
+        });
+      });
+    }
+
     fishEditor.root.addEventListener("beforeinput", (event: InputEvent) => {
       this.handleBeforeInput(event);
     });
-    fishEditor.root.addEventListener("input", this.handleInput.bind(this));
+    fishEditor.root.addEventListener("input", this.handleInput.bind(this, true));
   }
   private handleComposition() {
     this.fishEditor.on(Emitter.events.COMPOSITION_END, () => {
-      this.handleInput();
+      this.handleInput(false);
     });
   }
-  private handleInput() {
+  private handleInput(isOriginalEvent: boolean) {
+    if (isOriginalEvent && this.options.matchWordsList?.length) {
+      Promise.resolve().then(() => {
+        handleInputTransforms.call(this);
+      });
+    }
     /***
      * 在谷歌浏览器，输入遇见编辑器先清除焦点然后调用focus方法，重新修正光标的位置，会导致，下次输入中文时 onCompositionEnd事件不会触发，导致
      * isLock变量状态有问题，这里先注释掉，不判断了，直接变化值，就去暴露值
@@ -56,14 +89,9 @@ class Input extends Module<InputOptions> {
 
 /**
  * @name 文字转换
- * todo 限制频次
  */
 const handleInputTransforms = async function () {
-  const rangeInfo = fishRange.getRange();
-  const rowElementNode: HTMLElement = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
-  if (!rowElementNode) return false;
   const content = this.fishEditor.getText();
-  const original = transforms.getEditElementContent(rowElementNode as any);
   let strCont = content;
   const _this = this;
 
@@ -71,26 +99,19 @@ const handleInputTransforms = async function () {
     const reg = new RegExp("\\" + item, "g");
     // 替换
     strCont = strCont?.replace(reg, function () {
-      const dom = base.createChunkTextElement("span");
-      dom.style.color = _this.options.highlightColor;
-      dom.innerText = item;
-      return dom.outerHTML;
-      // return `<span style="color: ${_this.options.highlightColor};">${item}</span>`;
+      return `<span style="color: ${_this.options.highlightColor};">${item}</span>`;
     });
   });
 
-  // console.log(original, strCont, original == strCont);
-  if (original == strCont) return false;
-
-  rowElementNode.innerHTML = strCont;
-
-  const referenceElement = rowElementNode.childNodes[rowElementNode.childNodes.length - 1];
-
-  if (referenceElement) {
-    // console.log(referenceElement);
-    fishRange.setCursorPosition(referenceElement, "after");
+  const lines = strCont?.split(/\r\n|\r|\n/) || [];
+  const nodes = [];
+  for (let i = 0; i < lines.length; i++) {
+    const lineContent = lines[i];
+    const dom_p = document.createElement("p");
+    dom_p.innerHTML = lineContent == "" ? "<br>" : lineContent;
+    nodes.push(dom_p);
   }
-
+  dom.toTargetAddNodes(this.coverDom, nodes as any[]);
   return true;
 };
 

@@ -20,7 +20,9 @@ class Emitter {
     EDITOR_CHANGE: "editor-change",
     EDITOR_ENTER_DOWN: "editor-enter-down",
     COMPOSITION_START: "composition-start",
-    COMPOSITION_END: "composition-end"
+    COMPOSITION_END: "composition-end",
+    /** 富文本操作变化时，快速触发变化，比如换行，粘贴时 */
+    EDITOR_INPUT_CHANGE: "editor-input-change"
   } as const;
 
   subscribes: Map<string, Array<SubscribeEvent>>;

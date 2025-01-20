@@ -1,4 +1,49 @@
 /**
+ * 当需要高亮时的富文本，样式
+ */
+
+// 遮罩层
+.fb-cover-mask-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  z-index: 2;
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    background-color: rgb(255 255 255 / 0%);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgb(0 0 0 / 15%);
+  }
+  p {
+    line-height: 1.5;
+  }
+}
+
+//  高亮时修改样式
+.is-highlight.fb-editor-container {
+  height: 75px;
+  flex: none !important;
+  .fb-editor-scroll {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 3;
+    -webkit-text-fill-color: transparent;
+    &::-webkit-scrollbar {
+      display: none !important;
+    }
+  }
+}
+
+/**
 * 编辑器区域
 */
 .fb-editor-container {
@@ -63,6 +108,7 @@
   left: 0;
   top: -1px;
   width: 90%;
+  z-index: 10;
 }
 
 .fb-e-image-container {
