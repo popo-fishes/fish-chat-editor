@@ -55,13 +55,8 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     fishEditor.current = new FishEditor(demoref.current, {
       placeholder: restProps.placeholder,
       modules: {
-        clipboard: {
-          // 不能粘贴图片
-          isPasteFile: false
-        },
-        input: {
-          highlightColor: "red",
-          matchWordsList: ["哈哈"]
+        uploader: {
+          beforeUpload: restProps.beforePasteImage || null
         }
       }
     });
