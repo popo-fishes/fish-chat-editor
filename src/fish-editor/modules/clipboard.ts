@@ -10,14 +10,23 @@ import type Uploader from "./uploader";
 import type FishEditor from "../core/fish-editor";
 import { range, transforms } from "../utils";
 
-class Clipboard extends Module {
+interface IClipboardOptions {
+  /** 是否可以粘贴图片 */
+  isPasteFile?: boolean;
+}
+
+class Clipboard extends Module<IClipboardOptions> {
+  static DEFAULTS: IClipboardOptions = {
+    isPasteFile: true
+  };
+
   isPasteLock = false;
 
   emitThrottled = throttle(() => {
     // 300 毫秒的节流间隔，可以根据需要调整
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
   }, 300);
-  constructor(fishEditor: FishEditor, options: Record<string, never>) {
+  constructor(fishEditor: FishEditor, options: Partial<IClipboardOptions>) {
     super(fishEditor, options);
     this.fishEditor.root.addEventListener("copy", (e) => this.onCaptureCopy(e, false));
     this.fishEditor.root.addEventListener("cut", (e) => this.onCaptureCopy(e, true));
@@ -70,7 +79,7 @@ class Clipboard extends Module {
     const isHtml = clp?.types?.includes("text/html");
     const isPlain = clp?.types?.includes("text/plain");
 
-    if (isFile) {
+    if (isFile && this.options.isPasteFile) {
       const files = isObject(clp.files) ? Object.values(clp.files) : clp.files;
       const vfiles = Array.from(files || []);
       if (vfiles.length > 0) {

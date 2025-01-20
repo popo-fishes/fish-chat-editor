@@ -117,8 +117,12 @@ export const getNodePlainText = (node: HTMLElement) => {
   return text;
 };
 
-/** @name 获取编辑行属性节点的html内容 */
-export const getEditElementContent = (node: HTMLElement): string => {
+/**
+ * @name 获取编辑行属性节点的html内容
+ * @param node 当前的行
+ * @param isFullAttr 是否需要全部的节点属性信息
+ */
+export const getEditElementContent = (node: HTMLElement, isFullAttr?: boolean): string => {
   let content = "";
 
   if (isNode.isDOMText(node) && node.nodeValue) {
@@ -134,12 +138,18 @@ export const getEditElementContent = (node: HTMLElement): string => {
         if (node.style?.length) {
           container.style.cssText = node.style.cssText;
         }
+        if (isFullAttr) {
+          container.id = node.id;
+          // 标记为编辑器 文本节点
+          const key = base.getElementAttributeKey("fishNode");
+          container.setAttribute(key, "text");
+        }
         container.innerText = node.innerText;
         // console.log(node, container.outerHTML);
         content += container.outerHTML;
       } else {
         // 遍历子节点
-        content += getEditElementContent((node as any).childNodes[i]);
+        content += getEditElementContent((node as any).childNodes[i], isFullAttr || false);
       }
     }
 

@@ -5,20 +5,22 @@ import type FishEditor from "../core/fish-editor";
 import store from "../core/store";
 import Module from "../core/module.js";
 
-interface UploaderOptions {
+interface IUploaderOptions {
+  /** @name 支持文件类型 */
   mimetypes: string[];
+  /** @name 文件最大值上传数量 */
   slice: number;
-  /** @param beforePasteImage 图片插入前的钩子 */
+  /** @name 文件插入前的钩子 */
   beforeUpload?: (files: File[], amount: number) => (File[] | []) | Promise<File[] | []>;
 }
 
-class Uploader extends Module<UploaderOptions> {
-  static DEFAULTS: UploaderOptions = {
+class Uploader extends Module<IUploaderOptions> {
+  static DEFAULTS: IUploaderOptions = {
     mimetypes: ["image/png", "image/jpeg"],
     slice: 10
   };
 
-  constructor(fishEditor: FishEditor, options: Partial<UploaderOptions>) {
+  constructor(fishEditor: FishEditor, options: Partial<IUploaderOptions>) {
     super(fishEditor, options);
   }
 

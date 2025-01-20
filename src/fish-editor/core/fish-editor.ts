@@ -26,7 +26,12 @@ export interface IFishEditorOptions {
    * @default false
    */
   readOnly?: boolean;
+  /**
+   * 编辑器placeholder
+   * @default 请输入内容
+   */
   placeholder?: string;
+  /** editor中各个模块的配置选项和 API */
   modules?: Record<string, unknown>;
 }
 
@@ -126,7 +131,7 @@ class FishEditor {
       this.enable();
     }
 
-    this.setHtml("<p>hello <span style='color: rgb(231, 95, 51)'>editor</span><strong>word</strong></p>");
+    // this.setHtml("<p>hello <span style='color: rgb(231, 95, 51)'>editor</span><strong>word</strong></p>");
   }
 
   addContainer(): HTMLDivElement {
@@ -178,6 +183,9 @@ class FishEditor {
   }
   setText(value: string) {
     return this.editor.setText(value);
+  }
+  getText() {
+    return this.editor.getText();
   }
   /** @name editor.getHtml() 获取非格式化的 html */
   getHtml() {
