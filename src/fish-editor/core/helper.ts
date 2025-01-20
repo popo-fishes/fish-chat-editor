@@ -10,7 +10,7 @@ const getEditImageFileBlobUrl = (node: HTMLElement): string[] => {
   const result: string[] = [];
   function traverse(node) {
     if (isNode.isDOMElement(node)) {
-      if (isNode.isEditInline(node) && isNode.isImageNode(node)) {
+      if (isNode.isImageNode(node)) {
         result.push(node.src);
       }
       for (let i = 0; i < node.childNodes.length; i++) {

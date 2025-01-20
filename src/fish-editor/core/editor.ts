@@ -39,8 +39,8 @@ class Editor {
     const editorNode = this.container;
     if (!editorNode || !editorNode?.childNodes) return true;
     /**
-     * 没有纯文本内容，并且没有内联块节点。代表是一个空内容
-     * hasEditorExistInlineNode方法主要判断，有可能编辑器存在图片节点。等等内联块节点
+     * 没有纯文本内容，并且没有图片块节点。代表是一个空内容
+     * hasEditorExistInlineNode方法主要判断，有可能编辑器存在图片节点。
      */
     if (this.getText() == "" && !hasEditorExistInlineNode(editorNode)) return true;
 
@@ -135,9 +135,9 @@ class Editor {
 
     console.time("editor插入内容耗时");
 
-    // 如果当前节点是一个内联块编辑节点，就需要先分割它
+    // 如果当前节点是一个文本块编辑节点，就需要先分割它
     if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
-      const result = split.splitEditInlineNode(cloneRange);
+      const result = split.splitEditTextNode(cloneRange);
       cloneRange.startContainer = result.parentNode;
       cloneRange.anchorNode = result.parentNode;
       cloneRange.startOffset = result.startOffset;
@@ -293,9 +293,9 @@ class Editor {
     }
     console.time("editor插入节点耗时");
 
-    // 如果当前节点是一个内联块编辑节点，就需要先分割它
+    // 如果当前节点是一个文本块编辑节点，就需要先分割它
     if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
-      const result = split.splitEditInlineNode(cloneRange);
+      const result = split.splitEditTextNode(cloneRange);
       cloneRange.startContainer = result.parentNode;
       cloneRange.anchorNode = result.parentNode;
       cloneRange.startOffset = result.startOffset;
@@ -470,10 +470,10 @@ class Editor {
 }
 
 /**
- * @name 传入编辑器，判断是否存在内联块属性节点
+ * @name 传入编辑器，判断是否存在图片节点，或者表情节点
  */
 function hasEditorExistInlineNode(node: HTMLElement): boolean {
-  if (isNode.isEditInline(node)) {
+  if (isNode.isImageNode(node) || isNode.isEmojiImgNode(node)) {
     return true;
   }
   for (let i = 0; i < node.childNodes.length; i++) {

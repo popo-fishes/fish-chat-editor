@@ -28,7 +28,7 @@ export const isDOMText = (value: any) => {
 };
 
 /**
- * @name 判断节点是否一个编辑器块属性节点：element
+ * @name 判断节点是否一个编辑器--行块属性节点：element
  */
 export const isEditElement = (node: HTMLElement): boolean => {
   if (!node) return false;
@@ -47,7 +47,7 @@ export const isEditElement = (node: HTMLElement): boolean => {
 };
 
 /**
- * @name 判断节点是否一个编辑器--文本属性节点：text
+ * @name 判断节点是否一个编辑器--文本块属性节点：text
  */
 export const isEditTextNode = (node: HTMLElement): boolean => {
   if (!node) return false;
@@ -58,24 +58,6 @@ export const isEditTextNode = (node: HTMLElement): boolean => {
   if (hasAttr) {
     const elementAttrVal = node?.dataset?.[attrName] || "";
     if (elementAttrVal == "text") {
-      return true;
-    }
-    return false;
-  }
-  return false;
-};
-
-/**
- * @name 判断节点是否一个编辑器行--内联块属性节点
- */
-export const isEditInline = (node: HTMLElement): boolean => {
-  if (!node || !isDOMElement(node)) return false;
-  const key = base.getElementAttributeKey("fishInline");
-  const attrName = base.getElementAttributeDatasetName("fishInline");
-  const hasAttr = node.hasAttribute(key);
-  if (hasAttr) {
-    const elementAttrVal = node?.dataset?.[attrName] || "";
-    if (elementAttrVal == "true") {
       return true;
     }
     return false;

@@ -1,4 +1,4 @@
-import { base, dom, util, isNode, type IRange } from ".";
+import { base, dom, util, type IRange } from ".";
 
 function getNodeIndex(node) {
   if (!node.parentNode) return -1;
@@ -6,11 +6,11 @@ function getNodeIndex(node) {
 }
 
 /**
- * @name 分割内联块节点
+ * @name 分割编辑器--文本节点
  * @returns 返回分割节点在数组中的索引
  */
-export const splitEditInlineNode = (range: IRange): { target: HTMLElement | null; parentNode: HTMLElement | null; startOffset: number | null } => {
-  // 必须是一个可编辑的内联块节点
+export const splitEditTextNode = (range: IRange): { target: HTMLElement | null; parentNode: HTMLElement | null; startOffset: number | null } => {
+  // 必须是一个可编辑的文本块节点
   const targetElementNode = util.getNodeOfEditorTextNode(range.startContainer);
   if (!targetElementNode) {
     return {
@@ -24,7 +24,7 @@ export const splitEditInlineNode = (range: IRange): { target: HTMLElement | null
   // console.log(targetElementNode, nextNodeList);
   const cNodes = dom.cloneNodes(nextNodeList);
 
-  // 如果之前存在节点，就创建一个内联节点包起来
+  // 如果之前存在节点，就创建一个编辑器文本块节点包起来
   if (cNodes.length) {
     const nodeName = (targetElementNode.nodeName || "").toLowerCase();
     let container: HTMLElement | null = null;

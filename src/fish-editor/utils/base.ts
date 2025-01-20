@@ -4,9 +4,7 @@
  */
 import { helper } from ".";
 
-const specialmode = false;
-
-/** 编辑器标签扩展属性配置表 */
+/** @name 编辑器标签扩展属性配置表 */
 const elementAttributeData = {
   /**
    * 编辑器节点
@@ -15,14 +13,6 @@ const elementAttributeData = {
   fishNode: {
     key: "data-fish-node",
     value: "fishNode"
-  },
-  /**
-   * 内联块节点
-   * 属性值为：true 代表是内联块
-   */
-  fishInline: {
-    key: "data-fish-inline",
-    value: "fishInline"
   },
   /**
    * 图片节点
@@ -38,18 +28,18 @@ const elementAttributeData = {
    * 属性值：value 代表是表情的名称
    */
   emojiNode: {
-    key: "data-fish-emoji-name",
-    value: "fishEmojiName"
+    key: "data-fish-emoji",
+    value: "fishEmoji"
   }
 };
 
-/** 空的富文本内容 */
+/** @name 空的富文本内容 */
 export const emptyEditHtmlText = "<p><br></p>";
 
-/** 样式前缀名称 */
+/** @name 样式前缀名称 */
 export const prefixNmae = "fb-e-";
 
-/** 零宽度非换行空格 */
+/** @name 零宽度非换行空格 */
 export const zeroWidthNoBreakSpace = "\u200B";
 
 /** @name 获取编辑器节点属性key */
@@ -65,7 +55,6 @@ export const getElementAttributeDatasetName = (name: keyof typeof elementAttribu
 /**
  * @name 创建一个编辑器--行节点
  * @param isNullNode 默认为false, true代表不需要子节点，直接返回一个空的p标签
- * @returns
  */
 export const createLineElement = (isNullNode = false): HTMLParagraphElement => {
   const dom_p = document.createElement("p");
@@ -106,39 +95,15 @@ export const createChunkTextElement = <K extends keyof HTMLElementTagNameMap>(no
  * @returns 块容器图片节点
  */
 export const createChunkEmojiElement = (url: string, size: number, emijiName: string): HTMLSpanElement => {
-  if (specialmode) {
-    // 创建一个图片容器节点，这种的方式需要自己去处理合并行时的场景太复杂了
-    const container = document.createElement("span");
-    container.id = `${prefixNmae}emoji-container-` + helper.generateRandomString();
-    container.classList.add(`${prefixNmae}emoji-container`);
-    container.setAttribute("style", `width:${size}px;height:${size}px`);
-    // 不可编辑
-    container.setAttribute("contenteditable", "false");
-    // 标记为内联块节点
-    const fishInlineKey = getElementAttributeKey("fishInline");
-    container.setAttribute(fishInlineKey, "true");
-    // 表情name值
-    const emojiNodeKey = getElementAttributeKey("emojiNode");
-    container.setAttribute(emojiNodeKey, emijiName);
-    // 添加图片
-    const node = new Image();
-    node.src = url || null;
-    container.appendChild(node);
-    return container;
-  } else {
-    const node = new Image();
-    node.src = url || null;
-    node.id = `${prefixNmae}emoji-img-` + helper.generateRandomString();
-    node.classList.add(`${prefixNmae}emoji-img`);
-    node.setAttribute("style", `width:${size}px;height:${size}px`);
-
-    const fishInlineKey = getElementAttributeKey("fishInline");
-    node.setAttribute(fishInlineKey, "true");
-    // 表情name值
-    const emojiNodeKey = getElementAttributeKey("emojiNode");
-    node.setAttribute(emojiNodeKey, emijiName);
-    return node;
-  }
+  const node = new Image();
+  node.src = url || null;
+  node.id = `${prefixNmae}emoji-` + helper.generateRandomString();
+  node.classList.add(`${prefixNmae}emoji`);
+  node.setAttribute("style", `width:${size}px;height:${size}px`);
+  // 表情name值
+  const emojiNodeKey = getElementAttributeKey("emojiNode");
+  node.setAttribute(emojiNodeKey, emijiName);
+  return node;
 };
 
 /**
@@ -146,45 +111,20 @@ export const createChunkEmojiElement = (url: string, size: number, emijiName: st
  * @param url 表情图片的路径
  */
 export const createChunkImgElement = (url: string): HTMLSpanElement => {
-  if (specialmode) {
-    // 创建一个图片容器节点，这种的方式需要自己去处理合并行时的场景太复杂了
-    const container = document.createElement("span");
-    container.id = `${prefixNmae}image-container-` + helper.generateRandomString();
-    container.classList.add(`${prefixNmae}image-container`);
-    // 不可编辑
-    container.setAttribute("contenteditable", "false");
-    // 标记为内联块节点
-    const fishInlineKey = getElementAttributeKey("fishInline");
-    container.setAttribute(fishInlineKey, "true");
-    // 标记为图片节点
-    const imageNodeKey = getElementAttributeKey("imageNode");
-    container.setAttribute(imageNodeKey, "true");
-    // 添加图片
-    const node = new Image();
-    node.src = url || null;
-    container.appendChild(node);
-    return container;
-  } else {
-    const node = new Image();
-    node.src = url || null;
-    node.id = `${prefixNmae}image-` + helper.generateRandomString();
-    node.classList.add(`${prefixNmae}image`);
+  const node = new Image();
+  node.src = url || null;
+  node.id = `${prefixNmae}image-` + helper.generateRandomString();
+  node.classList.add(`${prefixNmae}image`);
 
-    const fishInlineKey = getElementAttributeKey("fishInline");
-    node.setAttribute(fishInlineKey, "true");
+  // 标记为图片节点
+  const imageNodeKey = getElementAttributeKey("imageNode");
+  node.setAttribute(imageNodeKey, "true");
 
-    // 标记为图片节点
-    const imageNodeKey = getElementAttributeKey("imageNode");
-    node.setAttribute(imageNodeKey, "true");
-
-    return node;
-  }
+  return node;
 };
 
 /**
  * @name 创建一个编辑器--零宽度文本节点
- * 它是一个核心！！
- * @returns
  */
 export const createZeroSpaceElement = (): Text => {
   return document.createTextNode(zeroWidthNoBreakSpace);

@@ -64,7 +64,7 @@ class Keyboard extends Module {
 
       /**
        * bug3:
-       * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
+       * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个图片节点，然后删除了就会导致行节点也被删除了。
        * 兜底处理,防止骚操作
        */
       if (rangeInfo && rangeInfo.startContainer) {
@@ -119,9 +119,9 @@ function handleLineFeed(callBack: (success: boolean) => void) {
     return callBack(false);
   }
 
-  // 如果当前节点是一个内联块编辑节点，就需要先分割它
+  // 如果当前节点是一个文本块编辑节点，就需要先分割它
   if (util.getNodeOfEditorTextNode(rangeInfo.startContainer)) {
-    const result = split.splitEditInlineNode(rangeInfo);
+    const result = split.splitEditTextNode(rangeInfo);
     rangeInfo.startContainer = result.parentNode;
     rangeInfo.anchorNode = result.parentNode;
     rangeInfo.startOffset = result.startOffset;
@@ -168,61 +168,12 @@ function handleLineFeed(callBack: (success: boolean) => void) {
   callBack(false);
 }
 
-/** @name 子节点是否只有一个br节点 */
-function hasParentOnlyBr(node: HTMLElement) {
-  if (node) {
-    if (node.childNodes && node.childNodes?.length == 1) {
-      if (node.childNodes[0]?.nodeName == "BR") return true;
-    }
-  }
-  return false;
-}
-
-/** @name 处理节点带有style属性时，也需要标记 */
-function hasTransparentBackgroundColor(node: HTMLElement) {
-  try {
-    if (node.style && node.style?.backgroundColor) return true;
-    return false;
-  } catch (err) {
-    return false;
-  }
-}
-
-/**
- * @name 行节点下面是否具有异常的节点
- */
-function hasNotSatisfiedNode(node: HTMLElement) {
-  if (!node) return false;
-  if (!node.childNodes) return false;
-  if (!node.childNodes.length) return false;
-  if (node.childNodes.length == 1) {
-    if (hasParentOnlyBr(node)) return false;
-  }
-  const nodes: any[] = Array.from(node.childNodes);
-  let exist = false;
-  for (const cld of nodes) {
-    // 存在BR节点，但是子节点有很多个
-    if (cld.nodeName === "BR" && nodes.length > 1) {
-      exist = true;
-      break;
-    }
-    // 节点不是内联块属性节点 || 节点有背景色属性
-    if (hasTransparentBackgroundColor(cld as any)) {
-      exist = true;
-      break;
-    }
-  }
-  return exist;
-}
-
 /** @name 转换器--编辑节点 */
 function transformsEditNodes() {
   const editNode = (this as Keyboard).fishEditor.root;
 
   const rangeInfo = fishRange.getRange();
-
   // console.time("transforms转换节点耗时");
-
   /**
    * bug1:
    * 获取光标的行编辑节点，查询是否存在不符合编辑节点格式的节点，然后重写它。
@@ -232,8 +183,7 @@ function transformsEditNodes() {
   if (rangeInfo && rangeInfo?.startContainer) {
     // 获取行编辑节点
     const editorRowNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
-    if (editorRowNode && hasNotSatisfiedNode(editorRowNode)) {
-      // console.log(editorRowNode.childNodes);
+    if (editorRowNode) {
       /**
        * 必须用Array.from包裹下childNodes，不然导致for渲染不如预期的次数
        * 遍历行节点集合
@@ -241,17 +191,20 @@ function transformsEditNodes() {
       const nodes: any[] = Array.from(editorRowNode.childNodes);
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i] as any;
-        if (node.nodeName == "SPAN" && !isNode.isEditInline(node)) {
+        // 1. 如果是span标签，但是不属于编辑器--文本块，则进行格式化处理
+        if (node.nodeName == "SPAN" && !isNode.isEditTextNode(node)) {
           const formatNode = formats.createNodeOptimize(node);
           if (formatNode) {
             node.parentNode?.replaceChild(formatNode, node);
           }
         }
 
-        if (hasTransparentBackgroundColor(node) && isNode.isEditInline(node)) {
+        // 2. 存在背景色样式
+        if (node.style && node.style?.backgroundColor) {
           node.style.removeProperty("background-color");
         }
 
+        // 3. 存在br
         if (node.nodeName === "BR" && nodes.length > 1) {
           node.remove();
         }
@@ -277,7 +230,7 @@ function transformsEditNodes() {
 
   /**
    * bug3:
-   * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个内联节点，然后删除了就会导致行节点也被删除了。
+   * 不可以在非编辑行节点里面输入。这种情况出现在行编辑里面剩下一个图片节点，然后删除了就会导致行节点也被删除了。
    * 兜底处理,防止骚操作
    */
   if (rangeInfo && rangeInfo?.startContainer) {

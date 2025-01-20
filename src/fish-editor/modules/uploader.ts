@@ -106,7 +106,7 @@ const getEditImageAmount = (node: (typeof FishEditor)["prototype"]["root"]): num
       amount += getEditImageAmount((node as any).childNodes[i]);
     }
 
-    if (isNode.isEditInline(node) && isNode.isImageNode(node)) {
+    if (isNode.isImageNode(node)) {
       amount += 1;
     }
   }

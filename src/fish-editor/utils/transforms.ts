@@ -100,7 +100,7 @@ export const getNodePlainText = (node: HTMLElement) => {
 
     const display = getComputedStyle(node).getPropertyValue("display");
 
-    if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {
+    if (isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
       // 是否是一个表情图片,如果是取出名称
       const isEmojiVal = node.dataset?.[emojiNodeAttrName] || "";
@@ -109,7 +109,7 @@ export const getNodePlainText = (node: HTMLElement) => {
       }
     }
 
-    if (display === "block" && !isNode.isEditInline(node)) {
+    if (display === "block") {
       text += "\n";
     }
   }
@@ -127,23 +127,29 @@ export const getEditElementContent = (node: HTMLElement): string => {
 
   if (isNode.isDOMElement(node)) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      // 是内联块属性节点，不是图片节点
-      if (isNode.isEditInline(node) && !isNode.isEmojiImgNode(node) && !isNode.isImageNode(node)) {
-        const dom_span = (node as any).childNodes[i].parentNode;
-        // console.log(dom_span);
-        content += node.style.color ? `<span style="color: ${node.style.color}">${dom_span.innerText}</span>` : dom_span.innerText;
+      // 属于编辑器--文本块节点，不属于图片节点
+      if (isNode.isEditTextNode(node) && !isNode.isEmojiImgNode(node) && !isNode.isImageNode(node)) {
+        const nodeName = (node.nodeName || "").toLowerCase();
+        const container = document.createElement(nodeName);
+        if (node.style?.length) {
+          container.style.cssText = node.style.cssText;
+        }
+        container.innerText = node.innerText;
+        // console.log(node, container.outerHTML);
+        content += container.outerHTML;
       } else {
+        // 遍历子节点
         content += getEditElementContent((node as any).childNodes[i]);
       }
     }
 
-    if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {
+    if (isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
       const emojiVal = node?.dataset?.[emojiNodeAttrName] || "";
       if (emojiVal) content += emojiVal;
     }
 
-    if (isNode.isEditInline(node) && isNode.isImageNode(node)) {
+    if (isNode.isImageNode(node)) {
       content += `<img src="${(node as HTMLImageElement).src}">`;
     }
   }

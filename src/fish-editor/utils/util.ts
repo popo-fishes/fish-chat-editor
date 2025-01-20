@@ -4,7 +4,7 @@
  */
 import { isNode } from ".";
 
-const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditTextNode, isEditInline, isEditElement } = isNode;
+const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditTextNode, isEditElement } = isNode;
 
 /**
  * @name 传入一个节点--获取编辑器行--属性节点，如果没有，最多找5级父节点
@@ -43,7 +43,7 @@ export const getNodeOfEditorEmojiNode = (node: any, level = 0): HTMLElement | nu
     return null;
   }
 
-  if (isEmojiImgNode(node) && isEditInline(node)) return node;
+  if (isEmojiImgNode(node)) return node;
 
   return getNodeOfEditorEmojiNode(node.parentNode, level + 1);
 };
@@ -57,7 +57,7 @@ export const getNodeOfEditorImageNode = (node: any, level = 0): HTMLElement | nu
     return null;
   }
 
-  if (isImageNode(node) && isEditInline(node)) return node;
+  if (isImageNode(node)) return node;
 
   return getNodeOfEditorImageNode(node.parentNode, level + 1);
 };
