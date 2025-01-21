@@ -77,10 +77,8 @@ class Editor {
    * @name Retrieve semantic HTML of editor content
    */
   public getSemanticHTML() {
-    console.time("getSemanticHTML:获取内容耗时");
     const cloneEditeNode = getCloneEditeElements.call(this);
     const contentResult = transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
-    console.timeEnd("getSemanticHTML:获取内容耗时");
 
     removeBodyChild(cloneEditeNode);
 
