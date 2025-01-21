@@ -20,7 +20,9 @@ class Emitter {
     EDITOR_CHANGE: "editor-change",
     EDITOR_ENTER_DOWN: "editor-enter-down",
     COMPOSITION_START: "composition-start",
-    COMPOSITION_END: "composition-end"
+    COMPOSITION_END: "composition-end",
+    /** When rich text operations change, quickly trigger changes, such as line breaks and pasting */
+    EDITOR_INPUT_CHANGE: "editor-input-change"
   } as const;
 
   subscribes: Map<string, Array<SubscribeEvent>>;
@@ -36,19 +38,14 @@ class Emitter {
   }
 
   /**
-   * 事件订阅
-   * @param type 订阅的事件名称
-   * @param callback 触发的回调函数
+   * event subscriptions
+   * @param type
+   * @param callback
    */
   on(type: string, callback: Function) {
     this.addEvent(type, callback);
   }
 
-  /**
-   * 发布事件
-   * @param type 发布的事件名称
-   * @param args 发布事件的额外参数
-   */
   emit(type: string, ...args: Array<any>) {
     const sub = this.subscribes.get(type) || [];
 
@@ -65,11 +62,6 @@ class Emitter {
     }
   }
 
-  /**
-   * 取消订阅
-   * @param type 取消订阅的事件名称
-   * @param callback 取消订阅的具体事件
-   */
   off(type: string, callback: Function) {
     const sub = this.subscribes.get(type);
 
@@ -79,7 +71,6 @@ class Emitter {
     }
   }
 
-  // 只订阅一次
   once(type: string, callback: Function) {
     this.addEvent(type, callback, true);
   }

@@ -9,14 +9,13 @@ import { isEditElement } from "./isNode";
 import store from "../core/store";
 
 /**
- * @name 字符串标签转义
- * @param str 转换的字符串 把：`<h1>` ==> `&lt;h1&gt;`
- * @param reversal 是否反转回去? 比如：把`&lt;h1&gt;`==> `<h1>`
+ * @name String tag escape
+ * @param str `<h1>` ==> `&lt;h1&gt;`
+ * @param reversal `&lt;h1&gt;`==> `<h1>`
  * @returns
  */
 export const labelRep = (str: string, reversal?: boolean): string => {
   if (!str) return "";
-  // 反转回去
   if (reversal) {
     return str
       .replace(/&amp;/g, "&")
@@ -29,9 +28,9 @@ export const labelRep = (str: string, reversal?: boolean): string => {
 };
 
 /**
- * @name 把插入的文本转成节点, 主要是把文本转成表情节点
- * @param content 文本内容
- * @param size? 表情的尺寸
+ * @name Convert inserted text into nodes, mainly converting text into emoji nodes
+ * @param content
+ * @param size
  * @returns
  */
 export const transformTextToNodes = (content: string, size?: number): Node[] | [] => {
@@ -40,29 +39,20 @@ export const transformTextToNodes = (content: string, size?: number): Node[] | [
   const nodes: Node[] = [];
 
   let strCont = content;
-  /**
-   * 比如content为：哈哈[爱你]哈[不看]哈 --->
-   * 要转换为一个数组： [text节点内容为“"哈哈"，img节点， text节点内容为“"哈"，img节点， text节点内容为“"哈哈"]
-   * ：：：：：
-   *这里主要做字符串标记
-   */
+
   for (const i in emojiList) {
     const item = emojiList[i];
     const reg = new RegExp("\\" + item.name, "g");
-    // 替换
     strCont = strCont?.replace(reg, function () {
       const key = base.getElementAttributeKey("emojiNode");
-      // 替换表情
       const strimg = `<img src="${item.url}" ${key}="${item.name}"/>`;
       return strimg;
     });
   }
 
-  // 创建一个p标签, 把字符串转成一个dom节点
   const dom_p = document.createElement("p");
   dom_p.innerHTML = strCont;
 
-  // 处理节点内容
   if (dom_p.childNodes?.length) {
     for (const i in dom_p.childNodes) {
       const cldNode = dom_p.childNodes[i];
@@ -83,8 +73,7 @@ export const transformTextToNodes = (content: string, size?: number): Node[] | [
 };
 
 /**
- * @name 传入节点,获取它的纯文本内容
- * @returns
+ * @name Get its plain text content
  */
 export const getNodePlainText = (node: HTMLElement) => {
   let text = "";
@@ -100,16 +89,16 @@ export const getNodePlainText = (node: HTMLElement) => {
 
     const display = getComputedStyle(node).getPropertyValue("display");
 
-    if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {
+    if (isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
-      // 是否是一个表情图片,如果是取出名称
+
       const isEmojiVal = node.dataset?.[emojiNodeAttrName] || "";
       if (isEmojiVal) {
         text += isEmojiVal;
       }
     }
 
-    if (display === "block" && !isNode.isEditInline(node)) {
+    if (display === "block") {
       text += "\n";
     }
   }
@@ -117,8 +106,12 @@ export const getNodePlainText = (node: HTMLElement) => {
   return text;
 };
 
-/** @name 获取编辑行属性节点的html内容 */
-export const getEditElementContent = (node: HTMLElement): string => {
+/**
+ * @name Retrieve the HTML content of the edit line attribute node
+ * @param node
+ * @param isFullAttr
+ */
+export const getEditElementContent = (node: HTMLElement, isFullAttr?: boolean): string => {
   let content = "";
 
   if (isNode.isDOMText(node) && node.nodeValue) {
@@ -127,16 +120,33 @@ export const getEditElementContent = (node: HTMLElement): string => {
 
   if (isNode.isDOMElement(node)) {
     for (let i = 0; i < node.childNodes.length; i++) {
-      content += getEditElementContent((node as any).childNodes[i]);
+      // Belongs to Editor - Text Block Node, not Image Node
+      if (isNode.isEditTextNode(node) && !isNode.isEmojiImgNode(node) && !isNode.isImageNode(node)) {
+        const nodeName = (node.nodeName || "").toLowerCase();
+        const container = document.createElement(nodeName);
+        if (node.style?.length) {
+          container.style.cssText = node.style.cssText;
+        }
+        if (isFullAttr) {
+          container.id = node.id;
+          const key = base.getElementAttributeKey("fishNode");
+          container.setAttribute(key, "text");
+        }
+        container.innerText = node.innerText;
+        // console.log(node, container.outerHTML);
+        content += container.outerHTML;
+      } else {
+        content += getEditElementContent((node as any).childNodes[i], isFullAttr || false);
+      }
     }
 
-    if (isNode.isEditInline(node) && isNode.isEmojiImgNode(node)) {
+    if (isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
       const emojiVal = node?.dataset?.[emojiNodeAttrName] || "";
       if (emojiVal) content += emojiVal;
     }
 
-    if (isNode.isEditInline(node) && isNode.isImageNode(node)) {
+    if (isNode.isImageNode(node)) {
       content += `<img src="${(node as HTMLImageElement).src}">`;
     }
   }
@@ -145,9 +155,9 @@ export const getEditElementContent = (node: HTMLElement): string => {
 };
 
 /**
- * @name 获取编辑器的语义内容。逐行获取
- * @desc 它是会给img图片的src转换成base64的
- * @returns 返回一个html格式数组
+ * @name retrieves the semantic content of the editor. Retrieve line by line
+ * @desc will convert the src of img images to base64
+ * @returns returns an HTML formatted array
  */
 export const handleEditTransformsSemanticHtml = (node: HTMLElement): string => {
   const result: string[] = [];
@@ -158,7 +168,7 @@ export const handleEditTransformsSemanticHtml = (node: HTMLElement): string => {
   try {
     for (const cld of Array.from(nodes)) {
       if (isEditElement(cld as HTMLElement)) {
-        // 存在图片就需要转换src。 主要处理把图片的blob转成base64
+        // If there is an image, it needs to be converted to src. Mainly processing the conversion of image blob to base64
         const imgElements = (cld as HTMLElement).querySelectorAll("img") as any;
         for (const cimg of Array.from(imgElements)) {
           if (isNode.isImageNode(cimg as HTMLElement)) {
@@ -190,9 +200,9 @@ export const handleEditTransformsSemanticHtml = (node: HTMLElement): string => {
 };
 
 /**
- * @name 获取编辑器节点的原始内容。逐行获取
- * @desc 它不会转换img图片的src，还是blob格式
- * @returns 返回一个html格式数组
+ * @name retrieves the semantic content of the editor. Retrieve line by line
+ * @desc will convert the src of img images to blob
+ * @returns returns an HTML formatted array
  */
 export const handleEditTransformsProtoHtml = (node: HTMLElement): string => {
   const result: string[] = [];

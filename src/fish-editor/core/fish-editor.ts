@@ -22,11 +22,15 @@ export interface ExpandedFishEditorOptions {
 
 export interface IFishEditorOptions {
   /**
-   * 是否禁用编辑
+   * Do you want to disable editing
    * @default false
    */
   readOnly?: boolean;
+  /**
+   * placeholder
+   */
   placeholder?: string;
+  /** Configuration options for each module in the editor */
   modules?: Record<string, unknown>;
 }
 
@@ -45,7 +49,7 @@ class FishEditor {
   static imports: Record<string, unknown> = {};
   static import(name: string) {
     if (this.imports[name] == null) {
-      console.warn(`无法导入${name}。你确定它已经注册了吗？`);
+      console.warn(`Unable to import ${name}. Are you sure it has already been registered?`);
     }
     return this.imports[name];
   }
@@ -62,10 +66,13 @@ class FishEditor {
     }
   }
   options: ExpandedFishEditorOptions;
-  /** @name 编辑器最外层容器 */
+  /** @name Editor's outermost container node */
   container: HTMLElement;
-  /** @name 编辑器根节点*/
+  /** @name root*/
   root: HTMLDivElement;
+  /** @name scroll Dom */
+  scrollDom: HTMLDivElement;
+  /** @name Composition Event */
   composition: Composition;
   emitter: Emitter;
   theme: Theme;
@@ -76,7 +83,8 @@ class FishEditor {
     this.container = resolveSelector(container);
     this.options = expandConfig(options);
     this.isDestroyed = false;
-    // 选区信息
+    this.scrollDom = null;
+    // range Info
     this.rangeInfo = {
       startContainer: null,
       startOffset: 0,
@@ -108,7 +116,7 @@ class FishEditor {
       // console.log(editor);
       const hasEmpty = (editor as Editor).isEditorEmptyNode();
       this.container.classList.toggle("is-placeholder-visible", hasEmpty);
-      // 将 removeEditorImageBse64Map 包装成Promise异步执行
+      // removeEditorImageBse64Map Promise asynchronous execution
       return new Promise((resolve, reject) => {
         removeEditorImageBse64Map(hasEmpty, this.root)
           .then(() => {
@@ -125,6 +133,8 @@ class FishEditor {
     } else {
       this.enable();
     }
+
+    // this.setHtml("<p>hello <span style='color: rgb(231, 95, 51)'>editor</span><strong>word</strong></p>");
   }
 
   addContainer(): HTMLDivElement {
@@ -137,9 +147,9 @@ class FishEditor {
     editorDom.setAttribute("spellCheck", "false");
 
     // add scroll dom
-    const scrollDom = document.createElement("div");
-    scrollDom.classList.add("fb-editor-scroll");
-    dom.toTargetAddNodes(scrollDom, [editorDom], false);
+    this.scrollDom = document.createElement("div");
+    this.scrollDom.classList.add("fb-editor-scroll");
+    dom.toTargetAddNodes(this.scrollDom, [editorDom], false);
 
     // add placeholder dom
     const placeholderDom = document.createElement("div");
@@ -147,7 +157,7 @@ class FishEditor {
     if (this.options.placeholder) {
       placeholderDom.innerHTML = this.options.placeholder;
     }
-    dom.toTargetAddNodes(this.container, [scrollDom, placeholderDom], false);
+    dom.toTargetAddNodes(this.container, [this.scrollDom, placeholderDom], false);
     return editorDom;
   }
 
@@ -177,6 +187,17 @@ class FishEditor {
   setText(value: string) {
     return this.editor.setText(value);
   }
+  getText() {
+    return this.editor.getText();
+  }
+
+  getHtml() {
+    return this.editor.getProtoHTML();
+  }
+
+  setHtml(value: string) {
+    this.editor.setHtml(value);
+  }
   isEmpty() {
     return this.editor.isEmpty();
   }
@@ -190,15 +211,11 @@ class FishEditor {
   once(...args: Parameters<(typeof Emitter)["prototype"]["once"]>) {
     return this.emitter.once(...args);
   }
-  /**
-   * @name 不要使用，它是内部方法
-   * @param args
-   * @returns
-   */
+
   emit(...args: Parameters<(typeof Emitter)["prototype"]["emit"]>) {
     return this.emitter.emit(...args);
   }
-  /** @name 备份选区的位置 */
+
   backupRangePosition(node: HTMLElement, startOffset: number, isReset?: boolean) {
     let targetDom = node;
     if (isNode.isEditElement(node) && isReset) {
@@ -213,10 +230,9 @@ class FishEditor {
     };
   }
 
-  /** @name 插入表情图片 */
   insertEmoji(item: IEmojiType) {
     if (!this.editor) return;
-    // 创建
+
     const imgNode = base.createChunkEmojiElement(item.url, emojiSize, item.name);
 
     const currentRange = this.rangeInfo;
@@ -249,7 +265,6 @@ class FishEditor {
     this.root?.remove();
     this.container?.remove();
     this.isDestroyed = true;
-    // 触发自定义事件
     this.emit("destroyed");
   }
 }
@@ -272,7 +287,7 @@ function expandConfig(options: IFishEditorOptions): ExpandedFishEditorOptions {
       const moduleClass = FishEditor.import(`modules/${name}`);
 
       if (moduleClass == null) {
-        console.warn(`无法导入${name}。你确定它已经注册了吗？`);
+        console.warn(`Unable to import ${name}. Are you sure it has already been registered?`);
         return modulesWithDefaults;
       }
 

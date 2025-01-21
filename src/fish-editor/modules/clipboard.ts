@@ -10,14 +10,22 @@ import type Uploader from "./uploader";
 import type FishEditor from "../core/fish-editor";
 import { range, transforms } from "../utils";
 
-class Clipboard extends Module {
-  isPasteLock = false;
+interface IClipboardOptions {
+  /** Can I paste the image */
+  isPasteFile?: boolean;
+}
 
+class Clipboard extends Module<IClipboardOptions> {
+  static DEFAULTS: IClipboardOptions = {
+    isPasteFile: true
+  };
+
+  isPasteLock = false;
+  /** throttle */
   emitThrottled = throttle(() => {
-    // 300 毫秒的节流间隔，可以根据需要调整
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
   }, 300);
-  constructor(fishEditor: FishEditor, options: Record<string, never>) {
+  constructor(fishEditor: FishEditor, options: Partial<IClipboardOptions>) {
     super(fishEditor, options);
     this.fishEditor.root.addEventListener("copy", (e) => this.onCaptureCopy(e, false));
     this.fishEditor.root.addEventListener("cut", (e) => this.onCaptureCopy(e, true));
@@ -38,7 +46,6 @@ class Clipboard extends Module {
 
     if (!contents) return;
 
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
     const odiv = contents.ownerDocument.createElement("div");
     odiv.appendChild(contents);
 
@@ -52,7 +59,6 @@ class Clipboard extends Module {
     contents.ownerDocument.body.removeChild(odiv);
 
     if (isCut) {
-      // 后续可以拓展删除节点方法，先原生的
       document.execCommand("delete", false, undefined);
     }
   }
@@ -70,7 +76,7 @@ class Clipboard extends Module {
     const isHtml = clp?.types?.includes("text/html");
     const isPlain = clp?.types?.includes("text/plain");
 
-    if (isFile) {
+    if (isFile && this.options.isPasteFile) {
       const files = isObject(clp.files) ? Object.values(clp.files) : clp.files;
       const vfiles = Array.from(files || []);
       if (vfiles.length > 0) {
@@ -97,7 +103,6 @@ class Clipboard extends Module {
       }
 
       if (range.isSelected()) {
-        // 后续可以拓展删除节点方法，先原生的
         document.execCommand("delete", false, undefined);
       }
 
@@ -110,6 +115,7 @@ class Clipboard extends Module {
           (success) => {
             if (success) {
               Promise.resolve().then(() => {
+                this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE);
                 this.emitThrottled();
               });
             }

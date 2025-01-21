@@ -2,13 +2,14 @@
  * @Date: 2024-3-14 15:40:27
  * @LastEditors: Please set LastEditors
  */
-import { helper, base, dom, isNode, util, range as fishRange, transforms } from "../utils";
+import cloneDeep from "lodash/cloneDeep";
+import { helper, base, dom, isNode, util, range as fishRange, transforms, split, formats } from "../utils";
 import type { IRange } from "../utils";
 import type FishEditor from "./fish-editor";
 import Emitter from "../core/emitter";
 
 class Editor {
-  /** @name 编辑器节点 */
+  /** @name Editor Node */
   container: HTMLElement;
   constructor(protected fishEditor: FishEditor) {
     this.container = fishEditor.root;
@@ -31,88 +32,80 @@ class Editor {
   }
 
   /**
-   * @name 判断编辑器是否空内容
-   * @desc 仅存在换行or输入空格，都算是空内容
+   * @name Check if the editor has empty content
+   * @desc Only line breaks or input spaces are considered empty content
    */
   public isEmpty() {
     const editorNode = this.container;
     if (!editorNode || !editorNode?.childNodes) return true;
     /**
-     * 没有纯文本内容，并且没有内联块节点。代表是一个空内容
-     * hasEditorExistInlineNode方法主要判断，有可能编辑器存在图片节点。等等内联块节点
+     * There is no plain text content and no image block nodes. Represents an empty content
      */
     if (this.getText() == "" && !hasEditorExistInlineNode(editorNode)) return true;
 
     return false;
   }
   /**
-   * @name 判断编辑器是否空节点
-   * @desc 存在换行or输入空格，都算是有内容
-   * @desc 仅存在一个“<p><br></p>”代表是空。
+   * @name Check if the editor has empty nodes
+   * @desc If there is a line break or input space, it is considered as having content
+   * @desc Only one '<p><br></p>' represents emptiness.
    */
   public isEditorEmptyNode() {
     const editorNode = this.container;
     if (!editorNode || !editorNode?.childNodes) return true;
-    /**
-     * 代表有多个编辑行，不是空
-     */
+
     if (editorNode?.childNodes && editorNode?.childNodes.length > 1) {
       return false;
     }
-    /**
-     * 没有纯文本内容，并且仅存在一个“<p><br></p>”。代表是空
-     */
+
     if (this.getText() == "" && this.getProtoHTML() == base.emptyEditHtmlText) return true;
 
     return false;
   }
-  /** @name 获取编辑器的纯文本内容 */
+  /** @name Retrieve the plain text content of the editor */
   public getText() {
     const cloneEditeNode = getCloneEditeElements.call(this);
     const contentStr = transforms.getNodePlainText(cloneEditeNode);
-    // 移除节点
+
     removeBodyChild(cloneEditeNode);
-    // 替换
+
     const result = helper.contentReplaceEmpty(helper.removeTailLineFeed(contentStr));
 
     return result;
   }
   /**
-   * @name 获取编辑器内容的语义HTML
-   * @desc 当你想提交富文本内容时，它是非常有用的，因为它会把img图片的src转换成base64。
-   * @returns 返回Promise
+   * @name Retrieve semantic HTML of editor content
    */
   public getSemanticHTML() {
     console.time("getSemanticHTML:获取内容耗时");
     const cloneEditeNode = getCloneEditeElements.call(this);
     const contentResult = transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
     console.timeEnd("getSemanticHTML:获取内容耗时");
-    // 移除节点
+
     removeBodyChild(cloneEditeNode);
 
     return contentResult;
   }
   /**
-   * @name 获取编辑器内容的原始html，主要用于判断值场景 or 富文本内部使用
-   * @desc 它不会转换img图片的src，还是blob格式
-   * @returns 返回一个html标签字符串
+   * @name Retrieve the original HTML of the editor content, mainly used for judging value scenarios or internal use of rich text
    */
   public getProtoHTML() {
     const cloneEditeNode = getCloneEditeElements.call(this);
     const contentResult = transforms.handleEditTransformsProtoHtml(cloneEditeNode);
-    // 移除节点
     removeBodyChild(cloneEditeNode);
     return contentResult;
   }
   /**
-   * @name 在选区插入文本
-   * @param contentText 内容
-   * @param range 光标信息
-   * @param callBack 回调（success?）=> void
-   * @param showCursor 插入成功后是否需要设置光标
+   * @name Insert text in the selection area
+   * @param contentText
+   * @param range
+   * @param callBack （success?）=> void
+   * @param showCursor Do I need to set a cursor after successful insertion
    */
   public insertText(contentText: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean): void {
-    if (!contentText || !range) {
+    let cloneRange = cloneDeep(range) as IRange;
+
+    if (!contentText || !cloneRange) {
       callBack?.(false);
       return;
     }
@@ -121,33 +114,38 @@ class Editor {
       dom.toTargetAfterInsertNodes(startContainer, [node]);
     };
 
-    // 获取光标的行编辑节点
-    const rowElementNode: HTMLElement = util.getNodeOfEditorElementNode(range.startContainer);
+    // Retrieve the row editing node of the cursor
+    const rowElementNode: HTMLElement = util.getNodeOfEditorElementNode(cloneRange.startContainer);
 
     if (!rowElementNode) {
-      console.warn("无编辑行节点，不可插入");
+      console.warn("No editing line node, cannot be inserted");
       callBack?.(false);
       return;
     }
 
-    console.time("editor插入内容耗时");
+    if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
+      const result = split.splitEditTextNode(cloneRange);
+      cloneRange.startContainer = result.parentNode;
+      cloneRange.anchorNode = result.parentNode;
+      cloneRange.startOffset = result.startOffset;
+    }
 
-    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
+    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(cloneRange);
 
-    /** 处理内容插入 */
+    // console.log(behindNodeList, nextNodeList);
+
+    /** Processing Content Insertion */
     {
-      // 把文本标签转义：如<div>[爱心]</div> 把这个文本转义为"&lt;div&lt;"
       const semanticContent = transforms.labelRep(contentText);
 
       const lines = semanticContent?.split(/\r\n|\r|\n/) || [];
 
-      // 是否需要进行分割
       let split = false;
-      // 初始化光标节点的顶级节点，在遍历时会不停地更新它
+
       let initialNode = rowElementNode;
-      // 需要插入的第一个节点(没有被真正插入到dom，只用到了它的子节点去合并光标位置的节点)
+
       let firstNode: any = null;
-      // 需要插入节点的最后一个节点（如果需要插入节点只有一个，那么这个值和第一个节点 相同）
+      // The last node that needs to be inserted (if there is only one node to be inserted, then this value is the same as the first node)
       let lastNode: any = null;
 
       for (let i = 0; i < lines.length; i++) {
@@ -182,31 +180,23 @@ class Editor {
         lastNode.appendChild(iElement);
       }
 
-      /** 处理原始光标行节点的内容 */
+      /** Process the content of the original cursor line node */
       {
         const content = transforms.getEditElementContent(rowElementNode);
-        // 空文本??
+        // Empty Text??
         if (content == "\n" || content == "") {
           if (isNode.isDOMElement(firstNode)) {
-            // 直接把第一个插入的节点内容 赋值给 光标节点的顶级富文本节点
             dom.toTargetAddNodes(rowElementNode, dom.cloneNodes(firstNode.childNodes));
           }
         } else {
-          // 不是空！！
-          /**
-           * 1. 在光标前面节点数组中，找到最后一个节点，在最后一个节点的后面插入节点
-           */
-          // 获取第一个插入节点的文本内容
           const firstContent = transforms.getEditElementContent(firstNode);
-          // 不是空文本！！
           if (firstContent !== "\n" && firstContent !== "") {
-            // 获取前面节点的最后一个节点
             const prevLast = behindNodeList[0];
             if (prevLast) {
               dom.toTargetAfterInsertNodes(prevLast, dom.cloneNodes(firstNode.childNodes));
             } else {
               /**
-               * 如果光标位置的之前没节点, 则选择光标之后的第一个节点，然后插入节点
+               * If there is no node before the cursor position, select the first node after the cursor and insert the node
                */
               if (nextNodeList[0]) {
                 const nodes: any = Array.from(dom.cloneNodes(firstNode.childNodes));
@@ -214,22 +204,22 @@ class Editor {
                 for (let i = 0; i < nodes.length; i++) {
                   fragment.appendChild(nodes[i]);
                 }
-                // 在行的--光标之后的第一个节点，的前面插入多个节点
                 rowElementNode.insertBefore(fragment, nextNodeList[0]);
               }
             }
           }
 
           /**
-           * 2.1 如果第一个插入的节点和最后一个插入的节点是 相同的，代表是插入一个节点, 如果是一个节点，就不能去删除原始节点后面的节点，因为没有换行。
-           * 2.2 我们这里判断如果不是一个节点，那么就删除后面的节点
+            *2.1 If the first inserted node and the last inserted node are the same, it means that a node has been inserted.
+              If it is a node, the nodes after the original node cannot be deleted because there is no line break.
+            *2.2 If it is not a node, we will delete the following nodes
            */
           if (firstNode !== lastNode && nextNodeList.length) {
             const lastContent = transforms.getEditElementContent(lastNode);
             dom.toTargetAddNodes(lastNode, dom.cloneNodes(nextNodeList), false);
             /**
-             * 如果添加的节点本身没有内容，就需要先清空节点吧BR标签删除掉
-             * 没有内容lastNode会带一个 br标签子节点，如果不处理，会导致有2行的BUG视觉效果
+             *If the added node itself has no content, you need to clear the node first and delete the BR tag
+             *If there is no content, lastNode will have a br labeled child node. If not processed, it will result in a 2-line BUG visual effect
              */
             if (lastContent == "" || lastContent == "\n") {
               util.deleteTargetNodeOfBrNode(lastNode);
@@ -238,8 +228,6 @@ class Editor {
           }
         }
       }
-
-      console.timeEnd("editor插入内容耗时");
 
       {
         const focusNode = document.getElementById(keyId) as any;
@@ -256,56 +244,52 @@ class Editor {
     }
   }
   /**
-   * @name 在目标位置插入节点（目前是图片）
-   * @param nodes 节点集合
-   * @param range 光标信息
-   * @param callBack 回调（success?）=> void
+   * @name Insert a node at the target location (currently an image)
+   * @param nodes
+   * @param range
+   * @param callBack（success?）=> void
    * @returns
    */
   public insertNode(nodes: HTMLElement[], range: IRange, callBack?: (success: boolean) => void): void {
     if (!nodes || nodes?.length == 0) return callBack?.(false);
-
-    // 不存在光标
-    if (!range) {
+    let cloneRange = cloneDeep(range) as IRange;
+    // No cursor exists
+    if (!cloneRange) {
       callBack?.(false);
       return;
     }
 
-    const rowElementNode: any = util.getNodeOfEditorElementNode(range.startContainer);
+    const rowElementNode: any = util.getNodeOfEditorElementNode(cloneRange.startContainer);
 
     if (!rowElementNode) {
-      console.warn("无编辑行节点，不可插入");
-      callBack?.(false);
-      return;
-    }
-    console.time("editor插入节点耗时");
-
-    // 获取光标位置的元素节点 前面的节点 和 后面的节点
-    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(range);
-
-    if (nodes.length == 0) {
-      console.timeEnd("editor插入节点耗时");
+      console.warn("No editing line node, cannot be inserted");
       callBack?.(false);
       return;
     }
 
-    /** 处理内容 */
+    if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
+      const result = split.splitEditTextNode(cloneRange);
+      cloneRange.startContainer = result.parentNode;
+      cloneRange.anchorNode = result.parentNode;
+      cloneRange.startOffset = result.startOffset;
+    }
+
+    // console.log(cloneRange);
+
+    const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(cloneRange);
+    // console.log(behindNodeList, nextNodeList);
+
+    /** Processing Content Insertion */
     {
-      // 行编辑节点没有节点
       if (behindNodeList.length == 0 && nextNodeList.length == 0) {
         dom.toTargetAddNodes(rowElementNode, nodes);
       } else if (behindNodeList.length) {
-        // 判断前面有节点
         dom.toTargetAfterInsertNodes(behindNodeList[0], nodes);
       } else if (nextNodeList.length) {
-        // 判断后面有节点
         dom.toTargetBeforeInsertNodes(nextNodeList[0], nodes);
       }
     }
 
-    console.timeEnd("editor插入节点耗时");
-
-    // 设置光标的位置
     {
       const referenceNode = nodes[nodes.length - 1] as any;
       if (isNode.isDOMElement(referenceNode)) {
@@ -313,30 +297,19 @@ class Editor {
         fishRange.setCursorPosition(referenceNode, "after");
         callBack?.(true);
         return;
-      } else {
-        const scrollNode = nodes[nodes.length - 2];
-        /**
-         * bug4:
-         * 插入一个内联节点，基本要在节点的后面插入一个文本，解决光标非常高的问题。
-         */
-        fishRange.setCursorPosition(referenceNode, null, 1);
-        scrollNode?.scrollIntoView({ block: "end", inline: "end" });
-        callBack?.(true);
-        return;
       }
     }
   }
-  /** @name 获取行数 */
+  /** @name Get the number of rows */
   public getLine() {
     if (!this.container || !this.container?.childNodes) return 0;
     return this.container.childNodes.length;
   }
 
-  /** @name 检索编辑器内容的长度，不包含图片 */
   public getLength() {
     return this.getText()?.length;
   }
-  /** @name 设置编辑器文本, 注意它不会覆盖编辑器内容，而是追加内容 */
+
   public setText(content: string) {
     if (!content || !this.container) return;
     this.setCursorEditorLast((node) => {
@@ -356,7 +329,39 @@ class Editor {
       }
     });
   }
-  /** @name 清空编辑器内容 */
+
+  public setHtml(html: string) {
+    if (!html) return;
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+
+    const pElements = tempDiv.querySelectorAll("p");
+
+    const nodes = Array.from(pElements);
+
+    if (nodes.length == 0) return [];
+
+    const newNode = [];
+    // nodes
+    for (let i = 0; i < nodes.length; i++) {
+      const lineDom = base.createLineElement(true);
+      const pldNode = nodes[i];
+      for (let c = 0; c < pldNode.childNodes.length; c++) {
+        const cldNode = pldNode.childNodes[c] as any;
+        const formatNode = formats.createNodeOptimize(cldNode);
+        if (formatNode) {
+          lineDom.appendChild(formatNode);
+        }
+      }
+      newNode.push(lineDom);
+    }
+
+    dom.toTargetAddNodes(this.container, newNode);
+
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+  }
+
   public clear() {
     if (!this.container) return null;
     const node = base.createLineElement();
@@ -368,16 +373,16 @@ class Editor {
       }
     });
   }
-  /** @name 失去焦点 */
+
   public blur() {
     this.container?.blur?.();
   }
-  /** @name 获取焦点 */
+
   public focus() {
     requestAnimationFrame(() => this.setCursorEditorLast());
   }
   /**
-   * @name 把光标设置在编辑器的最后一个行节点下面的最后子节点
+   * @name Set the cursor to the last child node below the last line node in the editor
    */
   public setCursorEditorLast = (callBack?: (node?: HTMLElement) => void) => {
     if (!this.container || !this.container.childNodes) {
@@ -385,25 +390,24 @@ class Editor {
       return;
     }
 
-    // 编辑器--行
     const lastRowElement = this.container.childNodes[this.container.childNodes.length - 1];
 
     if (!lastRowElement) {
-      console.warn("富文本不存在节点，请排查问题");
+      console.warn("Rich text does not have nodes, please investigate the issue");
       callBack?.();
       return;
     }
-    // 最后一行编辑节点是一个节点块
+
     if (isNode.isEditElement(lastRowElement as HTMLElement)) {
-      // 获取编辑行的最后一个子节点
       const referenceElement = lastRowElement.childNodes[lastRowElement.childNodes.length - 1];
       if (referenceElement) {
         /**
-       * 解决在初始化时，当富文本中只有一个br时，光标点不能设置在BR结束位置.不然会有输入中文时，不生效
-       * 特别是在清空输入内容时：然后在次获取焦点，再次输入就会有BUG
-       * 比如： 发送文本消息
+         * When there is only one 'br' in the rich text during initialization,
+          the cursor point cannot be set at the end position of the 'br' Otherwise, it will not take effect when entering Chinese
+         *Especially when clearing the input content: and then getting the focus again, there will be bugs when entering again
+         *For example: sending text messages
+
          const onSend = async (_) => {
-           // 清空编辑器
            editorRef.current?.clear();
 
            editorRef.current?.focus();
@@ -419,18 +423,15 @@ class Editor {
       }
     }
 
-    console.warn("富文本不存在节点，请排查问题");
+    console.warn("Rich text does not have nodes, please investigate the issue");
     callBack?.();
 
     return;
   };
 }
 
-/**
- * @name 传入编辑器，判断是否存在内联块属性节点
- */
 function hasEditorExistInlineNode(node: HTMLElement): boolean {
-  if (isNode.isEditInline(node)) {
+  if (isNode.isImageNode(node) || isNode.isEmojiImgNode(node)) {
     return true;
   }
   for (let i = 0; i < node.childNodes.length; i++) {
@@ -441,7 +442,6 @@ function hasEditorExistInlineNode(node: HTMLElement): boolean {
   return false;
 }
 
-/** @name 获取克隆编辑器的行节点 */
 function getCloneEditeElements(): HTMLDivElement | null {
   if (!this.container || !isNode.isDOMNode(this.container)) return null;
 
@@ -462,7 +462,6 @@ function getCloneEditeElements(): HTMLDivElement | null {
 
 function removeBodyChild(node: HTMLElement) {
   if (document.body) {
-    // 移除节点
     document.body.removeChild(node);
   }
 }

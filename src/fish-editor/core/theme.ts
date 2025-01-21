@@ -16,9 +16,7 @@ class Theme {
   constructor(
     protected fishEditor: FishEditor,
     protected options: ThemeOptions
-  ) {
-    this.init();
-  }
+  ) {}
 
   init() {
     Object.keys({ ...this.options.modules }).forEach((name) => {

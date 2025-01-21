@@ -5,25 +5,27 @@ import type FishEditor from "../core/fish-editor";
 import store from "../core/store";
 import Module from "../core/module.js";
 
-interface UploaderOptions {
+interface IUploaderOptions {
+  /** @name Support file types */
   mimetypes: string[];
+  /** @name Maximum number of uploaded files */
   slice: number;
-  /** @param beforePasteImage 图片插入前的钩子 */
+  /** @name Hook before file insertion */
   beforeUpload?: (files: File[], amount: number) => (File[] | []) | Promise<File[] | []>;
 }
 
-class Uploader extends Module<UploaderOptions> {
-  static DEFAULTS: UploaderOptions = {
+class Uploader extends Module<IUploaderOptions> {
+  static DEFAULTS: IUploaderOptions = {
     mimetypes: ["image/png", "image/jpeg"],
     slice: 10
   };
 
-  constructor(fishEditor: FishEditor, options: Partial<UploaderOptions>) {
+  constructor(fishEditor: FishEditor, options: Partial<IUploaderOptions>) {
     super(fishEditor, options);
   }
 
   async upload(rangeInfo: IRange, files: File[], callBack: (success: boolean) => void) {
-    // 截取
+    // capture
     const filtratefiles = this.options.slice ? files.slice(0, this.options.slice) : files;
     let uploads: File[] = [];
     Array.from(filtratefiles).forEach((file) => {
@@ -44,22 +46,18 @@ class Uploader extends Module<UploaderOptions> {
       }
     }
 
-    // 如果是一个空文件直接返回
     if (uploads.length == 0) {
       callBack(false);
       return;
     }
 
     const promiseData: Promise<{ blobUrl: string; base64: string }>[] = [];
-    console.time("图片转换耗时");
 
     for (let i = 0; i < uploads.length; i++) {
       const file = uploads[i];
       promiseData.push(imageFileToBlob(file));
     }
-    console.timeEnd("图片转换耗时");
 
-    // 执行其他操作
     {
       Promise.allSettled(promiseData)
         .then((res) => {
@@ -78,9 +76,7 @@ class Uploader extends Module<UploaderOptions> {
           });
 
           if (nodes.length) {
-            // 存在选区
             if (range.isSelected()) {
-              // 后续可以拓展删除节点方法，先原生的
               document.execCommand("delete", false, undefined);
             }
             this.fishEditor.editor.insertNode(nodes, rangeInfo, (success) => {
@@ -98,7 +94,6 @@ class Uploader extends Module<UploaderOptions> {
   }
 }
 
-/** 获取编辑器中有多少个图片文件（不包含表情） */
 const getEditImageAmount = (node: (typeof FishEditor)["prototype"]["root"]): number => {
   let amount = 0;
   if (isNode.isDOMElement(node)) {
@@ -106,16 +101,13 @@ const getEditImageAmount = (node: (typeof FishEditor)["prototype"]["root"]): num
       amount += getEditImageAmount((node as any).childNodes[i]);
     }
 
-    if (isNode.isEditInline(node) && isNode.isImageNode(node)) {
+    if (isNode.isImageNode(node)) {
       amount += 1;
     }
   }
   return amount;
 };
 
-/**
- * @name 把图片的file对象转为blob
- */
 export function imageFileToBlob(file: any): Promise<{ blobUrl: string; base64: string }> {
   const dataURLToBlob = (dataURL: string): Blob => {
     const arr = dataURL.split(",");
@@ -130,15 +122,14 @@ export function imageFileToBlob(file: any): Promise<{ blobUrl: string; base64: s
   };
 
   return new Promise((resolve, reject) => {
-    // 创建一个新的 FileReader 对象
     const reader = new FileReader();
-    // 读取 File 对象
+
     reader.readAsDataURL(file);
-    // 加载完成后
+
     reader.onload = function () {
       try {
         const base64Data = reader.result as string;
-        // 解析base64Data，并返回blob字符串
+        // Parse base64Data and return blob string
         const blob = dataURLToBlob(base64Data);
         const url = URL.createObjectURL(blob);
         resolve({
@@ -150,7 +141,6 @@ export function imageFileToBlob(file: any): Promise<{ blobUrl: string; base64: s
       }
     };
 
-    // 加载失败时
     reader.onerror = function () {
       reject(new Error("Failed to load file"));
     };
