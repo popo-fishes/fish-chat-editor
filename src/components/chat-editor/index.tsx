@@ -57,9 +57,6 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
       modules: {
         uploader: {
           beforeUpload: restProps.beforePasteImage || null
-        },
-        input: {
-          matchWordsList: ["哈哈"]
         }
       }
     });
