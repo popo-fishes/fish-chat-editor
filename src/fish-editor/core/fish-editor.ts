@@ -66,7 +66,7 @@ class FishEditor {
     }
   }
   options: ExpandedFishEditorOptions;
-  /** @name Editor's outermost container node */
+  /** @name Editor outermost container node */
   container: HTMLElement;
   /** @name root*/
   root: HTMLDivElement;
