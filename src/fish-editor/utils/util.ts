@@ -7,8 +7,7 @@ import { isNode } from ".";
 const { isNodeNotTtxt, isImageNode, isEmojiImgNode, isEditTextNode, isEditElement } = isNode;
 
 /**
- * @name 传入一个节点--获取编辑器行--属性节点，如果没有，最多找5级父节点
- * @returns 如果是行属性节点就返回，不是就返回空
+ * @name Pass in a node - get editor line - attribute node, if not, find up to 5 levels of parent nodes
  */
 export const getNodeOfEditorElementNode = (node: any, level = 0): HTMLElement | null => {
   if (!node || level >= 5) {
@@ -20,13 +19,9 @@ export const getNodeOfEditorElementNode = (node: any, level = 0): HTMLElement | 
   return getNodeOfEditorElementNode(node.parentNode, level + 1);
 };
 
-/**
- * @name 传入一个节点--获取编辑器行的文本节点，如果没有，最多找2级父节点
- * @returns 如果是编辑器行的文本节点就返回，不是就返回空
- */
 export const getNodeOfEditorTextNode = (node: any, level = 0): HTMLElement | null => {
   if (!node || !node?.parentNode || level >= 2) {
-    return null; // 如果节点没有父节点，则返回 null
+    return null;
   }
 
   if (isEditTextNode(node)) return node;
@@ -34,10 +29,6 @@ export const getNodeOfEditorTextNode = (node: any, level = 0): HTMLElement | nul
   return getNodeOfEditorTextNode(node.parentNode, level + 1);
 };
 
-/**
- * @name 传入一个节点--获取表情属性节点，如果没有，最多找3级父节点
- * @returns 如果是表情属性节点就返回，不是就返回空
- */
 export const getNodeOfEditorEmojiNode = (node: any, level = 0): HTMLElement | null => {
   if (!node || level >= 3) {
     return null;
@@ -48,10 +39,6 @@ export const getNodeOfEditorEmojiNode = (node: any, level = 0): HTMLElement | nu
   return getNodeOfEditorEmojiNode(node.parentNode, level + 1);
 };
 
-/**
- * @name 传入一个节点--获取图片属性节点，如果没有，最多找3级父节点
- * @returns 如果是图片属性节点就返回，不是就返回空
- */
 export const getNodeOfEditorImageNode = (node: any, level = 0): HTMLElement | null => {
   if (!node || level >= 3) {
     return null;
@@ -62,9 +49,6 @@ export const getNodeOfEditorImageNode = (node: any, level = 0): HTMLElement | nu
   return getNodeOfEditorImageNode(node.parentNode, level + 1);
 };
 
-/**
- * @name 传入一个编辑器-行属性节点，获取它的子节点集合，判断存在空text标签，就删除text标签
- */
 export const deleteTextNodeOfEmptyNode = (node: HTMLElement): boolean => {
   if (!isEditElement(node)) return false;
   const nodes: any[] = Array.from(node.childNodes);
@@ -81,9 +65,6 @@ export const deleteTextNodeOfEmptyNode = (node: HTMLElement): boolean => {
   return num > 0;
 };
 
-/**
- * @name 传入一个编辑器-行属性节点，获取它的子节点集合，判断存在br标签，就删除br标签
- */
 export const deleteTargetNodeOfBrNode = (node: HTMLElement): boolean => {
   if (!isEditElement(node)) return false;
 

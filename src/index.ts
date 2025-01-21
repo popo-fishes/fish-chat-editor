@@ -12,4 +12,4 @@ export type { IEmitter } from "./fish-editor";
 
 export type * from "./types";
 
-export const Version = "2.0.2";
+export const Version = "2.0.3";

@@ -1,6 +1,10 @@
+/*
+ * @Date: 2025-01-18 09:27:42
+ * @Description: Modify here please
+ */
 import { base, dom, isNode } from ".";
 
-/** 格式化--优化转换 */
+/** Format - Optimize Conversion */
 export const createNodeOptimize = (node: HTMLElement) => {
   let formatNode: HTMLElement | Text | null = null;
   if (!isNode.isDOMNode(node)) return formatNode;

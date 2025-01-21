@@ -9,10 +9,11 @@ import Emitter from "../core/emitter";
 import type FishEditor from "../core/fish-editor";
 
 interface InputOptions {
-  /** 匹配词高亮的颜色 */
+  /** Match word highlighted color */
   highlightColor?: string;
-  /** 需要匹配高亮词的文字数组 */
+  /** Need to match the text array of highlighted words */
   matchWordsList?: string[];
+  /** Throttle duration */
   throttleTime?: number;
 }
 
@@ -21,63 +22,106 @@ class Input extends Module<InputOptions> {
     highlightColor: "red",
     throttleTime: 300
   };
-  /** @name 蒙层节点*/
+  /** @name Mask Node*/
   coverDom: HTMLElement;
-  /** 节流 */
+  /** @name Match words */
+  matchWordsList: string[];
+  /** @name throttle */
   emitThrottled = throttle(async () => {
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
   }, this.options.throttleTime);
   constructor(fishEditor: FishEditor, options: Partial<InputOptions>) {
     super(fishEditor, options);
+    this.matchWordsList = this.options.matchWordsList;
+    // change this direction
+    this.handleInputChange = this.handleInputChange.bind(this);
+    this.onScrollChange = this.onScrollChange.bind(this);
+
     this.handleComposition();
 
     // add cover-mask dom
-    if (this.options.matchWordsList?.length && this.fishEditor.container) {
-      this.coverDom = document.createElement("div");
-      this.coverDom.classList.add("fb-cover-mask-box");
-      this.fishEditor.container.classList.add("is-highlight");
-      this.fishEditor.container.appendChild(this.coverDom);
-      this.fishEditor.scrollDom.addEventListener("scroll", () => {
-        const scrollTop = this.fishEditor.scrollDom.scrollTop;
-        this.coverDom.scrollTop = scrollTop;
-      });
-
-      // 监听值变化时，我们主动触发文本转换
-      this.fishEditor.on(Emitter.events.EDITOR_CHANGE, () => {
-        // 包装成Promise异步执行
-        Promise.resolve().then(() => {
-          handleInputTransforms.call(this);
+    if (this.matchWordsList?.length && this.fishEditor.container) {
+      if (this.coverDom) {
+        this.removeMatchWordsDom();
+        requestAnimationFrame(() => {
+          this.addCoverDom();
         });
-      });
-
-      this.fishEditor.on(Emitter.events.EDITOR_INPUT_CHANGE, () => {
-        // 包装成Promise异步执行
-        Promise.resolve().then(() => {
-          handleInputTransforms.call(this);
-        });
-      });
+      } else {
+        this.addCoverDom();
+      }
     }
 
     fishEditor.root.addEventListener("beforeinput", (event: InputEvent) => {
       this.handleBeforeInput(event);
     });
+
     fishEditor.root.addEventListener("input", this.handleInput.bind(this, true));
   }
+  /** Monitor editor scrolling */
+  private onScrollChange() {
+    const scrollTop = this.fishEditor.scrollDom.scrollTop;
+    this.coverDom.scrollTop = scrollTop;
+  }
+
+  /** trigger text conversion event listening */
+  private handleInputChange() {
+    // Promise asynchronous execution
+    Promise.resolve().then(() => {
+      handleInputTransforms.call(this);
+    });
+  }
+  /** add matching word mask nodes */
+  private addCoverDom() {
+    this.coverDom = document.createElement("div");
+    this.coverDom.classList.add("fb-cover-mask-box");
+    this.fishEditor.container.classList.add("is-highlight");
+    this.fishEditor.container.appendChild(this.coverDom);
+    this.fishEditor.scrollDom.addEventListener("scroll", this.onScrollChange);
+
+    // When the monitoring value changes, we actively trigger text conversion
+    this.fishEditor.on(Emitter.events.EDITOR_CHANGE, this.handleInputChange);
+
+    this.fishEditor.on(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange);
+  }
+  /** @name Delete matching word mask node */
+  private removeMatchWordsDom() {
+    this.fishEditor.container.classList.remove("is-highlight");
+    this.fishEditor.container.removeChild(this.coverDom);
+    this.fishEditor.scrollDom.removeEventListener("scroll", this.onScrollChange);
+    this.fishEditor.off(Emitter.events.EDITOR_CHANGE, this.handleInputChange);
+    this.fishEditor.off(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange);
+    // set null
+    this.matchWordsList = null;
+    this.coverDom = null;
+  }
+
+  /** Dynamically modify matchWordsList matching word data */
+  public addMatchWords(list: string[]) {
+    if (list.length) {
+      this.removeMatchWordsDom();
+      this.fishEditor.clear();
+      this.matchWordsList = list;
+      requestAnimationFrame(() => {
+        this.addCoverDom();
+      });
+    } else {
+      this.removeMatchWordsDom();
+    }
+  }
+
   private handleComposition() {
     this.fishEditor.on(Emitter.events.COMPOSITION_END, () => {
       this.handleInput(false);
     });
   }
+
   private handleInput(isOriginalEvent: boolean) {
-    if (isOriginalEvent && this.options.matchWordsList?.length) {
+    if (isOriginalEvent && this.matchWordsList?.length) {
       Promise.resolve().then(() => {
         handleInputTransforms.call(this);
       });
     }
-    /***
-     * 在谷歌浏览器，输入遇见编辑器先清除焦点然后调用focus方法，重新修正光标的位置，会导致，下次输入中文时 onCompositionEnd事件不会触发，导致
-     * isLock变量状态有问题，这里先注释掉，不判断了，直接变化值，就去暴露值
-     */
+    /** isComposing ?? */
     if (this.fishEditor.composition.isComposing) return;
     this.emitThrottled();
   }
@@ -88,16 +132,15 @@ class Input extends Module<InputOptions> {
 }
 
 /**
- * @name 文字转换
+ * @name Text Conver
  */
 const handleInputTransforms = async function () {
   const content = this.fishEditor.getText();
   let strCont = content;
   const _this = this;
-
-  this.options.matchWordsList.forEach((item: string) => {
-    const reg = new RegExp("\\" + item, "g");
-    // 替换
+  this.matchWordsList?.forEach((item: string) => {
+    const reg = new RegExp(item, "g");
+    // replace
     strCont = strCont?.replace(reg, function () {
       return `<span style="color: ${_this.options.highlightColor};">${item}</span>`;
     });

@@ -11,7 +11,7 @@ import type FishEditor from "../core/fish-editor";
 import { range, transforms } from "../utils";
 
 interface IClipboardOptions {
-  /** 是否可以粘贴图片 */
+  /** Can I paste the image */
   isPasteFile?: boolean;
 }
 
@@ -21,7 +21,7 @@ class Clipboard extends Module<IClipboardOptions> {
   };
 
   isPasteLock = false;
-  /** 节流 */
+  /** throttle */
   emitThrottled = throttle(() => {
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
   }, 300);
@@ -46,7 +46,6 @@ class Clipboard extends Module<IClipboardOptions> {
 
     if (!contents) return;
 
-    // 将内容添加到＜div＞中，这样我们就可以获得它的内部HTML。
     const odiv = contents.ownerDocument.createElement("div");
     odiv.appendChild(contents);
 
@@ -60,7 +59,6 @@ class Clipboard extends Module<IClipboardOptions> {
     contents.ownerDocument.body.removeChild(odiv);
 
     if (isCut) {
-      // 后续可以拓展删除节点方法，先原生的
       document.execCommand("delete", false, undefined);
     }
   }
@@ -105,7 +103,6 @@ class Clipboard extends Module<IClipboardOptions> {
       }
 
       if (range.isSelected()) {
-        // 后续可以拓展删除节点方法，先原生的
         document.execCommand("delete", false, undefined);
       }
 

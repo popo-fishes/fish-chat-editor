@@ -4,9 +4,8 @@
  */
 import type FishEditor from "./fish-editor";
 
-/** 保存图片的base64 map数据 */
 const editorImageBase64Map: Map<string, string> = new Map();
-// 记录下当前 editor 的 destroy listeners
+
 const instances: WeakMap<Node, FishEditor> = new WeakMap();
 
 export default {

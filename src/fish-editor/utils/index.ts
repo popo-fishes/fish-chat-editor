@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 /**
- * 注意导出的顺序，不要变化
+ * Pay attention to the order
  */
 export * as base from "./base";
 
