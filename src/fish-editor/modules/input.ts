@@ -22,7 +22,7 @@ class Input extends Module<InputOptions> {
     highlightColor: "red",
     throttleTime: 300
   };
-  /** @name Mask Node*/
+  /** @name match words mask node*/
   coverDom: HTMLElement;
   /** @name Match words */
   matchWordsList: string[];
@@ -95,8 +95,8 @@ class Input extends Module<InputOptions> {
     this.coverDom = null;
   }
 
-  /** Dynamically modify matchWordsList matching word data */
-  public addMatchWords(list: string[]) {
+  /** Set matching word data */
+  public setMatchWords(list: string[]) {
     if (list.length) {
       this.removeMatchWordsDom();
       this.fishEditor.clear();
@@ -137,12 +137,11 @@ class Input extends Module<InputOptions> {
 const handleInputTransforms = async function () {
   const content = this.fishEditor.getText();
   let strCont = content;
-  const _this = this;
   this.matchWordsList?.forEach((item: string) => {
     const reg = new RegExp(item, "g");
     // replace
-    strCont = strCont?.replace(reg, function () {
-      return `<span style="color: ${_this.options.highlightColor};">${item}</span>`;
+    strCont = strCont?.replace(reg, () => {
+      return `<span style="color: ${this.options.highlightColor};">${item}</span>`;
     });
   });
 
