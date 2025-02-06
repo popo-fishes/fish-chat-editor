@@ -83,10 +83,13 @@ class Input extends Module<InputOptions> {
 
     this.fishEditor.on(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange);
   }
+
   /** @name Delete matching word mask node */
   private removeHighlightCoverDom() {
+    if (this.highlightCoverDom) {
+      this.fishEditor.container.removeChild(this.highlightCoverDom);
+    }
     this.fishEditor.container.classList.remove("is-highlight");
-    this.fishEditor.container.removeChild(this.highlightCoverDom);
     this.fishEditor.scrollDom.removeEventListener("scroll", this.onScrollChange);
     this.fishEditor.off(Emitter.events.EDITOR_CHANGE, this.handleInputChange);
     this.fishEditor.off(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange);
@@ -153,7 +156,7 @@ const handleInputTransforms = async function () {
     dom_p.innerHTML = lineContent == "" ? "<br>" : lineContent;
     nodes.push(dom_p);
   }
-  dom.toTargetAddNodes(this.coverDom, nodes as any[]);
+  dom.toTargetAddNodes(this.highlightCoverDom, nodes as any[]);
   return true;
 };
 
