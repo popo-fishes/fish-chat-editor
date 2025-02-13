@@ -119,15 +119,22 @@ class Input extends Module<InputOptions> {
   }
 
   private handleInput(isOriginalEvent: boolean) {
-    if (isOriginalEvent && this.matchWordsList?.length) {
+    if (isOriginalEvent) {
       Promise.resolve().then(() => {
-        handleInputTransforms.call(this);
+        // Update placeholder visibility
+        const hasEmpty = this.fishEditor.editor.isEditorEmptyNode();
+        this.fishEditor.container.classList.toggle("is-placeholder-visible", hasEmpty);
+
+        if (this.matchWordsList?.length) {
+          handleInputTransforms.call(this);
+        }
       });
     }
     /** isComposing ?? */
     if (this.fishEditor.composition.isComposing) return;
     this.emitThrottled();
   }
+
   private handleBeforeInput(event: InputEvent) {
     const rangeInfo = fishRange.getRange();
     // console.log(event, rangeInfo);

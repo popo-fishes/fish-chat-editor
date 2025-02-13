@@ -18,6 +18,8 @@ export interface ExpandedFishEditorOptions {
   modules: Record<string, unknown>;
   placeholder: string;
   readOnly: boolean;
+  /** maxLength */
+  maxLength: number | null;
 }
 
 export interface IFishEditorOptions {
@@ -32,6 +34,8 @@ export interface IFishEditorOptions {
   placeholder?: string;
   /** Configuration options for each module in the editor */
   modules?: Record<string, unknown>;
+  /** maxLength */
+  maxLength?: number | null;
 }
 
 class FishEditor {
@@ -41,6 +45,7 @@ class FishEditor {
       keyboard: true,
       uploader: true
     },
+    maxLength: null,
     placeholder: "请输入内容",
     readOnly: false
   } satisfies Partial<IFishEditorOptions>;
@@ -112,8 +117,21 @@ class FishEditor {
     this.theme.addModule("input");
     this.theme.init();
 
-    this.emitter.on(Emitter.events.EDITOR_CHANGE, ({ editor }) => {
+    this.emitter.on(Emitter.events.EDITOR_CHANGE, ({ editor }, notChange?: boolean) => {
+      if (!notChange) {
+        const length = this.editor.getLength();
+        const maxLength = this.options.maxLength;
+        if (maxLength && length && length > maxLength) {
+          const text = this.editor.getText();
+          const ntext = text.substring(0, maxLength);
+          this.editor.setHtml(`<p>${ntext}</p>`, true);
+          this.blur();
+          this.emit(Emitter.events.EDITOR_MAXLENGTH);
+        }
+      }
+
       // console.log(editor);
+      // Update placeholder visibility
       const hasEmpty = (editor as Editor).isEditorEmptyNode();
       this.container.classList.toggle("is-placeholder-visible", hasEmpty);
       // removeEditorImageBse64Map Promise asynchronous execution

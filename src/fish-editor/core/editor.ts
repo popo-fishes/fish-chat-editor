@@ -328,8 +328,8 @@ class Editor {
     });
   }
 
-  public setHtml(html: string) {
-    if (!html) return;
+  public setHtml(html: string, notChange?: boolean) {
+    if (!html) return null;
 
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = html;
@@ -338,7 +338,7 @@ class Editor {
 
     const nodes = Array.from(pElements);
 
-    if (nodes.length == 0) return [];
+    if (nodes.length == 0) return null;
 
     const newNode = [];
     // nodes
@@ -357,7 +357,7 @@ class Editor {
 
     dom.toTargetAddNodes(this.container, newNode);
 
-    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor, notChange);
   }
 
   public clear() {
