@@ -22,9 +22,9 @@ class Input extends Module<InputOptions> {
     highlightColor: "red",
     throttleTime: 300
   };
-  /** @name Mask Node*/
-  coverDom: HTMLElement;
-  /** @name Match words */
+  /** @name highlight cover node*/
+  highlightCoverDom: HTMLElement;
+  /** @name Match words data */
   matchWordsList: string[];
   /** @name throttle */
   emitThrottled = throttle(async () => {
@@ -41,13 +41,13 @@ class Input extends Module<InputOptions> {
 
     // add cover-mask dom
     if (this.matchWordsList?.length && this.fishEditor.container) {
-      if (this.coverDom) {
-        this.removeMatchWordsDom();
+      if (this.highlightCoverDom) {
+        this.removeHighlightCoverDom();
         requestAnimationFrame(() => {
-          this.addCoverDom();
+          this.addHighlightCoverDom();
         });
       } else {
-        this.addCoverDom();
+        this.addHighlightCoverDom();
       }
     }
 
@@ -60,7 +60,7 @@ class Input extends Module<InputOptions> {
   /** Monitor editor scrolling */
   private onScrollChange() {
     const scrollTop = this.fishEditor.scrollDom.scrollTop;
-    this.coverDom.scrollTop = scrollTop;
+    this.highlightCoverDom.scrollTop = scrollTop;
   }
 
   /** trigger text conversion event listening */
@@ -71,11 +71,11 @@ class Input extends Module<InputOptions> {
     });
   }
   /** add matching word mask nodes */
-  private addCoverDom() {
-    this.coverDom = document.createElement("div");
-    this.coverDom.classList.add("fb-cover-mask-box");
+  private addHighlightCoverDom() {
+    this.highlightCoverDom = document.createElement("div");
+    this.highlightCoverDom.classList.add("fb-cover-mask-box");
     this.fishEditor.container.classList.add("is-highlight");
-    this.fishEditor.container.appendChild(this.coverDom);
+    this.fishEditor.container.appendChild(this.highlightCoverDom);
     this.fishEditor.scrollDom.addEventListener("scroll", this.onScrollChange);
 
     // When the monitoring value changes, we actively trigger text conversion
@@ -83,29 +83,32 @@ class Input extends Module<InputOptions> {
 
     this.fishEditor.on(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange);
   }
+
   /** @name Delete matching word mask node */
-  private removeMatchWordsDom() {
+  private removeHighlightCoverDom() {
+    if (this.highlightCoverDom) {
+      this.fishEditor.container.removeChild(this.highlightCoverDom);
+    }
     this.fishEditor.container.classList.remove("is-highlight");
-    this.fishEditor.container.removeChild(this.coverDom);
     this.fishEditor.scrollDom.removeEventListener("scroll", this.onScrollChange);
     this.fishEditor.off(Emitter.events.EDITOR_CHANGE, this.handleInputChange);
     this.fishEditor.off(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange);
     // set null
     this.matchWordsList = null;
-    this.coverDom = null;
+    this.highlightCoverDom = null;
   }
 
-  /** Dynamically modify matchWordsList matching word data */
-  public addMatchWords(list: string[]) {
+  /** Set matching word data */
+  public setMatchWords(list: string[]) {
     if (list.length) {
-      this.removeMatchWordsDom();
+      this.removeHighlightCoverDom();
       this.fishEditor.clear();
       this.matchWordsList = list;
       requestAnimationFrame(() => {
-        this.addCoverDom();
+        this.addHighlightCoverDom();
       });
     } else {
-      this.removeMatchWordsDom();
+      this.removeHighlightCoverDom();
     }
   }
 
@@ -116,15 +119,22 @@ class Input extends Module<InputOptions> {
   }
 
   private handleInput(isOriginalEvent: boolean) {
-    if (isOriginalEvent && this.matchWordsList?.length) {
+    if (isOriginalEvent) {
       Promise.resolve().then(() => {
-        handleInputTransforms.call(this);
+        // Update placeholder visibility
+        const hasEmpty = this.fishEditor.editor.isEditorEmptyNode();
+        this.fishEditor.container.classList.toggle("is-placeholder-visible", hasEmpty);
+
+        if (this.matchWordsList?.length) {
+          handleInputTransforms.call(this);
+        }
       });
     }
     /** isComposing ?? */
     if (this.fishEditor.composition.isComposing) return;
     this.emitThrottled();
   }
+
   private handleBeforeInput(event: InputEvent) {
     const rangeInfo = fishRange.getRange();
     // console.log(event, rangeInfo);
@@ -137,12 +147,11 @@ class Input extends Module<InputOptions> {
 const handleInputTransforms = async function () {
   const content = this.fishEditor.getText();
   let strCont = content;
-  const _this = this;
   this.matchWordsList?.forEach((item: string) => {
     const reg = new RegExp(item, "g");
     // replace
-    strCont = strCont?.replace(reg, function () {
-      return `<span style="color: ${_this.options.highlightColor};">${item}</span>`;
+    strCont = strCont?.replace(reg, () => {
+      return `<span style="color: ${this.options.highlightColor};">${item}</span>`;
     });
   });
 
@@ -154,7 +163,7 @@ const handleInputTransforms = async function () {
     dom_p.innerHTML = lineContent == "" ? "<br>" : lineContent;
     nodes.push(dom_p);
   }
-  dom.toTargetAddNodes(this.coverDom, nodes as any[]);
+  dom.toTargetAddNodes(this.highlightCoverDom, nodes as any[]);
   return true;
 };
 

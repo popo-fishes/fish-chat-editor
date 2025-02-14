@@ -2,7 +2,7 @@
  * 当需要高亮时的富文本，样式
  */
 
-// 遮罩层
+// 高亮词遮罩层
 .fb-cover-mask-box {
   position: absolute;
   left: 0;
@@ -36,9 +36,19 @@
     left: 0;
     width: 100%;
     z-index: 3;
-    -webkit-text-fill-color: transparent;
+    // -webkit-text-fill-color: transparent; // 会导致不能复制选中
     &::-webkit-scrollbar {
       display: none !important;
+    }
+    // 重点
+    p {
+      color: transparent; // 把输入框的文字颜色设置为透明
+      caret-color: #333; // 定义输入光标（caret）的颜色
+      // 设置选中时的颜色
+      &::selection {
+        color: #fff !important;
+        background: #1890ff !important;
+      }
     }
   }
 }

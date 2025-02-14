@@ -1,3 +1,7 @@
+/*
+ * @Date: 2024-11-05 09:00:23
+ * @Description: Modify here please
+ */
 interface SubscribeEvent {
   fn: Function;
   once: boolean;
@@ -22,7 +26,9 @@ class Emitter {
     COMPOSITION_START: "composition-start",
     COMPOSITION_END: "composition-end",
     /** When rich text operations change, quickly trigger changes, such as line breaks and pasting */
-    EDITOR_INPUT_CHANGE: "editor-input-change"
+    EDITOR_INPUT_CHANGE: "editor-input-change",
+    /** on maxlength */
+    EDITOR_MAXLENGTH: "maxlength"
   } as const;
 
   subscribes: Map<string, Array<SubscribeEvent>>;
