@@ -231,9 +231,13 @@ class Editor {
         const focusNode = document.getElementById(keyId) as any;
 
         if (showCursor) {
-          focusNode?.scrollIntoView(true);
-          fishRange.setCursorPosition(focusNode, "after");
+          const referenceNode = focusNode?.parentNode;
+          if (referenceNode) {
+            referenceNode.scrollIntoView({ block: "end", inline: "end" });
+            fishRange.setCursorPosition(focusNode, "after");
+          }
         }
+
         focusNode?.remove();
 
         callBack?.(true);
