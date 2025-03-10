@@ -6,7 +6,7 @@ import cloneDeep from "lodash/cloneDeep";
 import { helper, base, dom, isNode, util, range as fishRange, transforms, split, formats } from "../utils";
 import type { IRange } from "../utils";
 import type FishEditor from "./fish-editor";
-import Emitter from "../core/emitter";
+import Emitter from "./emitter";
 
 class Editor {
   /** @name Editor Node */
@@ -101,7 +101,7 @@ class Editor {
    * @param showCursor Do I need to set a cursor after successful insertion
    */
   public insertText(contentText: string, range: IRange, callBack?: (success: boolean) => void, showCursor?: boolean): void {
-    let cloneRange = cloneDeep(range) as IRange;
+    const cloneRange = cloneDeep(range) as IRange;
 
     if (!contentText || !cloneRange) {
       callBack?.(false);
@@ -133,7 +133,7 @@ class Editor {
     // console.log(behindNodeList, nextNodeList);
 
     /** Processing Content Insertion */
-    {
+    try {
       const semanticContent = transforms.labelRep(contentText);
 
       const lines = semanticContent?.split(/\r\n|\r|\n/) || [];
@@ -208,10 +208,10 @@ class Editor {
           }
 
           /**
-            *2.1 If the first inserted node and the last inserted node are the same, it means that a node has been inserted.
-              If it is a node, the nodes after the original node cannot be deleted because there is no line break.
-            *2.2 If it is not a node, we will delete the following nodes
-           */
+              *2.1 If the first inserted node and the last inserted node are the same, it means that a node has been inserted.
+                If it is a node, the nodes after the original node cannot be deleted because there is no line break.
+              *2.2 If it is not a node, we will delete the following nodes
+             */
           if (firstNode !== lastNode && nextNodeList.length) {
             const lastContent = transforms.getEditElementContent(lastNode);
             dom.toTargetAddNodes(lastNode, dom.cloneNodes(nextNodeList), false);
@@ -231,18 +231,20 @@ class Editor {
         const focusNode = document.getElementById(keyId) as any;
 
         if (showCursor) {
-          const referenceNode = focusNode?.parentNode;
+          const referenceNode = focusNode.parentNode;
           if (referenceNode) {
-            referenceNode.scrollIntoView({ block: "end", inline: "end" });
+            referenceNode?.scrollIntoView({ block: "end", inline: "end" });
             fishRange.setCursorPosition(focusNode, "after");
           }
         }
-
         focusNode?.remove();
 
         callBack?.(true);
         return;
       }
+    } catch (error) {
+      console.error(error);
+      callBack?.(false);
     }
   }
   /**
@@ -254,7 +256,7 @@ class Editor {
    */
   public insertNode(nodes: HTMLElement[], range: IRange, callBack?: (success: boolean) => void): void {
     if (!nodes || nodes?.length == 0) return callBack?.(false);
-    let cloneRange = cloneDeep(range) as IRange;
+    const cloneRange = cloneDeep(range) as IRange;
     // No cursor exists
     if (!cloneRange) {
       callBack?.(false);
@@ -282,24 +284,29 @@ class Editor {
     // console.log(behindNodeList, nextNodeList);
 
     /** Processing Content Insertion */
-    {
-      if (behindNodeList.length == 0 && nextNodeList.length == 0) {
-        dom.toTargetAddNodes(rowElementNode, nodes);
-      } else if (behindNodeList.length) {
-        dom.toTargetAfterInsertNodes(behindNodeList[0], nodes);
-      } else if (nextNodeList.length) {
-        dom.toTargetBeforeInsertNodes(nextNodeList[0], nodes);
+    try {
+      {
+        if (behindNodeList.length == 0 && nextNodeList.length == 0) {
+          dom.toTargetAddNodes(rowElementNode, nodes);
+        } else if (behindNodeList.length) {
+          dom.toTargetAfterInsertNodes(behindNodeList[0], nodes);
+        } else if (nextNodeList.length) {
+          dom.toTargetBeforeInsertNodes(nextNodeList[0], nodes);
+        }
       }
-    }
 
-    {
-      const referenceNode = nodes[nodes.length - 1] as any;
-      if (isNode.isDOMElement(referenceNode)) {
-        referenceNode?.scrollIntoView({ block: "end", inline: "end" });
-        fishRange.setCursorPosition(referenceNode, "after");
-        callBack?.(true);
-        return;
+      {
+        const referenceNode = nodes[nodes.length - 1] as any;
+        if (isNode.isDOMElement(referenceNode)) {
+          referenceNode?.scrollIntoView({ block: "end", inline: "end" });
+          fishRange.setCursorPosition(referenceNode, "after");
+          callBack?.(true);
+          return;
+        }
       }
+    } catch (error) {
+      console.error(error);
+      callBack?.(false);
     }
   }
   /** @name Get the number of rows */

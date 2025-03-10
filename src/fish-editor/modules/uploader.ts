@@ -1,9 +1,9 @@
 import isFunction from "lodash/isFunction";
 import isArray from "lodash/isArray";
-import { isNode, base, type IRange, range } from "../utils";
+import { isNode, base, range } from "../utils";
 import type FishEditor from "../core/fish-editor";
 import store from "../core/store";
-import Module from "../core/module.js";
+import Module from "../core/module";
 
 interface IUploaderOptions {
   /** @name Support file types */
@@ -24,7 +24,7 @@ class Uploader extends Module<IUploaderOptions> {
     super(fishEditor, options);
   }
 
-  async upload(rangeInfo: IRange, files: File[], callBack: (success: boolean) => void) {
+  async upload(files: File[], callBack: (success: boolean) => void) {
     // capture
     const filtratefiles = this.options.slice ? files.slice(0, this.options.slice) : files;
     let uploads: File[] = [];
@@ -79,8 +79,12 @@ class Uploader extends Module<IUploaderOptions> {
             if (range.isSelected()) {
               document.execCommand("delete", false, undefined);
             }
-            this.fishEditor.editor.insertNode(nodes, rangeInfo, (success) => {
-              callBack(success);
+            // delay insert
+            requestAnimationFrame(() => {
+              const rangeInfo = range.getRange();
+              this.fishEditor.editor.insertNode(nodes, rangeInfo, (success) => {
+                callBack(success);
+              });
             });
             return;
           }
