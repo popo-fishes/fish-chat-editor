@@ -64,12 +64,11 @@ class Editor {
   }
   /** @name Retrieve the plain text content of the editor */
   public getText() {
-    const cloneEditeNode = getCloneEditeElements.call(this);
-    const contentStr = transforms.getNodePlainText(cloneEditeNode);
-
-    removeBodyChild(cloneEditeNode);
+    const contentStr = transforms.handleEditTransformsPlainText(this.container);
 
     const result = helper.contentReplaceEmpty(helper.removeTailLineFeed(contentStr));
+
+    // console.log(JSON.stringify(result))
 
     return result;
   }
@@ -77,10 +76,9 @@ class Editor {
    * @name Retrieve semantic HTML of editor content
    */
   public getSemanticHTML() {
-    const cloneEditeNode = getCloneEditeElements.call(this);
-    const contentResult = transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
+    const cloneEditeNode = this.container.cloneNode(true) as any;
 
-    removeBodyChild(cloneEditeNode);
+    const contentResult = transforms.handleEditTransformsSemanticHtml(cloneEditeNode);
 
     return contentResult;
   }
@@ -88,9 +86,10 @@ class Editor {
    * @name Retrieve the original HTML of the editor content, mainly used for judging value scenarios or internal use of rich text
    */
   public getProtoHTML() {
-    const cloneEditeNode = getCloneEditeElements.call(this);
+    const cloneEditeNode = this.container.cloneNode(true) as any;
+
     const contentResult = transforms.handleEditTransformsProtoHtml(cloneEditeNode);
-    removeBodyChild(cloneEditeNode);
+
     return contentResult;
   }
   /**
@@ -449,30 +448,6 @@ function hasEditorExistInlineNode(node: HTMLElement): boolean {
     }
   }
   return false;
-}
-
-function getCloneEditeElements(): HTMLDivElement | null {
-  if (!this.container || !isNode.isDOMNode(this.container)) return null;
-
-  const contentNode = this.container.cloneNode(true);
-
-  const odiv = document.createElement("div");
-
-  for (const childNode of Array.from(contentNode.childNodes)) {
-    odiv.appendChild(childNode as Node);
-  }
-
-  odiv.setAttribute("hidden", "true");
-
-  contentNode.ownerDocument.body.appendChild(odiv);
-
-  return odiv;
-}
-
-function removeBodyChild(node: HTMLElement) {
-  if (document.body) {
-    document.body.removeChild(node);
-  }
 }
 
 export type IEditorInstance = InstanceType<typeof Editor>;

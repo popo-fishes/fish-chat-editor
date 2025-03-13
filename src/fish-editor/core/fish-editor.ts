@@ -52,7 +52,8 @@ class FishEditor {
     modules: {
       clipboard: true,
       keyboard: true,
-      uploader: true
+      uploader: true,
+      input: true
     },
     placeholder: "请输入内容",
     maxLength: null,

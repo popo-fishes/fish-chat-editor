@@ -8,7 +8,7 @@ import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type Uploader from "./uploader";
 import type FishEditor from "../core/fish-editor";
-import { range, transforms } from "../utils";
+import { range, transforms, base, isNode } from "../utils";
 
 interface IClipboardOptions {
   /** Can I paste the image */
@@ -53,16 +53,18 @@ class Clipboard extends Module<IClipboardOptions> {
     if (!contentsDom) return;
 
     const odiv = contentsDom.ownerDocument.createElement("div");
+
     odiv.appendChild(contentsDom);
 
     odiv.setAttribute("hidden", "true");
-    contentsDom.ownerDocument.body.appendChild(odiv);
-
-    const content = transforms.getNodePlainText(odiv);
-
-    contentsDom.ownerDocument.body.removeChild(odiv);
 
     try {
+      contentsDom.ownerDocument.body.appendChild(odiv);
+
+      const content = getCursorSelectedNodePlainText(odiv);
+
+      contentsDom.ownerDocument.body.removeChild(odiv);
+
       await copyToClipboard(content);
 
       if (isCut) {
@@ -139,6 +141,44 @@ class Clipboard extends Module<IClipboardOptions> {
   }
 }
 
+/**
+ * @name get the plain text of the selected node with the cursor
+ */
+function getCursorSelectedNodePlainText(node: HTMLElement) {
+  let text = "";
+
+  if (isNode.isDOMText(node) && node.nodeValue) {
+    return transforms.labelRep(node.nodeValue);
+  }
+
+  if (isNode.isDOMElement(node)) {
+    for (const childNode of Array.from(node.childNodes)) {
+      text += getCursorSelectedNodePlainText(childNode as any);
+    }
+
+    const display = getComputedStyle(node).getPropertyValue("display");
+
+    if (isNode.isEmojiImgNode(node)) {
+      const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
+
+      const isEmojiVal = node.dataset?.[emojiNodeAttrName] || "";
+      if (isEmojiVal) {
+        text += isEmojiVal;
+      }
+    }
+
+    if (display === "block") {
+      text += "\n";
+    }
+  }
+
+  return text;
+}
+
+/**
+ * copy To Clipboard
+ * @param content
+ */
 async function copyToClipboard(textToCopy: string) {
   // Navigator clipboard api needs a secure context (https)
   if (navigator.clipboard && window.isSecureContext) {
