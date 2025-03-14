@@ -3,8 +3,8 @@
  * @Description: Modify here please
  */
 import { base, isNode } from ".";
-import { getEmojiData } from "../../utils";
 import { emojiSize } from "../../config";
+import { getEmojiData } from "../../utils";
 import { isEditElement } from "./isNode";
 import store from "../core/store";
 
@@ -73,9 +73,9 @@ export const transformTextToNodes = (content: string, size?: number): Node[] | [
 };
 
 /**
- * @name Get its plain text content
+ * @name get Edit Element Plain Text
  */
-export const getNodePlainText = (node: HTMLElement) => {
+export const getEditElementPlainText = (node: HTMLElement) => {
   let text = "";
 
   if (isNode.isDOMText(node) && node.nodeValue) {
@@ -84,10 +84,8 @@ export const getNodePlainText = (node: HTMLElement) => {
 
   if (isNode.isDOMElement(node)) {
     for (const childNode of Array.from(node.childNodes)) {
-      text += getNodePlainText(childNode as any);
+      text += getEditElementPlainText(childNode as any);
     }
-
-    const display = getComputedStyle(node).getPropertyValue("display");
 
     if (isNode.isEmojiImgNode(node)) {
       const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
@@ -97,13 +95,30 @@ export const getNodePlainText = (node: HTMLElement) => {
         text += isEmojiVal;
       }
     }
-
-    if (display === "block") {
-      text += "\n";
-    }
   }
 
   return text;
+};
+
+/** @name Get the pure text of the editor */
+export const handleEditTransformsPlainText = (node: HTMLElement): string => {
+  const result: string[] = [];
+  if (!node || !node?.childNodes) return "";
+
+  const nodes: ChildNode[] = Array.from(node.childNodes);
+
+  for (const cld of Array.from(nodes)) {
+    if (isEditElement(cld as HTMLElement)) {
+      const content = getEditElementPlainText(cld as any);
+      if (content) {
+        result.push(content);
+      } else {
+        result.push("");
+      }
+    }
+  }
+  const testStr = result.join("\n");
+  return testStr;
 };
 
 /**

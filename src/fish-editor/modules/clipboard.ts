@@ -8,7 +8,7 @@ import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type Uploader from "./uploader";
 import type FishEditor from "../core/fish-editor";
-import { range, transforms } from "../utils";
+import { range, transforms, base, isNode } from "../utils";
 
 interface IClipboardOptions {
   /** Can I paste the image */
@@ -27,14 +27,20 @@ class Clipboard extends Module<IClipboardOptions> {
   }, 300);
   constructor(fishEditor: FishEditor, options: Partial<IClipboardOptions>) {
     super(fishEditor, options);
-    this.fishEditor.root.addEventListener("copy", (e) => this.onCaptureCopy(e, false));
-    this.fishEditor.root.addEventListener("cut", (e) => this.onCaptureCopy(e, true));
+    this.fishEditor.root.addEventListener("copy", (e) => this.captureCopy(e, false));
+    this.fishEditor.root.addEventListener("cut", (e) => this.captureCopy(e, true));
     this.fishEditor.root.addEventListener("paste", this.onCapturePaste.bind(this));
   }
 
-  onCaptureCopy(event: ClipboardEvent, isCut = false) {
-    if (event.defaultPrevented) return;
-    event.preventDefault();
+  public getIsPasteFile() {
+    return this.options.isPasteFile;
+  }
+
+  public async captureCopy(event: ClipboardEvent | null, isCut = false) {
+    if (event) {
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+    }
 
     if (!range.isSelected()) {
       return;
@@ -42,33 +48,36 @@ class Clipboard extends Module<IClipboardOptions> {
 
     const selection = range.getSelection();
 
-    const contents = selection.getRangeAt(0)?.cloneContents();
+    const contentsDom = selection.getRangeAt(0)?.cloneContents();
 
-    if (!contents) return;
+    if (!contentsDom) return;
 
-    const odiv = contents.ownerDocument.createElement("div");
-    odiv.appendChild(contents);
+    const odiv = contentsDom.ownerDocument.createElement("div");
+
+    odiv.appendChild(contentsDom);
 
     odiv.setAttribute("hidden", "true");
-    contents.ownerDocument.body.appendChild(odiv);
 
-    const content = transforms.getNodePlainText(odiv);
+    try {
+      contentsDom.ownerDocument.body.appendChild(odiv);
 
-    // event.clipboardData.setData("text/html", odiv.innerHTML);
-    event.clipboardData?.setData("text/plain", content);
-    contents.ownerDocument.body.removeChild(odiv);
+      const content = getCursorSelectedNodePlainText(odiv);
 
-    if (isCut) {
-      document.execCommand("delete", false, undefined);
+      contentsDom.ownerDocument.body.removeChild(odiv);
+
+      await copyToClipboard(content);
+
+      if (isCut) {
+        document.execCommand("delete", false, undefined);
+      }
+    } catch (err) {
+      console.error(err);
     }
   }
-  onCapturePaste(e: ClipboardEvent) {
+
+  private onCapturePaste(e: ClipboardEvent) {
     if (e.defaultPrevented || !this.fishEditor.isEnabled()) return;
     e.preventDefault();
-
-    const rangeInfo = range.getRange();
-
-    if (rangeInfo == null || !this.fishEditor.root || this.isPasteLock) return;
 
     // @ts-expect-error
     const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
@@ -78,12 +87,23 @@ class Clipboard extends Module<IClipboardOptions> {
 
     if (isFile && this.options.isPasteFile) {
       const files = isObject(clp.files) ? Object.values(clp.files) : clp.files;
+      this.capturePaste(files, null);
+    }
+
+    if ((isHtml || isPlain) && !isFile) {
+      const content = clp.getData("text/plain");
+      this.capturePaste(null, content);
+    }
+  }
+
+  public capturePaste(files: File[] | null, content: string | null) {
+    if (!this.fishEditor.root || this.isPasteLock) return;
+    if (files) {
       const vfiles = Array.from(files || []);
       if (vfiles.length > 0) {
         const uploader = this.fishEditor.getModule("uploader") as Uploader;
         this.isPasteLock = true;
-        // @ts-expect-error
-        uploader.upload(rangeInfo, vfiles, (success) => {
+        uploader.upload(vfiles, (success) => {
           if (success) {
             Promise.resolve().then(() => {
               this.emitThrottled();
@@ -93,22 +113,15 @@ class Clipboard extends Module<IClipboardOptions> {
         });
         return;
       }
-    }
-
-    if ((isHtml || isPlain) && !isFile) {
-      const content = clp.getData("text/plain");
-
-      if (!content) {
-        return;
-      }
-
+    } else if (content) {
       if (range.isSelected()) {
         document.execCommand("delete", false, undefined);
       }
 
       this.isPasteLock = true;
-
-      {
+      // delay insert
+      requestAnimationFrame(() => {
+        const rangeInfo = range.getRange();
         this.fishEditor.editor.insertText(
           content,
           rangeInfo,
@@ -123,8 +136,73 @@ class Clipboard extends Module<IClipboardOptions> {
           },
           true
         );
-      }
+      });
     }
   }
 }
+
+/**
+ * @name get the plain text of the selected node with the cursor
+ */
+function getCursorSelectedNodePlainText(node: HTMLElement) {
+  let text = "";
+
+  if (isNode.isDOMText(node) && node.nodeValue) {
+    return transforms.labelRep(node.nodeValue);
+  }
+
+  if (isNode.isDOMElement(node)) {
+    for (const childNode of Array.from(node.childNodes)) {
+      text += getCursorSelectedNodePlainText(childNode as any);
+    }
+
+    const display = getComputedStyle(node).getPropertyValue("display");
+
+    if (isNode.isEmojiImgNode(node)) {
+      const emojiNodeAttrName = base.getElementAttributeDatasetName("emojiNode");
+
+      const isEmojiVal = node.dataset?.[emojiNodeAttrName] || "";
+      if (isEmojiVal) {
+        text += isEmojiVal;
+      }
+    }
+
+    if (display === "block") {
+      text += "\n";
+    }
+  }
+
+  return text;
+}
+
+/**
+ * copy To Clipboard
+ * @param content
+ */
+async function copyToClipboard(textToCopy: string) {
+  // Navigator clipboard api needs a secure context (https)
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(textToCopy);
+  } else {
+    // Use the 'out of viewport hidden text area' trick
+    const textArea = document.createElement("textarea");
+    textArea.value = textToCopy;
+
+    // Move textarea out of the viewport so it's not visible
+    textArea.style.position = "absolute";
+    textArea.style.left = "-999999px";
+
+    document.body.prepend(textArea);
+    textArea.select();
+
+    try {
+      document.execCommand("copy");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      textArea.remove();
+    }
+  }
+}
+
 export default Clipboard;

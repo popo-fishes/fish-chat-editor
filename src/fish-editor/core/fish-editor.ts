@@ -6,6 +6,7 @@ import merge from "lodash/merge";
 import { helper, base, dom, isNode, util, range, transforms } from "../utils";
 import type { IRange } from "../utils";
 import type { IEmojiType } from "../../types";
+import type OtherEventType from "../modules/other-event";
 import { emojiSize } from "../../config";
 import Emitter from "./emitter";
 import Composition from "./composition";
@@ -16,24 +17,32 @@ import { removeEditorImageBse64Map } from "./helper";
 
 export interface ExpandedFishEditorOptions {
   modules: Record<string, unknown>;
-  placeholder: string;
+  /** Do you want to disable editing */
   readOnly: boolean;
+  /** is Display custom menu */
+  showCustomizeMenu: boolean;
+  /** is Prohibit right-click menu */
+  disableRightMenu: boolean;
+  /** placeholder */
+  placeholder: string;
   /** maxLength */
   maxLength: number | null;
 }
 
 export interface IFishEditorOptions {
+  /** Configuration options for each module in the editor */
+  modules?: Record<string, unknown>;
   /**
    * Do you want to disable editing
    * @default false
    */
   readOnly?: boolean;
-  /**
-   * placeholder
-   */
+  /** Display custom menu */
+  showCustomizeMenu?: boolean;
+  /** is Prohibit right-click menu */
+  disableRightMenu?: boolean;
+  /** placeholder */
   placeholder?: string;
-  /** Configuration options for each module in the editor */
-  modules?: Record<string, unknown>;
   /** maxLength */
   maxLength?: number | null;
 }
@@ -43,12 +52,15 @@ class FishEditor {
     modules: {
       clipboard: true,
       keyboard: true,
-      uploader: true
+      uploader: true,
+      input: true
     },
-    maxLength: null,
     placeholder: "请输入内容",
+    maxLength: null,
+    showCustomizeMenu: false,
+    disableRightMenu: true,
     readOnly: false
-  } satisfies Partial<IFishEditorOptions>;
+  };
   static events = Emitter.events;
 
   static imports: Record<string, unknown> = {};
@@ -152,14 +164,18 @@ class FishEditor {
       this.enable();
     }
 
-    // this.setHtml("<p>hello <span style='color: rgb(231, 95, 51)'>editor</span><strong>word</strong></p>");
+    // setTimeout(() => {
+    //   this.setHtml(
+    //     '<p>哈哈<span style="color: red">1212</span><strong>湿哒哒</strong><em>我是斜体</em><u>下划线</u><del>我被删除了</del><a target="_blank">link</a></p>',
+    //   )
+    // })
   }
 
   addContainer(): HTMLDivElement {
     this.container.classList.add(...["fb-editor-container", "is-placeholder-visible"]);
 
     // add editor dom
-    let editorDom = document.createElement("div");
+    const editorDom = document.createElement("div");
     editorDom.classList.add("fb-editor");
     editorDom.setAttribute("data-fish-editor", "true");
     editorDom.setAttribute("spellCheck", "false");
@@ -282,8 +298,9 @@ class FishEditor {
     if (this.isDestroyed) return;
     this.root?.remove();
     this.container?.remove();
-    this.isDestroyed = true;
+    (this.getModule("other-event") as OtherEventType).destroy();
     this.emit("destroyed");
+    this.isDestroyed = true;
   }
 }
 
@@ -311,7 +328,7 @@ function expandConfig(options: IFishEditorOptions): ExpandedFishEditorOptions {
 
       return {
         ...modulesWithDefaults,
-        // @ts-expect-error
+        // @ts-expect-error Module class may not have DEFAULTS property, but we still want to merge with defaults if available
         [name]: merge({}, moduleClass.DEFAULTS || {}, value)
       };
     }, {})
