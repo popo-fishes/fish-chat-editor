@@ -148,7 +148,7 @@ function getCursorSelectedNodePlainText(node: HTMLElement) {
   let text = "";
 
   if (isNode.isDOMText(node) && node.nodeValue) {
-    return transforms.labelRep(node.nodeValue);
+    return node.nodeValue;
   }
 
   if (isNode.isDOMElement(node)) {
