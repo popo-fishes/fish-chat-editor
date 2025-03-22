@@ -170,7 +170,7 @@ const handleInputTransforms = async function () {
 
     while (index !== -1) {
       // 当前需要匹配的字符串的开始位置是否在历史匹配器中存在，存在代表已经匹配过了不需要匹配了
-      const isFlag = matches.some((match) => match.start <= index && match.end >= index);
+      const isFlag = matches.some((match) => match.start <= index && match.end > index);
       const keyId = helper.generateRandomString(5);
       if (!isFlag) {
         matches.push({
