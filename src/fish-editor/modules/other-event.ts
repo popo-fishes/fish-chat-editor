@@ -6,9 +6,24 @@ import Module from "../core/module";
 import type Clipboard from "./clipboard";
 import type FishEditor from "../core/fish-editor";
 
-import { util, range, helper, isNode } from "../utils";
+import { util, range, helper, isNode, ua } from "../utils";
+
+const isShowCustomizeMenu = (open: boolean) => {
+  let isShow = false;
+  // 在外包传递开始时，还需要判断浏览器类型
+  if (open) {
+    if (ua.IS_FIREFOX) {
+      isShow = false;
+    } else {
+      isShow = true;
+    }
+  }
+
+  return isShow;
+};
 
 class OtherEvent extends Module {
+  isInputFocused: boolean;
   root: (typeof FishEditor)["prototype"]["root"];
   /** @name editor Menu Wrap Dom */
   editorMenuWrap: HTMLDivElement;
@@ -17,8 +32,9 @@ class OtherEvent extends Module {
     this.root = this.fishEditor.root;
     // change this direction
     this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handleDocumentkeydown = this.handleDocumentkeydown.bind(this);
     // create
-    this.editorMenuWrap = this.fishEditor.options.showCustomizeMenu ? createMenuWrapDom() : null;
+    this.editorMenuWrap = isShowCustomizeMenu(this.fishEditor.options.showCustomizeMenu) ? createMenuWrapDom() : null;
     // listeners
     this.setupListeners();
   }
@@ -26,6 +42,9 @@ class OtherEvent extends Module {
     this.root.addEventListener("click", (e) => {
       e.preventDefault();
       this.onClick(e);
+    });
+    this.root.addEventListener("focus", () => {
+      this.isInputFocused = true;
     });
     this.root.addEventListener("blur", this.onBlur.bind(this));
 
@@ -37,19 +56,25 @@ class OtherEvent extends Module {
       // Disable drag and drop operations. Dragging images in the editor will cause the image's address to be entered into rich text
       e.preventDefault();
     });
-    this.root.addEventListener("contextmenu", (e) => {
-      if (this.fishEditor.options.disableRightMenu) {
-        e.preventDefault();
-      }
 
+    // Right click to trigger menu
+    this.root.addEventListener("contextmenu", (e) => {
+      /**
+       * 开启右键菜单的, editorMenuWrap节点存在。
+       */
       if (this.editorMenuWrap) {
         if (isNode.isImageNode(e.target as any) || isNode.isEmojiImgNode(e.target as any)) {
           this.hideContextMenu();
+          e.preventDefault();
           return;
         }
         this.showContextMenu(e);
+        e.preventDefault();
       }
     });
+
+    // Monitor global keydown events
+    document.addEventListener("keydown", this.handleDocumentkeydown);
 
     // Menu Dom Event
     if (this.editorMenuWrap) {
@@ -66,6 +91,7 @@ class OtherEvent extends Module {
 
   private onBlur(e: FocusEvent) {
     const rangeInfo = range.getRange();
+    this.isInputFocused = false;
     // console.log(rangeInfo);
     if (rangeInfo) {
       this.fishEditor.backupRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
@@ -198,45 +224,8 @@ class OtherEvent extends Module {
         clipboardModule.capturePaste([file], null);
       }
     } catch (error) {
-      // this.fallbackHandlePaste()
       console.error("Failed to read clipboard:", error);
     }
-  }
-
-  private fallbackHandlePaste() {
-    // Create a hidden textarea to capture paste content
-    const textArea = document.createElement("textarea");
-    textArea.style.position = "absolute";
-    textArea.style.left = "-9999px";
-    document.body.appendChild(textArea);
-
-    textArea.addEventListener("paste", (e) => {
-      e.preventDefault();
-      // @ts-expect-error
-      const clp = e.clipboardData || (e.originalEvent && (e.originalEvent as any).clipboardData);
-      const isFile = clp?.types?.includes("Files");
-      const isHtml = clp?.types?.includes("text/html");
-      const isPlain = clp?.types?.includes("text/plain");
-
-      const content = clp.getData("text/plain");
-      console.log(clp, content);
-      // if (isFile && this.options.isPasteFile) {
-      //   const files = isObject(clp.files) ? Object.values(clp.files) : clp.files
-      //   this.capturePaste(files, null)
-      // }
-    });
-    // 创建 DataTransfer 对象并设置数据
-    const dataTransfer = new DataTransfer();
-    dataTransfer.setData("text/plain", "Hello, Paste!");
-
-    // 创建 paste 事件
-    const pasteEvent = new ClipboardEvent("paste", {
-      bubbles: true,
-      cancelable: true,
-      clipboardData: dataTransfer
-    });
-
-    textArea.dispatchEvent(pasteEvent);
   }
 
   private async showContextMenu(e: MouseEvent) {
@@ -308,11 +297,18 @@ class OtherEvent extends Module {
     }
   }
 
+  private handleDocumentkeydown(evt: KeyboardEvent) {
+    const isUndoKey = (evt.ctrlKey && evt.key == "z") || (evt.metaKey && evt.key == "z");
+    if (isUndoKey && !this.isInputFocused) {
+      evt.preventDefault();
+    }
+  }
+
   public destroy() {
     this.editorMenuWrap?.remove();
     // Remove the click event listener from the document
     document.removeEventListener("click", this.handleClickOutside);
-
+    document.removeEventListener("keydown", this.handleDocumentkeydown);
     this.editorMenuWrap = null;
   }
 }
@@ -371,11 +367,5 @@ function isElementVisible(element: HTMLDivElement) {
 
   return true;
 }
-
-/**
- * issue：
- * js 自定义右键菜单 点击粘贴按钮 ，如何获取剪切板的内容，当剪切板的内容是 jpeg图片格式 如何获取
- * js 点击按钮主动获取剪切板的内容，当剪切板的内容是 jpeg图片格式 如何获取
- */
 
 export default OtherEvent;

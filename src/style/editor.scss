@@ -8,38 +8,22 @@
   left: 0;
   top: 0;
   width: 100%;
-  max-height: 100%;
-  overflow-y: auto;
+  height: 100%;
   z-index: 2;
-  &::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-    background-color: rgb(255 255 255 / 0%);
-  }
 
-  &::-webkit-scrollbar-thumb {
-    border-radius: 4px;
-    background-color: rgb(0 0 0 / 15%);
-  }
   p {
     line-height: 1.5;
   }
 }
 
 //  高亮时修改样式
-.is-highlight.fb-editor-container {
-  height: 75px;
-  flex: none !important;
-  .fb-editor-scroll {
+.fb-editor-scroll.is-highlight {
+  .fb-editor {
     position: absolute;
-    top: 0;
     left: 0;
+    top: 0;
     width: 100%;
     z-index: 3;
-    // -webkit-text-fill-color: transparent; // 会导致不能复制选中
-    &::-webkit-scrollbar {
-      display: none !important;
-    }
     // 重点
     p {
       color: transparent; // 把输入框的文字颜色设置为透明
@@ -67,8 +51,9 @@
 
 .fb-editor-scroll {
   width: 100%;
-  max-height: 75px;
   overflow-y: auto;
+  overscroll-behavior: none;
+  position: relative;
   &::-webkit-scrollbar {
     width: 4px;
     height: 4px;
@@ -83,8 +68,6 @@
 
 .fb-editor {
   width: 100%;
-  min-height: 75px;
-  overflow-x: hidden;
   border: none;
   outline: none;
   background-color: transparent;
@@ -100,6 +83,10 @@
   -webkit-font-smoothing: antialiased;
   p {
     line-height: 1.5;
+  }
+  a {
+    text-decoration: underline;
+    color: #06c;
   }
 }
 
@@ -194,4 +181,47 @@
   height: 100%;
   border-style: none;
   vertical-align: text-bottom;
+}
+
+/** 右键菜单 */
+.fb-editor-menu-wrap {
+  border: 1px solid rgba(233, 237, 243, 1);
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0px 16px 24px rgba(41, 80, 155, 0.1);
+  border-radius: 12px;
+
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  display: none;
+  flex-direction: column;
+  padding: 4px;
+  z-index: 999;
+  .fb-menu-item {
+    height: 32px;
+    min-width: 99px;
+    user-select: none;
+    box-sizing: border-box;
+    padding: 0 8px;
+    align-items: center;
+    color: rgba(0, 0, 0, 0.65);
+    display: none;
+    font-size: 14px;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 8px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.85);
+    img {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      margin-right: 10px;
+    }
+    &:hover {
+      background-color: rgba(245, 246, 250, 1);
+    }
+  }
 }

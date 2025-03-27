@@ -2,164 +2,164 @@
  * @Date: 2024-10-12 14:24:28
  * @Description: dom
  */
-import { isNode, util } from ".";
-import type { IRange } from "./range";
-const { isDOMText, isDOMElement, isDOMNode, isNodeNotTtxt } = isNode;
+import { isNode, util } from '.'
+import type { IRange } from './range'
+const { isDOMText, isDOMElement, isDOMNode, isNodeNotTtxt } = isNode
 
 const getDomPreviousOrnextSibling = (targetElement: Node): [][] => {
-  if (!isDOMNode(targetElement)) return [[], []];
+  if (!isDOMNode(targetElement)) return [[], []]
 
-  const previousNodes: any = [];
-  let currentElement = targetElement.previousSibling;
+  const previousNodes: any = []
+  let currentElement = targetElement.previousSibling
   while (currentElement) {
     if (currentElement.nodeType === Node.ELEMENT_NODE || currentElement.nodeType === Node.TEXT_NODE) {
-      previousNodes.push(currentElement);
+      previousNodes.push(currentElement)
     }
-    currentElement = currentElement.previousSibling;
+    currentElement = currentElement.previousSibling
   }
 
-  const nextNodes: any = [];
-  currentElement = targetElement.nextSibling;
+  const nextNodes: any = []
+  currentElement = targetElement.nextSibling
   while (currentElement) {
     if (currentElement.nodeType === Node.ELEMENT_NODE || currentElement.nodeType === Node.TEXT_NODE) {
-      nextNodes.push(currentElement);
+      nextNodes.push(currentElement)
     }
-    currentElement = currentElement.nextSibling;
+    currentElement = currentElement.nextSibling
   }
-  return [previousNodes, nextNodes];
-};
+  return [previousNodes, nextNodes]
+}
 
 export const cloneNodes = (childNodes: HTMLElement[]) => {
-  const nodes: any[] = [];
+  const nodes: any[] = []
   for (let i = 0; i < childNodes.length; i++) {
-    const clonedNode = childNodes[i].cloneNode(true);
-    nodes.push(clonedNode);
+    const clonedNode = childNodes[i].cloneNode(true)
+    nodes.push(clonedNode)
   }
-  return nodes;
-};
+  return nodes
+}
 
 export const removeNodes = (childNodes: HTMLElement[]) => {
-  const nodes: HTMLElement[] = Array.from(childNodes);
+  const nodes: HTMLElement[] = Array.from(childNodes)
   for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
-    node?.remove();
+    const node = nodes[i]
+    node?.remove()
   }
-};
+}
 
 /**
  *@name is passed into the target node, and multiple nodes are inserted after the target node
  *@desc, for example:< p><a></p>, Enter node a. Then insert after a: become<p><a><b></ p>
  */
 export const toTargetAfterInsertNodes = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
-  if (!targetElement || !childNodes || !childNodes?.length) return;
-  const fragment = new DocumentFragment();
+  if (!targetElement || !childNodes || !childNodes?.length) return
+  const fragment = new DocumentFragment()
   for (let i = 0; i < childNodes.length; i++) {
     if (childNodes[i]) {
-      fragment.appendChild(childNodes[i]);
+      fragment.appendChild(childNodes[i])
     }
   }
-  const parentNode = targetElement.parentNode;
+  const parentNode = targetElement.parentNode
 
-  const nextSibling = targetElement.nextSibling;
+  const nextSibling = targetElement.nextSibling
 
   if (parentNode) {
-    parentNode.insertBefore(fragment, nextSibling);
+    parentNode.insertBefore(fragment, nextSibling)
   }
-};
+}
 
 /**
  *@name is passed to the target node, and multiple nodes are inserted before the target node
  *@desc for example:< p><a></p>, Enter node a. Then insert before a: become<p>< b><a></p>
  */
 export const toTargetBeforeInsertNodes = (targetElement: HTMLElement, childNodes: HTMLElement[]) => {
-  if (!targetElement || !childNodes || !childNodes?.length) return;
-  const fragment = new DocumentFragment();
+  if (!targetElement || !childNodes || !childNodes?.length) return
+  const fragment = new DocumentFragment()
   for (let i = 0; i < childNodes.length; i++) {
     if (childNodes[i]) {
-      fragment.appendChild(childNodes[i]);
+      fragment.appendChild(childNodes[i])
     }
   }
-  const parentNode = targetElement.parentNode;
+  const parentNode = targetElement.parentNode
 
   if (parentNode) {
-    parentNode.insertBefore(fragment, targetElement);
+    parentNode.insertBefore(fragment, targetElement)
   }
-};
+}
 
 export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElement[], clear: boolean = true) => {
   if (isDOMElement(targetNode)) {
     if (childNodes && childNodes.length && clear) {
-      targetNode.innerHTML = "";
+      targetNode.innerHTML = ''
     }
-    const fragment = new DocumentFragment();
+    const fragment = new DocumentFragment()
     for (let i = 0; i < childNodes.length; i++) {
-      fragment.appendChild(childNodes[i]);
+      fragment.appendChild(childNodes[i])
     }
-    targetNode.appendChild(fragment);
+    targetNode.appendChild(fragment)
   }
-  return targetNode;
-};
+  return targetNode
+}
 
 export const getRangeAroundNode = (range: IRange) => {
-  let behindNodeList: any[] = [];
+  let behindNodeList: any[] = []
 
-  let nextNodeList: any[] = [];
+  let nextNodeList: any[] = []
 
-  if (!range || !range?.startContainer) return [behindNodeList, nextNodeList];
+  if (!range || !range?.startContainer) return [behindNodeList, nextNodeList]
 
-  const targetNode: any = range.startContainer;
+  const targetNode: any = range.startContainer
 
-  const editTextNode = util.getNodeOfEditorElementNode(targetNode);
+  const editTextNode = util.getNodeOfEditorElementNode(targetNode)
 
   if (!editTextNode) {
-    return [behindNodeList, nextNodeList];
+    return [behindNodeList, nextNodeList]
   }
   // console.log(range);
 
   if (isDOMElement(targetNode)) {
-    const anchorNode = range.anchorNode;
+    const anchorNode = range.anchorNode
 
-    const anchorOffset = range.startOffset;
+    const anchorOffset = range.startOffset
 
     if (anchorOffset == 0) {
-      nextNodeList = anchorNode?.childNodes ? [...anchorNode?.childNodes] : [];
+      nextNodeList = anchorNode?.childNodes ? [...(anchorNode as any).childNodes] : []
     } else {
-      const currentNode = anchorNode?.childNodes?.[anchorOffset - 1] || null;
+      const currentNode = anchorNode?.childNodes?.[anchorOffset - 1] || null
 
       if (currentNode) {
-        const [pNode, nNode] = getDomPreviousOrnextSibling(currentNode);
-        behindNodeList = [currentNode, ...pNode];
-        nextNodeList = [...nNode];
+        const [pNode, nNode] = getDomPreviousOrnextSibling(currentNode)
+        behindNodeList = [currentNode, ...pNode]
+        nextNodeList = [...nNode]
       }
     }
   }
 
   if (isDOMText(targetNode)) {
-    const anchorNode = range.anchorNode;
+    const anchorNode = range.anchorNode
 
-    const anchorOffset = range.startOffset;
+    const anchorOffset = range.startOffset
 
-    const afterNode = (anchorNode as any)?.splitText?.(anchorOffset) || null;
+    const afterNode = (anchorNode as any)?.splitText?.(anchorOffset) || null
 
-    const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode);
+    const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode)
 
-    behindNodeList = [...pNode];
+    behindNodeList = [...pNode]
 
-    nextNodeList = afterNode ? [afterNode, ...nNode] : [...nNode];
+    nextNodeList = afterNode ? [afterNode, ...nNode] : [...nNode]
   }
 
   const tempPrev = behindNodeList?.filter((node: any) => {
     if (isNodeNotTtxt(node)) {
-      node?.remove();
+      node?.remove()
     }
-    return node.nodeName !== "BR" && !isNodeNotTtxt(node);
-  });
+    return node.nodeName !== 'BR' && !isNodeNotTtxt(node)
+  })
   const tempNext = nextNodeList?.filter((node: any) => {
     if (isNodeNotTtxt(node)) {
-      node?.remove();
+      node?.remove()
     }
-    return node.nodeName !== "BR" && !isNodeNotTtxt(node);
-  });
+    return node.nodeName !== 'BR' && !isNodeNotTtxt(node)
+  })
 
-  return [tempPrev, tempNext];
-};
+  return [tempPrev, tempNext]
+}
