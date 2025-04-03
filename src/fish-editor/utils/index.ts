@@ -13,8 +13,6 @@ export * as isNode from './isNode'
 
 export * as util from './util'
 
-export * as range from './range'
-
 export * as dom from './dom'
 
 export * as transforms from './transforms'
@@ -24,5 +22,3 @@ export * as split from './split'
 export * as formats from './formats'
 
 export * as ua from './ua'
-
-export type { IRange } from './range'

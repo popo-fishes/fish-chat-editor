@@ -1,18 +1,51 @@
 import throttle from 'lodash/throttle'
+import cloneDeep from 'lodash/cloneDeep'
 import Module from '../core/module'
 import Emitter from '../core/emitter'
 import type FishEditor from '../core/fish-editor'
-import { range as fishRange, split, util, dom, base, isNode, formats } from '../utils'
+import type { IRange } from '../core/selection'
+import { split, util, dom, base, isNode } from '../utils'
 
 interface KeyboardOptions {
   /** can enter new line  */
-  isEnterNewLine?: boolean
+  isEnterNewLine: boolean
+  bindings: Record<string, Binding>
 }
+interface Context {
+  /** If the start and end nodes are in the same position in the DOM, this property returns true; Otherwise, return false */
+  collapsed: boolean
+  event: KeyboardEvent
+}
+
+interface BindingObject extends Partial<Context> {
+  key: string | number
+  shiftKey?: boolean | null
+  altKey?: boolean | null
+  metaKey?: boolean | null
+  ctrlKey?: boolean | null
+  handler?: (range: IRange, curContext: Context, binding: BindingObject) => boolean | void
+}
+
+type Binding = BindingObject | string | number
 
 class Keyboard extends Module<KeyboardOptions> {
   static DEFAULTS: KeyboardOptions = {
     isEnterNewLine: false,
+    bindings: {},
   }
+  static match(evt: KeyboardEvent, binding: BindingObject) {
+    // Match detects the state of a specific modifier key on the keyboard
+    if (
+      (['altKey', 'ctrlKey', 'metaKey', 'shiftKey'] as const).some((key) => {
+        return !!binding[key] !== evt[key] && binding[key] !== null
+      })
+    ) {
+      return false
+    }
+    return binding.key === evt.key || binding.key === evt.which
+  }
+
+  bindings: Record<string, BindingObject[]>
   isLineFeedLock = false
   /** throttle */
   emitThrottled = throttle(() => {
@@ -20,93 +53,195 @@ class Keyboard extends Module<KeyboardOptions> {
   }, 300)
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
     super(fishEditor, options)
+    this.isLineFeedLock = false
+    this.bindings = {}
+
+    // add default bindings
+    Object.keys(this.options.bindings).forEach((name) => {
+      if (this.options.bindings[name]) {
+        // @ts-expect-error Fix me later
+        this.addBinding(this.options.bindings[name])
+      }
+    })
+
+    if (this.options.isEnterNewLine) {
+      this.addBinding({ key: 'Enter' }, this.handleLineFeed)
+    } else {
+      this.addBinding({ key: 'Enter', ctrlKey: true }, this.handleLineFeed)
+      this.addBinding({ key: 'Enter' }, () => {
+        this.fishEditor.emit(Emitter.events.EDITOR_ENTER_DOWN, this.fishEditor)
+      })
+    }
+
+    // No selection, no backspace key
+    this.addBinding({ key: 'Backspace' }, { collapsed: true }, this.handleBackspace)
+    // There are selection, backspace keys
+    this.addBinding({ key: 'Backspace' }, { collapsed: false }, this.handleDeleteRange)
+    this.addBinding({ key: 'Delete' }, { collapsed: false }, this.handleDeleteRange)
+
     this.listen()
   }
+
+  addBinding(
+    keyBinding: Binding,
+    context: Required<BindingObject['handler']> | Partial<Omit<BindingObject, 'key' | 'handler'>> = {},
+    handler: Required<BindingObject['handler']> = {},
+  ) {
+    const binding = normalize(keyBinding)
+    if (binding == null) {
+      console.warn('Attempting to add invalid keyboard binding', binding)
+      return
+    }
+
+    if (typeof context === 'function') {
+      context = { handler: context }
+    }
+    if (typeof handler === 'function') {
+      handler = { handler }
+    }
+
+    const singleBinding = {
+      ...binding,
+      key: binding.key,
+      ...context,
+      ...handler,
+    }
+
+    this.bindings[singleBinding.key] = this.bindings[singleBinding.key] || []
+    this.bindings[singleBinding.key].push(singleBinding)
+  }
+
   listen() {
     this.fishEditor.root.addEventListener('keydown', (evt: KeyboardEvent) => {
       if (evt.defaultPrevented || evt.isComposing) return
-      const keyCode = evt.keyCode
-      const rangeInfo = fishRange.getRange()
 
-      if ((evt.ctrlKey && keyCode === 13) || (this.options.isEnterNewLine && keyCode === 13)) {
+      // Matching key
+      const bindings = (this.bindings[evt.key] || []).concat(this.bindings[evt.which] || [])
+      // pairing
+      const matches = bindings.filter((binding) => Keyboard.match(evt, binding))
+
+      const rangeInfo = this.fishEditor.selection.getRange()
+
+      // 兜底处理
+      if (
+        rangeInfo == null ||
+        !this.fishEditor.selection.hasFocus() ||
+        !util.getNodeOfEditorElementNode(rangeInfo.startContainer)
+      ) {
         evt.preventDefault()
-        evt.stopPropagation()
-
-        if (this.isLineFeedLock) return
-
-        this.isLineFeedLock = true
-
-        handleLineFeed.call(this, (success) => {
-          if (success) {
-            Promise.resolve().then(() => {
-              this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE)
-              this.emitThrottled()
-            })
-          }
-          this.isLineFeedLock = false
-        })
         return
       }
 
-      if (keyCode === 13) {
-        evt.preventDefault()
-        evt.stopPropagation()
-        this.fishEditor.emit(Emitter.events.EDITOR_ENTER_DOWN, this.fishEditor)
-        return
+      if (matches.length === 0) return
+
+      const curContext = {
+        collapsed: rangeInfo.collapsed,
+        event: evt,
       }
 
-      // reject windows ctrl+z ;mac command+z
-      if ((evt.ctrlKey && evt.key == 'z') || (evt.metaKey && evt.key == 'z')) {
+      const prevented = matches.some((binding) => {
+        if (binding.collapsed != null && binding.collapsed !== curContext.collapsed) {
+          return false
+        }
+        return binding.handler.call(this, rangeInfo, curContext, binding) !== true
+      })
+
+      if (prevented) {
         evt.preventDefault()
-        evt.stopPropagation()
-        return
       }
 
       /**
-       *Problem 1: When dealing with the ctrl+a event, if there is no content, the br node of the selected row cannot be selected
-       * bug2:
+       * Problem 1: When dealing with the ctrl+a event, if there is no content, the br node of the selected row cannot be selected
+       * bug:
        *Press the delete button: If the editor is already an empty node, block the delete button. Otherwise, the empty text nodes will be deleted, leading to bugs
        *Bottom treatment to prevent rough handling
        */
-      if ((evt.ctrlKey && evt.key == 'a') || evt.keyCode === 8) {
-        const editor = this.fishEditor.editor
-        if (!fishRange.isSelected() && editor?.isEditorEmptyNode()) {
-          evt.preventDefault()
-          return
-        }
-      }
-
-      /**
-       * bug3:
-       *Cannot input in non editing line nodes. This situation occurs when there is only one image node left in the line editing, and then deleting it will result in the row node being deleted as well.
-       *Bottom treatment to prevent rough handling
-       */
-      if (rangeInfo && rangeInfo.startContainer) {
-        const elementRowNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer)
-        /**
-         * 修复火狐浏览器全选后，不可以删除富文本内容，直接返回不要走下面if
-         */
-        if (fishRange.isSelected() && !elementRowNode && rangeInfo.startContainer == this.fishEditor.root) {
-          /**
-           * 火狐浏览器，全选富文本内容后，下次按键输入会导致 富文本编辑行节点被删除了，导致光标丢失，这里需要重新创建一个行节点，再把光标设置上。
-           */
-          if (isContentChangingKey(evt)) {
-            const lineDom = base.createLineElement()
-            dom.toTargetAddNodes(this.fishEditor.root, [lineDom])
-            if (lineDom.firstChild) {
-              fishRange.setCursorPosition(lineDom.firstChild, 'before')
-            }
-          }
-          return
-        }
-
-        if (!elementRowNode) {
-          evt.preventDefault()
-          return
-        }
-      }
+      // if ((evt.ctrlKey && evt.key == 'a') || evt.keyCode === 8) {
+      //   const editor = this.fishEditor.editor
+      //   if (!fishRange.isSelected() && editor?.isEditorEmptyNode()) {
+      //     evt.preventDefault()
+      //     return
+      //   }
+      // }
     })
-    this.fishEditor.root.addEventListener('keyup', transformsEditNodes.bind(this))
+
+    // this.fishEditor.root.addEventListener('keyup', transformsEditNodes.bind(this))
+  }
+
+  /** handle Line Feed */
+  handleLineFeed(range: IRange) {
+    if (this.isLineFeedLock) return
+
+    this.isLineFeedLock = true
+
+    this.fishEditor.selection.deleteRange(range, () => {
+      normalizeLineFeed.call(this, range, (success: boolean) => {
+        if (success) {
+          Promise.resolve().then(() => {
+            this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE)
+            this.emitThrottled()
+          })
+        }
+        this.isLineFeedLock = false
+      })
+    })
+  }
+
+  handleBackspace(range: IRange) {
+    const editor = this.fishEditor.editor
+    // 1. If the content is empty, go straight back. That's equivalent to the beginning of the first row
+    if (editor.isEditorEmptyNode()) {
+      return false
+    }
+
+    // 2. 提行操作。
+    try {
+      // The position of the node at the start position in the edit line
+      const startLine = this.fishEditor.selection.getLine(range.startContainer)
+      if (startLine == null) {
+        return false
+      }
+      // Not the first line, and the cursor is at the start position
+      if (startLine > 0 && range.startOffset == 0) {
+        const [startBehindNodeList, startNextNodeList] = dom.getRangeAroundNode({
+          startContainer: range.startContainer,
+          startOffset: range.startOffset,
+        })
+        // console.log(startBehindNodeList, startNextNodeList)
+        const preRowNode = this.fishEditor.selection.getLineRow(startLine - 1)
+
+        if (startBehindNodeList.length == 0 && startNextNodeList.length) {
+          if (preRowNode) {
+            const cNode = dom.cloneNodes(startNextNodeList)
+            if (preRowNode.firstChild && preRowNode.firstChild.nodeName == 'BR') {
+              dom.toTargetAddNodes(preRowNode as any, cNode, true)
+            } else {
+              dom.toTargetAddNodes(preRowNode as any, cNode, false)
+            }
+            // Delete current line
+            this.fishEditor.selection.getLineRow(startLine)?.remove()
+            this.fishEditor.selection.setCursorPosition(cNode[0], 'before')
+            return false
+          }
+        }
+        if (startBehindNodeList.length == 0 && startNextNodeList.length == 0) {
+          // Delete current line
+          this.fishEditor.selection.getLineRow(startLine)?.remove()
+          if (preRowNode && preRowNode.lastChild) {
+            this.fishEditor.selection.setCursorPosition(preRowNode.lastChild, 'after')
+          }
+          return false
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      return true
+    }
+    return true
+  }
+
+  handleDeleteRange(range: IRange) {
+    this.fishEditor.selection.deleteRange(range)
   }
 
   /**
@@ -117,27 +252,37 @@ class Keyboard extends Module<KeyboardOptions> {
     const editNode = (this as Keyboard).fishEditor.root
     if (!isNode.isEditElement(editNode.firstChild as any)) {
       const lineDom = base.createLineElement()
-
       dom.toTargetAddNodes(editNode as any, [lineDom])
       if (lineDom.firstChild) {
-        fishRange.setCursorPosition(lineDom.firstChild, 'before')
+        this.fishEditor.selection.setCursorPosition(lineDom.firstChild, 'before')
       }
     }
   }
 }
 
-/** @name line feed */
-function handleLineFeed(callBack: (success: boolean) => void) {
-  const rangeInfo = fishRange.getRange()
+function normalize(binding: Binding): BindingObject | null {
+  if (typeof binding === 'string' || typeof binding === 'number') {
+    binding = { key: binding }
+  } else if (typeof binding === 'object') {
+    binding = cloneDeep(binding)
+  } else {
+    return null
+  }
+  return binding
+}
 
+/** @name line feed */
+function normalizeLineFeed(rangeInfo: IRange, callBack: (success: boolean) => void) {
   if (!rangeInfo) return callBack(false)
 
   const rowElementNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer)
 
   if (!rowElementNode) {
     this.fishEditor.editor.setCursorEditorLast((node) => {
+      // reset
+      const resetRange = this.fishEditor.selection.getRange()
       if (node) {
-        handleLineFeed(callBack)
+        normalizeLineFeed(resetRange, callBack)
       }
     })
     return callBack(false)
@@ -153,7 +298,6 @@ function handleLineFeed(callBack: (success: boolean) => void) {
   if (util.getNodeOfEditorTextNode(rangeInfo.startContainer)) {
     const result = split.splitEditTextNode(rangeInfo)
     rangeInfo.startContainer = result.parentNode
-    rangeInfo.anchorNode = result.parentNode
     rangeInfo.startOffset = result.startOffset
   }
 
@@ -179,7 +323,7 @@ function handleLineFeed(callBack: (success: boolean) => void) {
   dom.toTargetAfterInsertNodes(rowElementNode, [lineDom])
 
   if (isNode.isDOMNode(lineDom.firstChild)) {
-    fishRange.setCursorPosition(lineDom.firstChild, 'before')
+    this.fishEditor.selection.setCursorPosition(lineDom.firstChild, 'before')
     lineDom?.scrollIntoView({ block: 'end', inline: 'end' })
 
     callBack(true)
@@ -192,59 +336,9 @@ function handleLineFeed(callBack: (success: boolean) => void) {
 function transformsEditNodes() {
   const editNode = (this as Keyboard).fishEditor.root
 
-  const rangeInfo = fishRange.getRange()
-
-  if (rangeInfo && rangeInfo?.startContainer) {
-    const editorRowNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer)
-    if (editorRowNode) {
-      const nodes: any[] = Array.from(editorRowNode.childNodes)
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i] as any
-        // 1. If it is a span tag but does not belong to the editor text block, format it
-        if (node.nodeName == 'SPAN' && !isNode.isEditTextNode(node)) {
-          const formatNode = formats.createNodeOptimize(node)
-          if (formatNode) {
-            node.parentNode?.replaceChild(formatNode, node)
-          }
-        }
-
-        if (node.style && node.style?.backgroundColor) {
-          node.style.removeProperty('background-color')
-        }
-
-        if (node.nodeName === 'BR' && nodes.length > 1) {
-          node.remove()
-        }
-      }
-    }
-  }
-
   /** 检测修补富文本的编辑行节点 */
   if (!isNode.isEditElement(editNode.firstChild as any)) {
     ;(this as Keyboard).checkPatchEdittElement()
-  }
-
-  if (rangeInfo && rangeInfo?.startContainer) {
-    if (!util.getNodeOfEditorElementNode(rangeInfo.startContainer as any)) {
-      if (editNode.childNodes?.length > 1) {
-        const nodes: any[] = Array.from(editNode.childNodes)
-        for (let i = 0; i < nodes.length; i++) {
-          const node = nodes[i] as any
-
-          if (!isNode.isEditElement(node) && node.nodeName !== 'BR') {
-            node?.remove()
-          }
-          if (node.nodeName == 'BR') {
-            const lineDom = base.createLineElement()
-            node.parentNode?.replaceChild(lineDom, node)
-            const targetRowNode = editNode.childNodes[rangeInfo.startOffset]
-            if (targetRowNode?.firstChild) {
-              fishRange.setCursorPosition(targetRowNode.firstChild, 'before')
-            }
-          }
-        }
-      }
-    }
   }
 }
 
@@ -285,12 +379,12 @@ function isContentChangingKey(evt: KeyboardEvent): boolean {
 
   // 检查是否为空格键
   if (keyCode === 32) {
-    return false
+    return true
   }
 
   // 检查是否为退格键或删除键
   if (keyCode === 8 || keyCode === 46) {
-    return false
+    return true
   }
 
   return false

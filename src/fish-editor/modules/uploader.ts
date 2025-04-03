@@ -1,6 +1,6 @@
 import isFunction from 'lodash/isFunction'
 import isArray from 'lodash/isArray'
-import { isNode, base, range } from '../utils'
+import { isNode, base } from '../utils'
 import type FishEditor from '../core/fish-editor'
 import store from '../core/store'
 import Module from '../core/module'
@@ -10,6 +10,8 @@ interface IUploaderOptions {
   mimetypes: string[]
   /** @name Maximum number of uploaded files */
   slice: number
+  /** @name Limit the number of uploads */
+  maxCount: number
   /** @name Hook before file insertion */
   beforeUpload?: (files: File[], amount: number) => (File[] | []) | Promise<File[] | []>
 }
@@ -18,6 +20,7 @@ class Uploader extends Module<IUploaderOptions> {
   static DEFAULTS: IUploaderOptions = {
     mimetypes: ['image/png', 'image/jpeg'],
     slice: 10,
+    maxCount: 30,
   }
 
   constructor(fishEditor: FishEditor, options: Partial<IUploaderOptions>) {
@@ -34,15 +37,20 @@ class Uploader extends Module<IUploaderOptions> {
       }
     })
     if (uploads.length > 0) {
+      const amount = getEditImageAmount(this.fishEditor.root)
       const beforeUpload = this.options?.beforeUpload || null
       if (isFunction(beforeUpload)) {
-        const amount = getEditImageAmount(this.fishEditor.root)
         const result = await beforeUpload(uploads, amount)
         if (isArray(result) && result?.length) {
           uploads = result
         } else {
           uploads = []
         }
+      }
+      // 大于最大数量直接返回
+      if (amount >= (this.options.maxCount > 100 ? 100 : this.options.maxCount)) {
+        console.warn('The maximum number of uploads has been reached')
+        uploads = []
       }
     }
 
@@ -76,14 +84,13 @@ class Uploader extends Module<IUploaderOptions> {
           })
 
           if (nodes.length) {
-            if (range.isSelected()) {
-              document.execCommand('delete', false, undefined)
-            }
-            // delay insert
-            requestAnimationFrame(() => {
-              const rangeInfo = range.getRange()
-              this.fishEditor.editor.insertNode(nodes, rangeInfo, (success) => {
-                callBack(success)
+            this.fishEditor.selection.deleteRange(this.fishEditor.selection.getRange(), () => {
+              // delay insert
+              requestAnimationFrame(() => {
+                const rangeInfo = this.fishEditor.selection.getRange()
+                this.fishEditor.editor.insertNode(nodes, rangeInfo, (success) => {
+                  callBack(success)
+                })
               })
             })
             return

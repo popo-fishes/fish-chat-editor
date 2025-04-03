@@ -2,168 +2,145 @@
  * @Date: 2024-11-04 16:34:52
  * @Description: Modify here please
  */
-import Module from "../core/module";
-import type Clipboard from "./clipboard";
-import type FishEditor from "../core/fish-editor";
+import Module from '../core/module'
+import type Clipboard from './clipboard'
+import type FishEditor from '../core/fish-editor'
 
-import { util, range, helper, isNode, ua } from "../utils";
+import { util, helper, isNode, ua } from '../utils'
 
 const isShowCustomizeMenu = (open: boolean) => {
-  let isShow = false;
+  let isShow = false
   // 在外包传递开始时，还需要判断浏览器类型
   if (open) {
     if (ua.IS_FIREFOX) {
-      isShow = false;
+      isShow = false
     } else {
-      isShow = true;
+      isShow = true
     }
   }
 
-  return isShow;
-};
+  return isShow
+}
 
 class OtherEvent extends Module {
-  isInputFocused: boolean;
-  root: (typeof FishEditor)["prototype"]["root"];
+  isInputFocused: boolean
+  root: (typeof FishEditor)['prototype']['root']
   /** @name editor Menu Wrap Dom */
-  editorMenuWrap: HTMLDivElement;
+  editorMenuWrap: HTMLDivElement
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
-    super(fishEditor, options);
-    this.root = this.fishEditor.root;
+    super(fishEditor, options)
+    this.root = this.fishEditor.root
     // change this direction
-    this.handleClickOutside = this.handleClickOutside.bind(this);
-    this.handleDocumentkeydown = this.handleDocumentkeydown.bind(this);
+    this.handleClickOutside = this.handleClickOutside.bind(this)
+    this.handleDocumentkeydown = this.handleDocumentkeydown.bind(this)
     // create
-    this.editorMenuWrap = isShowCustomizeMenu(this.fishEditor.options.showCustomizeMenu) ? createMenuWrapDom() : null;
+    this.editorMenuWrap = isShowCustomizeMenu(this.fishEditor.options.showCustomizeMenu) ? createMenuWrapDom() : null
     // listeners
-    this.setupListeners();
+    this.setupListeners()
   }
   private setupListeners() {
-    this.root.addEventListener("click", (e) => {
-      e.preventDefault();
-      this.onClick(e);
-    });
-    this.root.addEventListener("focus", () => {
-      this.isInputFocused = true;
-    });
-    this.root.addEventListener("blur", this.onBlur.bind(this));
+    this.root.addEventListener('click', (e) => {
+      e.preventDefault()
+      this.onClick(e)
+    })
+    this.root.addEventListener('focus', () => {
+      this.isInputFocused = true
+    })
+    this.root.addEventListener('blur', this.onBlur.bind(this))
 
-    this.root.addEventListener("drop", (e) => {
+    this.root.addEventListener('drop', (e) => {
       // Disable drag and drop operations. Dragging images in the editor will cause the image's address to be entered into rich text
-      e.preventDefault();
-    });
-    this.root.addEventListener("dragover", (e) => {
+      e.preventDefault()
+    })
+    this.root.addEventListener('dragover', (e) => {
       // Disable drag and drop operations. Dragging images in the editor will cause the image's address to be entered into rich text
-      e.preventDefault();
-    });
+      e.preventDefault()
+    })
 
     // Right click to trigger menu
-    this.root.addEventListener("contextmenu", (e) => {
+    this.root.addEventListener('contextmenu', (e) => {
       /**
        * 开启右键菜单的, editorMenuWrap节点存在。
        */
       if (this.editorMenuWrap) {
         if (isNode.isImageNode(e.target as any) || isNode.isEmojiImgNode(e.target as any)) {
-          this.hideContextMenu();
-          e.preventDefault();
-          return;
+          this.hideContextMenu()
+          e.preventDefault()
+          return
         }
-        this.showContextMenu(e);
-        e.preventDefault();
+        this.showContextMenu(e)
+        e.preventDefault()
       }
-    });
+    })
 
     // Monitor global keydown events
-    document.addEventListener("keydown", this.handleDocumentkeydown);
+    document.addEventListener('keydown', this.handleDocumentkeydown)
 
     // Menu Dom Event
     if (this.editorMenuWrap) {
-      this.editorMenuWrap.addEventListener("click", (e) => {
-        this.handleMenuItemClick(e);
-      });
-      this.editorMenuWrap.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-      });
+      this.editorMenuWrap.addEventListener('click', (e) => {
+        this.handleMenuItemClick(e)
+      })
+      this.editorMenuWrap.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+      })
       // Add click event listener for document
-      document.addEventListener("click", this.handleClickOutside);
+      document.addEventListener('click', this.handleClickOutside)
     }
   }
 
   private onBlur(e: FocusEvent) {
-    const rangeInfo = range.getRange();
-    this.isInputFocused = false;
+    const rangeInfo = this.fishEditor.selection.getRange()
+    this.isInputFocused = false
     // console.log(rangeInfo);
     if (rangeInfo) {
-      this.fishEditor.backupRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset);
+      this.fishEditor.backupRangePosition(rangeInfo.startContainer as HTMLElement, rangeInfo.startOffset)
     }
-    if (range.isSelected()) {
-      // range?.removeAllRanges()
+    if (!rangeInfo.collapsed) {
+      // this.fishEditor.selection.removeAllRanges()
     }
   }
 
   private onClick(e: MouseEvent) {
-    const target = e?.target as any;
-    const emojiNode = util.getNodeOfEditorEmojiNode(target);
+    const target = e?.target as any
+    const emojiNode = util.getNodeOfEditorEmojiNode(target)
     if (emojiNode) {
-      range.selectNode(emojiNode);
+      this.fishEditor.selection.selectNode(emojiNode)
     }
-    const imageNode = util.getNodeOfEditorImageNode(target);
+    const imageNode = util.getNodeOfEditorImageNode(target)
     if (imageNode) {
       // range.selectNode(imageNode);
     }
-
-    /**
-     *If there is a cursor present
-     *After clicking on the editor, if the cursor position node is a block node and an image node, move the cursor to its preceding sibling node.
-     *1: It is necessary to ensure that the block nodes of the image cannot input content
-     *When pasting images, we will insert a text input node in front of the image node.
-     */
-
-    // if (isDOMElement(target) && findNodeWithImg(target)) {
-
-    //   if (pnode) {
-
-    //     const selection = window.getSelection();
-
-    //     selection?.removeAllRanges();
-
-    //     const textNode = base.createChunkTextElement();
-
-    //     pnode.insertAdjacentElement("afterend", textNode);
-
-    //     range.setRangeNode(textNode, "after", () => {});
-    //   }
-    // }
   }
 
   private handleMenuItemClick(e: MouseEvent) {
-    const target = e.target as HTMLElement;
-    let menuItem = null;
-    if (target.classList.contains("fb-menu-item")) {
-      menuItem = target;
+    const target = e.target as HTMLElement
+    let menuItem = null
+    if (target.classList.contains('fb-menu-item')) {
+      menuItem = target
     } else {
       // Match a specific selector with the ancestor element closest to the current element
-      menuItem = target.closest(".fb-menu-item") as HTMLElement | null;
+      menuItem = target.closest('.fb-menu-item') as HTMLElement | null
     }
 
     if (menuItem) {
-      const dataType = menuItem.getAttribute("data-type");
+      const dataType = menuItem.getAttribute('data-type')
 
       switch (dataType) {
-        case "copy":
-          (this.fishEditor.getModule("clipboard") as Clipboard).captureCopy(null, false);
-          break;
-        case "cut":
-          (this.fishEditor.getModule("clipboard") as Clipboard).captureCopy(null, true);
-          break;
-        case "paste":
-          this.handlePaste();
-          break;
+        case 'copy':
+          ;(this.fishEditor.getModule('clipboard') as Clipboard).captureCopy(null, false)
+          break
+        case 'cut':
+          ;(this.fishEditor.getModule('clipboard') as Clipboard).captureCopy(null, true)
+          break
+        case 'paste':
+          this.handlePaste()
+          break
         default:
-          break;
+          break
       }
 
-      this.hideContextMenu();
+      this.hideContextMenu()
     }
   }
 
@@ -171,27 +148,27 @@ class OtherEvent extends Module {
   private async isShowPasteBtn() {
     if (navigator.clipboard && window.isSecureContext) {
       try {
-        const text = await navigator.clipboard.readText();
-        const items = await navigator.clipboard.read();
+        const text = await navigator.clipboard.readText()
+        const items = await navigator.clipboard.read()
         // There are images or content present
-        if (text) return true;
+        if (text) return true
         for (const item of items) {
-          if (item.types.includes("image/png") || item.types.includes("image/jpeg")) {
-            return true;
+          if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+            return true
           }
         }
-        return false;
+        return false
       } catch (err) {
-        console.error("Unable to read the content of the clipboard: ", err);
-        return false;
+        console.error('Unable to read the content of the clipboard: ', err)
+        return false
       }
     }
-    return false;
+    return false
   }
 
   private async handlePaste() {
-    const showPaste = await this.isShowPasteBtn();
-    if (!showPaste) return;
+    const showPaste = await this.isShowPasteBtn()
+    if (!showPaste) return
 
     try {
       /**
@@ -199,32 +176,32 @@ class OtherEvent extends Module {
        * Browsers commonly support reading text, HTML, and PNG image data.
        * read()? Unable to process JPEG format
        */
-      const clipboardItems = await navigator.clipboard.read();
-      const text = await navigator.clipboard.readText();
-      const clipboardModule = this.fishEditor.getModule("clipboard") as Clipboard;
+      const clipboardItems = await navigator.clipboard.read()
+      const text = await navigator.clipboard.readText()
+      const clipboardModule = this.fishEditor.getModule('clipboard') as Clipboard
       //  console.log(clipboardItems)
 
       if (text) {
-        clipboardModule.capturePaste(null, text);
-        return;
+        clipboardModule.capturePaste(null, text)
+        return
       }
 
-      let file = null;
+      let file = null
       for (const item of clipboardItems) {
-        if (item.types.includes("image/png") || item.types.includes("image/jpeg")) {
-          const blob = (await item.getType("image/png")) || (await item.getType("image/jpeg"));
-          const fileName = "clipboard-image" + helper.generateRandomString() + ".png";
-          file = new File([blob], fileName, { type: blob.type });
+        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+          const blob = (await item.getType('image/png')) || (await item.getType('image/jpeg'))
+          const fileName = 'clipboard-image' + helper.generateRandomString() + '.png'
+          file = new File([blob], fileName, { type: blob.type })
         }
       }
 
-      const isPasteFile = clipboardModule.getIsPasteFile();
+      const isPasteFile = clipboardModule.getIsPasteFile()
       if (file && isPasteFile) {
         // console.log(file)
-        clipboardModule.capturePaste([file], null);
+        clipboardModule.capturePaste([file], null)
       }
     } catch (error) {
-      console.error("Failed to read clipboard:", error);
+      console.error('Failed to read clipboard:', error)
     }
   }
 
@@ -233,90 +210,90 @@ class OtherEvent extends Module {
     // if (isElementVisible(this.editorMenuWrap)) {
     //   return
     // }
-    const showPaste = await this.isShowPasteBtn();
-    let isShoweditorMenuWrap = false;
+    const showPaste = await this.isShowPasteBtn()
+    let isShoweditorMenuWrap = false
     if (this.editorMenuWrap) {
-      const copyDom = getMenuItemsByDataType.call(this, "copy");
-      const cutDom = getMenuItemsByDataType.call(this, "cut");
-      const pasteDom = getMenuItemsByDataType.call(this, "paste");
+      const copyDom = getMenuItemsByDataType.call(this, 'copy')
+      const cutDom = getMenuItemsByDataType.call(this, 'cut')
+      const pasteDom = getMenuItemsByDataType.call(this, 'paste')
 
-      if (range.isSelected()) {
-        copyDom.style.display = "inline-flex";
-        cutDom.style.display = "inline-flex";
-        isShoweditorMenuWrap = true;
+      if (this.fishEditor.selection.isSelected()) {
+        copyDom.style.display = 'inline-flex'
+        cutDom.style.display = 'inline-flex'
+        isShoweditorMenuWrap = true
       } else {
-        copyDom.style.display = "none";
-        cutDom.style.display = "none";
+        copyDom.style.display = 'none'
+        cutDom.style.display = 'none'
       }
 
       if (showPaste) {
-        pasteDom.style.display = "inline-flex";
-        isShoweditorMenuWrap = true;
+        pasteDom.style.display = 'inline-flex'
+        isShoweditorMenuWrap = true
       } else {
-        pasteDom.style.display = "none";
+        pasteDom.style.display = 'none'
       }
     }
 
     if (this.editorMenuWrap && isShoweditorMenuWrap) {
-      this.editorMenuWrap.style.display = "flex";
+      this.editorMenuWrap.style.display = 'flex'
       // Obtain the height of the menu and the height of the screen
-      const menuHeight = this.editorMenuWrap.offsetHeight;
-      const screenHeight = window.innerHeight;
+      const menuHeight = this.editorMenuWrap.offsetHeight
+      const screenHeight = window.innerHeight
 
-      let top = e.clientY;
-      let left = e.clientX;
+      let top = e.clientY
+      let left = e.clientX
 
       // Check if the menu extends beyond the bottom of the screen
       if (top + menuHeight > screenHeight) {
         // top = screenHeight - menuHeight
-        top = e.clientY - menuHeight;
+        top = e.clientY - menuHeight
       }
 
       // Check if the menu extends beyond the right side of the screen
-      const menuWidth = this.editorMenuWrap.offsetWidth;
-      const screenWidth = window.innerWidth;
+      const menuWidth = this.editorMenuWrap.offsetWidth
+      const screenWidth = window.innerWidth
       if (left + menuWidth > screenWidth) {
-        left = screenWidth - menuWidth;
+        left = screenWidth - menuWidth
       }
 
-      this.editorMenuWrap.style.left = `${left}px`;
-      this.editorMenuWrap.style.top = `${top}px`;
+      this.editorMenuWrap.style.left = `${left}px`
+      this.editorMenuWrap.style.top = `${top}px`
     }
   }
 
   private hideContextMenu() {
     if (this.editorMenuWrap) {
-      this.editorMenuWrap.style.display = "none";
+      this.editorMenuWrap.style.display = 'none'
     }
   }
 
   private handleClickOutside(e: MouseEvent) {
-    const target = e.target as HTMLElement;
+    const target = e.target as HTMLElement
     if (this.editorMenuWrap && !this.editorMenuWrap.contains(target)) {
-      this.hideContextMenu();
+      this.hideContextMenu()
     }
   }
 
   private handleDocumentkeydown(evt: KeyboardEvent) {
-    const isUndoKey = (evt.ctrlKey && evt.key == "z") || (evt.metaKey && evt.key == "z");
+    const isUndoKey = (evt.ctrlKey && evt.key == 'z') || (evt.metaKey && evt.key == 'z')
     if (isUndoKey && !this.isInputFocused) {
-      evt.preventDefault();
+      evt.preventDefault()
     }
   }
 
   public destroy() {
-    this.editorMenuWrap?.remove();
+    this.editorMenuWrap?.remove()
     // Remove the click event listener from the document
-    document.removeEventListener("click", this.handleClickOutside);
-    document.removeEventListener("keydown", this.handleDocumentkeydown);
-    this.editorMenuWrap = null;
+    document.removeEventListener('click', this.handleClickOutside)
+    document.removeEventListener('keydown', this.handleDocumentkeydown)
+    this.editorMenuWrap = null
   }
 }
 
 function createMenuWrapDom() {
-  const menuWrapDom = document.createElement("div");
-  menuWrapDom.className = "fb-editor-menu-wrap";
-  const cdn = "http://43.136.119.145:83/image";
+  const menuWrapDom = document.createElement('div')
+  menuWrapDom.className = 'fb-editor-menu-wrap'
+  const cdn = 'https://cdn.yupaowang.com/yupao_pc/images/im/icon'
   const _html = `
   <div class="fb-menu-item" data-type="copy">
     <img src="${cdn}/editor-copy.png"/>
@@ -330,42 +307,42 @@ function createMenuWrapDom() {
     <img src="${cdn}/editor-paste.png"/>
     <span>粘贴</span>
   </div>
-`;
-  menuWrapDom.innerHTML = _html;
+`
+  menuWrapDom.innerHTML = _html
 
   if (document?.body) {
-    document.body.appendChild(menuWrapDom);
-    return menuWrapDom;
+    document.body.appendChild(menuWrapDom)
+    return menuWrapDom
   }
 
-  return null;
+  return null
 }
 
 function getMenuItemsByDataType(dataType: string): HTMLElement {
   if (this.editorMenuWrap) {
-    return this.editorMenuWrap.querySelector(`.fb-menu-item[data-type="${dataType}"]`) as HTMLElement | null;
+    return this.editorMenuWrap.querySelector(`.fb-menu-item[data-type="${dataType}"]`) as HTMLElement | null
   }
-  return null;
+  return null
 }
 
 function isElementVisible(element: HTMLDivElement) {
-  if (!element) return false;
+  if (!element) return false
 
   // Check if the element is hidden by CSS
-  const style = window.getComputedStyle(element);
+  const style = window.getComputedStyle(element)
 
-  if (style.display === "none" || style.visibility === "hidden") {
-    return false;
+  if (style.display === 'none' || style.visibility === 'hidden') {
+    return false
   }
 
   // Check if the element is hidden by getBoundingClientRect
-  const rect = element.getBoundingClientRect();
+  const rect = element.getBoundingClientRect()
 
   if (rect.width === 0 && rect.height === 0) {
-    return false;
+    return false
   }
 
-  return true;
+  return true
 }
 
-export default OtherEvent;
+export default OtherEvent

@@ -3,7 +3,6 @@
  * @Description: dom
  */
 import { isNode, util } from '.'
-import type { IRange } from './range'
 const { isDOMText, isDOMElement, isDOMNode, isNodeNotTtxt } = isNode
 
 const getDomPreviousOrnextSibling = (targetElement: Node): [][] => {
@@ -100,7 +99,7 @@ export const toTargetAddNodes = (targetNode: HTMLElement, childNodes: HTMLElemen
   return targetNode
 }
 
-export const getRangeAroundNode = (range: IRange) => {
+export const getRangeAroundNode = (range: { startContainer: Node | null; startOffset: number }) => {
   let behindNodeList: any[] = []
 
   let nextNodeList: any[] = []
@@ -116,50 +115,52 @@ export const getRangeAroundNode = (range: IRange) => {
   }
   // console.log(range);
 
-  if (isDOMElement(targetNode)) {
-    const anchorNode = range.anchorNode
+  try {
+    if (isDOMElement(targetNode)) {
+      const startNode = range.startContainer
 
-    const anchorOffset = range.startOffset
+      const anchorOffset = range.startOffset
 
-    if (anchorOffset == 0) {
-      nextNodeList = anchorNode?.childNodes ? [...(anchorNode as any).childNodes] : []
-    } else {
-      const currentNode = anchorNode?.childNodes?.[anchorOffset - 1] || null
+      if (anchorOffset == 0) {
+        nextNodeList = startNode?.childNodes ? [...(startNode as any).childNodes] : []
+      } else {
+        const currentNode = startNode?.childNodes?.[anchorOffset - 1] || null
 
-      if (currentNode) {
-        const [pNode, nNode] = getDomPreviousOrnextSibling(currentNode)
-        behindNodeList = [currentNode, ...pNode]
-        nextNodeList = [...nNode]
+        if (currentNode) {
+          const [pNode, nNode] = getDomPreviousOrnextSibling(currentNode)
+          behindNodeList = [currentNode, ...pNode]
+          nextNodeList = [...nNode]
+        }
       }
     }
-  }
 
-  if (isDOMText(targetNode)) {
-    const anchorNode = range.anchorNode
+    if (isDOMText(targetNode)) {
+      const anchorOffset = range.startOffset
 
-    const anchorOffset = range.startOffset
+      const afterNode = (range.startContainer as any)?.splitText?.(anchorOffset) || null
 
-    const afterNode = (anchorNode as any)?.splitText?.(anchorOffset) || null
+      const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode)
 
-    const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode)
+      behindNodeList = [...pNode]
 
-    behindNodeList = [...pNode]
-
-    nextNodeList = afterNode ? [afterNode, ...nNode] : [...nNode]
-  }
-
-  const tempPrev = behindNodeList?.filter((node: any) => {
-    if (isNodeNotTtxt(node)) {
-      node?.remove()
+      nextNodeList = afterNode ? [afterNode, ...nNode] : [...nNode]
     }
-    return node.nodeName !== 'BR' && !isNodeNotTtxt(node)
-  })
-  const tempNext = nextNodeList?.filter((node: any) => {
-    if (isNodeNotTtxt(node)) {
-      node?.remove()
-    }
-    return node.nodeName !== 'BR' && !isNodeNotTtxt(node)
-  })
 
-  return [tempPrev, tempNext]
+    const tempPrev = behindNodeList?.filter((node: any) => {
+      if (isNodeNotTtxt(node)) {
+        node?.remove()
+      }
+      return node.nodeName !== 'BR' && !isNodeNotTtxt(node)
+    })
+    const tempNext = nextNodeList?.filter((node: any) => {
+      if (isNodeNotTtxt(node)) {
+        node?.remove()
+      }
+      return node.nodeName !== 'BR' && !isNodeNotTtxt(node)
+    })
+
+    return [tempPrev, tempNext]
+  } catch (err) {
+    return [behindNodeList, nextNodeList]
+  }
 }

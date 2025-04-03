@@ -3,10 +3,13 @@
  * @Description: Modify here please
  */
 import throttle from 'lodash/throttle'
-import { range as fishRange, dom, transforms, helper } from '../utils'
+import { dom, transforms, helper } from '../utils'
 import Module from '../core/module'
 import Emitter from '../core/emitter'
+import type { IRange } from '../core/selection'
 import type FishEditor from '../core/fish-editor'
+
+const INSERT_TYPES = ['insertText', 'insertReplacementText']
 
 type IMatchesType = { replaceText: string; start: number; keyId: string; end: number }
 interface InputOptions {
@@ -39,7 +42,7 @@ class Input extends Module<InputOptions> {
     super(fishEditor, options)
     this.matchWordsList = this.options.matchWordsList
     // change this direction
-    this.handleInputChange = this.handleInputChange.bind(this)
+    this.handleEditorChange = this.handleEditorChange.bind(this)
 
     this.handleComposition()
 
@@ -62,15 +65,84 @@ class Input extends Module<InputOptions> {
     fishEditor.root.addEventListener('input', this.handleInput.bind(this, true))
   }
 
-  /** trigger text conversion event listening */
-  private handleInputChange() {
+  private handleInput(isOriginalEvent: boolean) {
+    if (isOriginalEvent) {
+      Promise.resolve().then(() => {
+        // Update placeholder visibility
+        const hasEmpty = this.fishEditor.editor.isEditorEmptyNode()
+        this.fishEditor.container.classList.toggle('is-placeholder-visible', hasEmpty)
+
+        if (this.matchWordsList?.length) {
+          handleInputTransforms.call(this)
+        }
+      })
+    }
+    /** isComposing ?? */
+    if (this.fishEditor.composition.isComposing) return
+    this.emitThrottled()
+  }
+
+  private handleBeforeInput(event: InputEvent) {
+    if (this.fishEditor.composition.isComposing || event.defaultPrevented || !INSERT_TYPES.includes(event.inputType)) {
+      return
+    }
+
+    const staticRange = event.getTargetRanges ? event.getTargetRanges()[0] : null
+
+    if (!staticRange || staticRange.collapsed === true) {
+      return
+    }
+
+    const text = getPlainTextFromInputEvent(event)
+    if (text == null) {
+      return
+    }
+
+    const normalized = this.fishEditor.selection.normalizeNative(staticRange as Range)
+    const range = normalized ? this.fishEditor.selection.getRange() : null
+
+    if (range && this.replaceText(range, text)) {
+      event.preventDefault()
+    }
+  }
+
+  private replaceText(range: IRange, text = '') {
+    if (this.fishEditor.editor.isEditorEmptyNode()) {
+      return false
+    }
+    if (text) {
+      // console.time('replaceText')
+      this.fishEditor.selection.deleteRange(range, () => {
+        this.fishEditor.editor.insertText(
+          text,
+          this.fishEditor.selection.getRange(),
+          (success) => {
+            if (success) {
+              Promise.resolve().then(() => {
+                this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE)
+                this.emitThrottled()
+              })
+              // console.timeEnd('replaceText')
+            }
+          },
+          true,
+        )
+      })
+    } else {
+      this.fishEditor.selection.deleteRange(range)
+    }
+    return true
+  }
+
+  /** @name trigger text conversion event listening */
+  private handleEditorChange() {
     // Promise asynchronous execution
     Promise.resolve().then(() => {
       handleInputTransforms.call(this)
     })
   }
 
-  /** add matching word mask nodes */
+  /** @name add matching word mask nodes */
   private addHighlightCoverDom() {
     this.highlightCoverDom = document.createElement('div')
     this.highlightCoverDom.classList.add('fb-cover-mask-box')
@@ -115,9 +187,9 @@ class Input extends Module<InputOptions> {
     }
 
     // When the monitoring value changes, we actively trigger text conversion
-    this.fishEditor.on(Emitter.events.EDITOR_CHANGE, this.handleInputChange)
+    this.fishEditor.on(Emitter.events.EDITOR_CHANGE, this.handleEditorChange)
 
-    this.fishEditor.on(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange)
+    this.fishEditor.on(Emitter.events.EDITOR_INPUT_CHANGE, this.handleEditorChange)
 
     // 初始化 ResizeObserver
     this.resizeObserver = new ResizeObserver((entries) => {
@@ -150,8 +222,8 @@ class Input extends Module<InputOptions> {
     this.fishEditor.root.style.paddingLeft = ''
 
     // remove event
-    this.fishEditor.off(Emitter.events.EDITOR_CHANGE, this.handleInputChange)
-    this.fishEditor.off(Emitter.events.EDITOR_INPUT_CHANGE, this.handleInputChange)
+    this.fishEditor.off(Emitter.events.EDITOR_CHANGE, this.handleEditorChange)
+    this.fishEditor.off(Emitter.events.EDITOR_INPUT_CHANGE, this.handleEditorChange)
 
     // set null
     this.matchWordsList = null
@@ -165,7 +237,13 @@ class Input extends Module<InputOptions> {
     }
   }
 
-  /** Set matching word data */
+  private handleComposition() {
+    this.fishEditor.on(Emitter.events.COMPOSITION_END, () => {
+      this.handleInput(false)
+    })
+  }
+
+  /** @name Set matching word data */
   public setMatchWords(list: string[], cb?: () => void) {
     if (list.length) {
       this.removeHighlightCoverDom()
@@ -179,37 +257,26 @@ class Input extends Module<InputOptions> {
       this.removeHighlightCoverDom()
     }
   }
-
-  private handleComposition() {
-    this.fishEditor.on(Emitter.events.COMPOSITION_END, () => {
-      this.handleInput(false)
-    })
-  }
-
-  private handleInput(isOriginalEvent: boolean) {
-    if (isOriginalEvent) {
-      Promise.resolve().then(() => {
-        // Update placeholder visibility
-        const hasEmpty = this.fishEditor.editor.isEditorEmptyNode()
-        this.fishEditor.container.classList.toggle('is-placeholder-visible', hasEmpty)
-
-        if (this.matchWordsList?.length) {
-          handleInputTransforms.call(this)
-        }
-      })
-    }
-    /** isComposing ?? */
-    if (this.fishEditor.composition.isComposing) return
-    this.emitThrottled()
-  }
-  private handleBeforeInput(event: InputEvent) {
-    const rangeInfo = fishRange.getRange()
-    // console.log(event, rangeInfo);
-  }
-
   public destroy() {
     this.removeHighlightCoverDom()
   }
+}
+
+function getPlainTextFromInputEvent(event: InputEvent) {
+  // When `inputType` is "insertText":
+  // - `event.data` should be string (Safari uses `event.dataTransfer`).
+  // - `event.dataTransfer` should be null.
+  // When `inputType` is "insertReplacementText":
+  // - `event.data` should be null.
+  // - `event.dataTransfer` should contain "text/plain" data.
+
+  if (typeof event.data === 'string') {
+    return event.data
+  }
+  if (event.dataTransfer?.types.includes('text/plain')) {
+    return event.dataTransfer.getData('text/plain')
+  }
+  return null
 }
 
 function getContentHeightWithoutPadding(rootElement: HTMLDivElement) {

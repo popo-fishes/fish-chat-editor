@@ -7,9 +7,8 @@ import isObject from 'lodash/isObject'
 import Module from '../core/module'
 import Emitter from '../core/emitter'
 import type Uploader from './uploader'
-import type Keyboard from './keyboard'
 import type FishEditor from '../core/fish-editor'
-import { range, ua, base, isNode } from '../utils'
+import { base, isNode } from '../utils'
 
 interface IClipboardOptions {
   /** Can I paste the image */
@@ -43,13 +42,13 @@ class Clipboard extends Module<IClipboardOptions> {
       event.preventDefault()
     }
 
-    if (!range.isSelected()) {
+    if (this.fishEditor.selection.getRange().collapsed) {
       return
     }
 
-    const selection = range.getSelection()
+    const normalized = this.fishEditor.selection.getNativeRange()
 
-    const contentsDom = selection.getRangeAt(0)?.cloneContents()
+    const contentsDom = normalized?.cloneContents() || null
 
     if (!contentsDom) return
 
@@ -69,14 +68,11 @@ class Clipboard extends Module<IClipboardOptions> {
       await copyToClipboard(content)
 
       if (isCut) {
-        document.execCommand('delete', false, undefined)
-
-        // 修复火狐全选删除文本时，把编辑行节点清空了，这里需要延迟去检测下
-        if (ua.IS_FIREFOX) {
-          requestAnimationFrame(() => {
-            ;(this.fishEditor.getModule('keyboard') as Keyboard).checkPatchEdittElement()
+        this.fishEditor.selection.deleteRange(this.fishEditor.selection.getRange(), () => {
+          Promise.resolve().then(() => {
+            this.emitThrottled()
           })
-        }
+        })
       }
     } catch (err) {
       console.error(err)
@@ -122,28 +118,25 @@ class Clipboard extends Module<IClipboardOptions> {
         return
       }
     } else if (content) {
-      if (range.isSelected()) {
-        document.execCommand('delete', false, undefined)
-      }
-
-      this.isPasteLock = true
-      // delay insert
-      requestAnimationFrame(() => {
-        const rangeInfo = range.getRange()
-        this.fishEditor.editor.insertText(
-          content,
-          rangeInfo,
-          (success) => {
-            if (success) {
-              Promise.resolve().then(() => {
-                this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE)
-                this.emitThrottled()
-              })
-            }
-            this.isPasteLock = false
-          },
-          true,
-        )
+      this.fishEditor.selection.deleteRange(this.fishEditor.selection.getRange(), () => {
+        this.isPasteLock = true
+        // delay insert
+        requestAnimationFrame(() => {
+          this.fishEditor.editor.insertText(
+            content,
+            this.fishEditor.selection.getRange(),
+            (success) => {
+              if (success) {
+                Promise.resolve().then(() => {
+                  this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE)
+                  this.emitThrottled()
+                })
+              }
+              this.isPasteLock = false
+            },
+            true,
+          )
+        })
       })
     }
   }

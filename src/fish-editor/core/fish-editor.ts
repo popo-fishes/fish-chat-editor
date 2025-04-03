@@ -3,13 +3,14 @@
  * @LastEditors: Please set LastEditors
  */
 import merge from 'lodash/merge'
-import { helper, base, dom, isNode, util, range, transforms } from '../utils'
-import type { IRange } from '../utils'
+import { helper, base, dom, isNode, util, transforms } from '../utils'
+import type { IRange } from './selection'
 import type { IEmojiType } from '../../types'
 import type OtherEventType from '../modules/other-event'
 import type InputType from '../modules/input'
 import { emojiSize } from '../../config'
 import Emitter from './emitter'
+import Selection from './selection'
 import Composition from './composition'
 import Theme from './theme'
 import Editor from './editor'
@@ -82,6 +83,7 @@ class FishEditor {
   /** @name Composition Event */
   composition: Composition
   emitter: Emitter
+  selection: Selection
   theme: Theme
   editor: Editor
   rangeInfo: IRange
@@ -97,7 +99,7 @@ class FishEditor {
       startOffset: 0,
       endContainer: null,
       endOffset: 0,
-      anchorNode: null,
+      collapsed: true,
     }
 
     if (this.container == null) {
@@ -108,8 +110,9 @@ class FishEditor {
     store.instances.set(this.container, this)
     // add root dom
     this.root = this.addContainer()
-    this.editor = new Editor(this)
     this.emitter = new Emitter()
+    this.editor = new Editor(this)
+    this.selection = new Selection(this.root, this.emitter)
     this.composition = new Composition(this.root, this.emitter)
     this.theme = new Theme(this, this.options)
     this.theme.addModule('keyboard')
@@ -263,8 +266,8 @@ class FishEditor {
       startContainer: targetDom,
       startOffset: startOffset || 0,
       endContainer: targetDom,
-      endOffset: 0,
-      anchorNode: targetDom,
+      endOffset: startOffset || 0,
+      collapsed: true,
     }
   }
 
@@ -280,7 +283,7 @@ class FishEditor {
     if (!editorElementNode) {
       this.editor.setCursorEditorLast((rowNode) => {
         if (rowNode) {
-          const rangeInfo = range.getRange()
+          const rangeInfo = this.selection.getRange()
           this.editor.insertNode([imgNode], rangeInfo, (success) => {
             if (success) {
               this.emit(Emitter.events.EDITOR_CHANGE, this)

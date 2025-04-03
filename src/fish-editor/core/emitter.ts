@@ -3,6 +3,8 @@
  * @Date: 2025-02-11 09:20:06
  * @Description: Modify here please
  */
+import store from './store'
+
 interface SubscribeEvent {
   fn: Function
   once: boolean
@@ -20,6 +22,19 @@ export interface IEmitter {
   once(type: string, callback: Function): void
 }
 
+const EVENTS = ['selectionchange', 'mousedown', 'mouseup', 'click']
+
+EVENTS.forEach((eventName) => {
+  document.addEventListener(eventName, (...args) => {
+    Array.from(document.querySelectorAll('.fb-editor-container')).forEach((node) => {
+      const fishEditor = store.instances.get(node)
+      if (fishEditor && fishEditor.emitter) {
+        fishEditor.emitter.handleDOM(...args)
+      }
+    })
+  })
+})
+
 class Emitter {
   static events = {
     EDITOR_CHANGE: 'editor-change',
@@ -34,8 +49,11 @@ class Emitter {
 
   subscribes: Map<string, Array<SubscribeEvent>>
 
+  protected domListeners: Record<string, { node: Node; handler: Function }[]>
+
   constructor() {
     this.subscribes = new Map()
+    this.domListeners = {}
   }
 
   addEvent(type: string, callback: Function, once = false) {
@@ -80,6 +98,21 @@ class Emitter {
 
   once(type: string, callback: Function) {
     this.addEvent(type, callback, true)
+  }
+
+  handleDOM(event: Event, ...args: unknown[]) {
+    ;(this.domListeners[event.type] || []).forEach(({ node, handler }) => {
+      if (event.target === node || node.contains(event.target as Node)) {
+        handler(event, ...args)
+      }
+    })
+  }
+
+  listenDOM(eventName: string, node: Node, handler: EventListener) {
+    if (!this.domListeners[eventName]) {
+      this.domListeners[eventName] = []
+    }
+    this.domListeners[eventName].push({ node, handler })
   }
 }
 

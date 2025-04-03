@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 import throttle from 'lodash/throttle'
-import { range as fishRange, dom, transforms, helper } from '../utils'
+import { dom, transforms, helper } from '../utils'
 import Module from '../core/module'
 import Emitter from '../core/emitter'
 import type FishEditor from '../core/fish-editor'

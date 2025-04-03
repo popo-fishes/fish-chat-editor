@@ -3,8 +3,8 @@
  * @LastEditors: Please set LastEditors
  */
 import cloneDeep from 'lodash/cloneDeep'
-import { helper, base, dom, isNode, util, range as fishRange, transforms, split, formats } from '../utils'
-import type { IRange } from '../utils'
+import { helper, base, dom, isNode, util, transforms, split, formats } from '../utils'
+import type { IRange } from './selection'
 import type FishEditor from './fish-editor'
 import Emitter from './emitter'
 
@@ -128,7 +128,6 @@ class Editor {
     if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
       const result = split.splitEditTextNode(cloneRange)
       cloneRange.startContainer = result.parentNode
-      cloneRange.anchorNode = result.parentNode
       cloneRange.startOffset = result.startOffset
     }
 
@@ -238,7 +237,7 @@ class Editor {
           const referenceNode = focusNode.parentNode
           if (referenceNode) {
             referenceNode?.scrollIntoView({ block: 'end', inline: 'end' })
-            fishRange.setCursorPosition(focusNode, 'after')
+            this.fishEditor.selection.setCursorPosition(focusNode, 'after')
           }
         }
         focusNode?.remove()
@@ -278,7 +277,6 @@ class Editor {
     if (util.getNodeOfEditorTextNode(cloneRange.startContainer)) {
       const result = split.splitEditTextNode(cloneRange)
       cloneRange.startContainer = result.parentNode
-      cloneRange.anchorNode = result.parentNode
       cloneRange.startOffset = result.startOffset
     }
 
@@ -303,7 +301,7 @@ class Editor {
         const referenceNode = nodes[nodes.length - 1] as any
         if (isNode.isDOMElement(referenceNode)) {
           referenceNode?.scrollIntoView({ block: 'end', inline: 'end' })
-          fishRange.setCursorPosition(referenceNode, 'after')
+          this.fishEditor.selection.setCursorPosition(referenceNode, 'after')
           callBack?.(true)
           return
         }
@@ -313,6 +311,7 @@ class Editor {
       callBack?.(false)
     }
   }
+
   /** @name Get the number of rows */
   public getLine() {
     if (!this.container || !this.container?.childNodes) return 0
@@ -327,7 +326,7 @@ class Editor {
     if (!content || !this.container) return
     this.setCursorEditorLast((node) => {
       if (node) {
-        const rangeInfo = fishRange.getRange()
+        const rangeInfo = this.fishEditor.selection.getRange()
         this.insertText(
           content,
           rangeInfo,
@@ -427,9 +426,9 @@ class Editor {
           };
        */
         if (referenceElement.nodeName == 'BR') {
-          fishRange.setCursorPosition(referenceElement, 'before')
+          this.fishEditor.selection.setCursorPosition(referenceElement, 'before')
         } else {
-          fishRange.setCursorPosition(referenceElement, 'after')
+          this.fishEditor.selection.setCursorPosition(referenceElement, 'after')
         }
         callBack?.(referenceElement as HTMLElement)
         return
