@@ -1,153 +1,149 @@
-import throttle from 'lodash/throttle'
-import cloneDeep from 'lodash/cloneDeep'
-import Module from '../core/module'
-import Emitter from '../core/emitter'
-import type FishEditor from '../core/fish-editor'
-import type { IRange } from '../core/selection'
-import { split, util, dom, base, isNode } from '../utils'
+import throttle from "lodash/throttle";
+import cloneDeep from "lodash/cloneDeep";
+import Module from "../core/module";
+import Emitter from "../core/emitter";
+import type FishEditor from "../core/fish-editor";
+import type { IRange } from "../core/selection";
+import { split, util, dom, base, isNode } from "../utils";
 
 interface KeyboardOptions {
   /** can enter new line  */
-  isEnterNewLine: boolean
-  bindings: Record<string, Binding>
+  isEnterNewLine: boolean;
+  bindings: Record<string, Binding>;
 }
 interface Context {
   /** If the start and end nodes are in the same position in the DOM, this property returns true; Otherwise, return false */
-  collapsed: boolean
-  event: KeyboardEvent
+  collapsed: boolean;
+  event: KeyboardEvent;
 }
 
 interface BindingObject extends Partial<Context> {
-  key: string | number
-  shiftKey?: boolean | null
-  altKey?: boolean | null
-  metaKey?: boolean | null
-  ctrlKey?: boolean | null
-  handler?: (range: IRange, curContext: Context, binding: BindingObject) => boolean | void
+  key: string | number;
+  shiftKey?: boolean | null;
+  altKey?: boolean | null;
+  metaKey?: boolean | null;
+  ctrlKey?: boolean | null;
+  handler?: (range: IRange, curContext: Context, binding: BindingObject) => boolean | void;
 }
 
-type Binding = BindingObject | string | number
+type Binding = BindingObject | string | number;
 
 class Keyboard extends Module<KeyboardOptions> {
   static DEFAULTS: KeyboardOptions = {
     isEnterNewLine: false,
-    bindings: {},
-  }
+    bindings: {}
+  };
   static match(evt: KeyboardEvent, binding: BindingObject) {
     // Match detects the state of a specific modifier key on the keyboard
     if (
-      (['altKey', 'ctrlKey', 'metaKey', 'shiftKey'] as const).some((key) => {
-        return !!binding[key] !== evt[key] && binding[key] !== null
+      (["altKey", "ctrlKey", "metaKey", "shiftKey"] as const).some((key) => {
+        return !!binding[key] !== evt[key] && binding[key] !== null;
       })
     ) {
-      return false
+      return false;
     }
-    return binding.key === evt.key || binding.key === evt.which
+    return binding.key === evt.key || binding.key === evt.which;
   }
 
-  bindings: Record<string, BindingObject[]>
-  isLineFeedLock = false
+  bindings: Record<string, BindingObject[]>;
+  isLineFeedLock = false;
   /** throttle */
   emitThrottled = throttle(() => {
-    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
-  }, 300)
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+  }, 300);
   constructor(fishEditor: FishEditor, options: Record<string, never>) {
-    super(fishEditor, options)
-    this.isLineFeedLock = false
-    this.bindings = {}
+    super(fishEditor, options);
+    this.isLineFeedLock = false;
+    this.bindings = {};
 
     // add default bindings
     Object.keys(this.options.bindings).forEach((name) => {
       if (this.options.bindings[name]) {
         // @ts-expect-error Fix me later
-        this.addBinding(this.options.bindings[name])
+        this.addBinding(this.options.bindings[name]);
       }
-    })
+    });
 
     if (this.options.isEnterNewLine) {
-      this.addBinding({ key: 'Enter' }, this.handleLineFeed)
+      this.addBinding({ key: "Enter" }, this.handleLineFeed);
     } else {
-      this.addBinding({ key: 'Enter', ctrlKey: true }, this.handleLineFeed)
-      this.addBinding({ key: 'Enter' }, () => {
-        this.fishEditor.emit(Emitter.events.EDITOR_ENTER_DOWN, this.fishEditor)
-      })
+      this.addBinding({ key: "Enter", ctrlKey: true }, this.handleLineFeed);
+      this.addBinding({ key: "Enter" }, () => {
+        this.fishEditor.emit(Emitter.events.EDITOR_ENTER_DOWN, this.fishEditor);
+      });
     }
 
     // No selection, no backspace key
-    this.addBinding({ key: 'Backspace' }, { collapsed: true }, this.handleBackspace)
+    this.addBinding({ key: "Backspace" }, { collapsed: true }, this.handleBackspace);
     // There are selection, backspace keys
-    this.addBinding({ key: 'Backspace' }, { collapsed: false }, this.handleDeleteRange)
-    this.addBinding({ key: 'Delete' }, { collapsed: false }, this.handleDeleteRange)
+    this.addBinding({ key: "Backspace" }, { collapsed: false }, this.handleDeleteRange);
+    this.addBinding({ key: "Delete" }, { collapsed: false }, this.handleDeleteRange);
 
-    this.listen()
+    this.listen();
   }
 
   addBinding(
     keyBinding: Binding,
-    context: Required<BindingObject['handler']> | Partial<Omit<BindingObject, 'key' | 'handler'>> = {},
-    handler: Required<BindingObject['handler']> = {},
+    context: Required<BindingObject["handler"]> | Partial<Omit<BindingObject, "key" | "handler">> = {},
+    handler: Required<BindingObject["handler"]> = {}
   ) {
-    const binding = normalize(keyBinding)
+    const binding = normalize(keyBinding);
     if (binding == null) {
-      console.warn('Attempting to add invalid keyboard binding', binding)
-      return
+      console.warn("Attempting to add invalid keyboard binding", binding);
+      return;
     }
 
-    if (typeof context === 'function') {
-      context = { handler: context }
+    if (typeof context === "function") {
+      context = { handler: context };
     }
-    if (typeof handler === 'function') {
-      handler = { handler }
+    if (typeof handler === "function") {
+      handler = { handler };
     }
 
     const singleBinding = {
       ...binding,
       key: binding.key,
       ...context,
-      ...handler,
-    }
+      ...handler
+    };
 
-    this.bindings[singleBinding.key] = this.bindings[singleBinding.key] || []
-    this.bindings[singleBinding.key].push(singleBinding)
+    this.bindings[singleBinding.key] = this.bindings[singleBinding.key] || [];
+    this.bindings[singleBinding.key].push(singleBinding);
   }
 
   listen() {
-    this.fishEditor.root.addEventListener('keydown', (evt: KeyboardEvent) => {
-      if (evt.defaultPrevented || evt.isComposing) return
+    this.fishEditor.root.addEventListener("keydown", (evt: KeyboardEvent) => {
+      if (evt.defaultPrevented || evt.isComposing) return;
 
       // Matching key
-      const bindings = (this.bindings[evt.key] || []).concat(this.bindings[evt.which] || [])
+      const bindings = (this.bindings[evt.key] || []).concat(this.bindings[evt.which] || []);
       // pairing
-      const matches = bindings.filter((binding) => Keyboard.match(evt, binding))
+      const matches = bindings.filter((binding) => Keyboard.match(evt, binding));
 
-      const rangeInfo = this.fishEditor.selection.getRange()
+      const rangeInfo = this.fishEditor.selection.getRange();
 
       // 兜底处理
-      if (
-        rangeInfo == null ||
-        !this.fishEditor.selection.hasFocus() ||
-        !util.getNodeOfEditorElementNode(rangeInfo.startContainer)
-      ) {
-        evt.preventDefault()
-        return
+      if (rangeInfo == null || !this.fishEditor.selection.hasFocus() || !util.getNodeOfEditorElementNode(rangeInfo.startContainer)) {
+        evt.preventDefault();
+        return;
       }
 
-      if (matches.length === 0) return
+      if (matches.length === 0) return;
 
       const curContext = {
         collapsed: rangeInfo.collapsed,
-        event: evt,
-      }
+        event: evt
+      };
 
       const prevented = matches.some((binding) => {
         if (binding.collapsed != null && binding.collapsed !== curContext.collapsed) {
-          return false
+          return false;
         }
-        return binding.handler.call(this, rangeInfo, curContext, binding) !== true
-      })
+        return binding.handler.call(this, rangeInfo, curContext, binding) !== true;
+      });
 
       if (prevented) {
-        evt.preventDefault()
+        evt.preventDefault();
       }
 
       /**
@@ -163,85 +159,85 @@ class Keyboard extends Module<KeyboardOptions> {
       //     return
       //   }
       // }
-    })
+    });
 
     // this.fishEditor.root.addEventListener('keyup', transformsEditNodes.bind(this))
   }
 
   /** handle Line Feed */
   handleLineFeed(range: IRange) {
-    if (this.isLineFeedLock) return
+    if (this.isLineFeedLock) return;
 
-    this.isLineFeedLock = true
+    this.isLineFeedLock = true;
 
     this.fishEditor.selection.deleteRange(range, () => {
       normalizeLineFeed.call(this, range, (success: boolean) => {
         if (success) {
           Promise.resolve().then(() => {
-            this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE)
-            this.emitThrottled()
-          })
+            this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE);
+            this.emitThrottled();
+          });
         }
-        this.isLineFeedLock = false
-      })
-    })
+        this.isLineFeedLock = false;
+      });
+    });
   }
 
   handleBackspace(range: IRange) {
-    const editor = this.fishEditor.editor
+    const editor = this.fishEditor.editor;
     // 1. If the content is empty, go straight back. That's equivalent to the beginning of the first row
     if (editor.isEditorEmptyNode()) {
-      return false
+      return false;
     }
 
     // 2. 提行操作。
     try {
       // The position of the node at the start position in the edit line
-      const startLine = this.fishEditor.selection.getLine(range.startContainer)
+      const startLine = this.fishEditor.selection.getLine(range.startContainer);
       if (startLine == null) {
-        return false
+        return false;
       }
       // Not the first line, and the cursor is at the start position
       if (startLine > 0 && range.startOffset == 0) {
         const [startBehindNodeList, startNextNodeList] = dom.getRangeAroundNode({
           startContainer: range.startContainer,
-          startOffset: range.startOffset,
-        })
+          startOffset: range.startOffset
+        });
         // console.log(startBehindNodeList, startNextNodeList)
-        const preRowNode = this.fishEditor.selection.getLineRow(startLine - 1)
+        const preRowNode = this.fishEditor.selection.getLineRow(startLine - 1);
 
         if (startBehindNodeList.length == 0 && startNextNodeList.length) {
           if (preRowNode) {
-            const cNode = dom.cloneNodes(startNextNodeList)
-            if (preRowNode.firstChild && preRowNode.firstChild.nodeName == 'BR') {
-              dom.toTargetAddNodes(preRowNode as any, cNode, true)
+            const cNode = dom.cloneNodes(startNextNodeList);
+            if (preRowNode.firstChild && preRowNode.firstChild.nodeName == "BR") {
+              dom.toTargetAddNodes(preRowNode as any, cNode, true);
             } else {
-              dom.toTargetAddNodes(preRowNode as any, cNode, false)
+              dom.toTargetAddNodes(preRowNode as any, cNode, false);
             }
             // Delete current line
-            this.fishEditor.selection.getLineRow(startLine)?.remove()
-            this.fishEditor.selection.setCursorPosition(cNode[0], 'before')
-            return false
+            this.fishEditor.selection.getLineRow(startLine)?.remove();
+            this.fishEditor.selection.setCursorPosition(cNode[0], "before");
+            return false;
           }
         }
         if (startBehindNodeList.length == 0 && startNextNodeList.length == 0) {
           // Delete current line
-          this.fishEditor.selection.getLineRow(startLine)?.remove()
+          this.fishEditor.selection.getLineRow(startLine)?.remove();
           if (preRowNode && preRowNode.lastChild) {
-            this.fishEditor.selection.setCursorPosition(preRowNode.lastChild, 'after')
+            this.fishEditor.selection.setCursorPosition(preRowNode.lastChild, "after");
           }
-          return false
+          return false;
         }
       }
     } catch (error) {
-      console.error(error)
-      return true
+      console.error(error);
+      return true;
     }
-    return true
+    return true;
   }
 
   handleDeleteRange(range: IRange) {
-    this.fishEditor.selection.deleteRange(range)
+    this.fishEditor.selection.deleteRange(range);
   }
 
   /**
@@ -249,145 +245,145 @@ class Keyboard extends Module<KeyboardOptions> {
    * @desc 按键结束后如果当前富文本下面的编辑行节点不存在，则重新创建一个，防止后续bug；兜底操作
    */
   checkPatchEdittElement() {
-    const editNode = (this as Keyboard).fishEditor.root
+    const editNode = (this as Keyboard).fishEditor.root;
     if (!isNode.isEditElement(editNode.firstChild as any)) {
-      const lineDom = base.createLineElement()
-      dom.toTargetAddNodes(editNode as any, [lineDom])
+      const lineDom = base.createLineElement();
+      dom.toTargetAddNodes(editNode as any, [lineDom]);
       if (lineDom.firstChild) {
-        this.fishEditor.selection.setCursorPosition(lineDom.firstChild, 'before')
+        this.fishEditor.selection.setCursorPosition(lineDom.firstChild, "before");
       }
     }
   }
 }
 
 function normalize(binding: Binding): BindingObject | null {
-  if (typeof binding === 'string' || typeof binding === 'number') {
-    binding = { key: binding }
-  } else if (typeof binding === 'object') {
-    binding = cloneDeep(binding)
+  if (typeof binding === "string" || typeof binding === "number") {
+    binding = { key: binding };
+  } else if (typeof binding === "object") {
+    binding = cloneDeep(binding);
   } else {
-    return null
+    return null;
   }
-  return binding
+  return binding;
 }
 
 /** @name line feed */
 function normalizeLineFeed(rangeInfo: IRange, callBack: (success: boolean) => void) {
-  if (!rangeInfo) return callBack(false)
+  if (!rangeInfo) return callBack(false);
 
-  const rowElementNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer)
+  const rowElementNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
 
   if (!rowElementNode) {
     this.fishEditor.editor.setCursorEditorLast((node) => {
       // reset
-      const resetRange = this.fishEditor.selection.getRange()
+      const resetRange = this.fishEditor.selection.getRange();
       if (node) {
-        normalizeLineFeed(resetRange, callBack)
+        normalizeLineFeed(resetRange, callBack);
       }
-    })
-    return callBack(false)
+    });
+    return callBack(false);
   }
 
-  const lineDom = base.createLineElement(true)
+  const lineDom = base.createLineElement(true);
 
   if (!isNode.isEditElement(rowElementNode as HTMLElement)) {
-    console.warn('No editing line node, cannot be inserted')
-    return callBack(false)
+    console.warn("No editing line node, cannot be inserted");
+    return callBack(false);
   }
 
   if (util.getNodeOfEditorTextNode(rangeInfo.startContainer)) {
-    const result = split.splitEditTextNode(rangeInfo)
-    rangeInfo.startContainer = result.parentNode
-    rangeInfo.startOffset = result.startOffset
+    const result = split.splitEditTextNode(rangeInfo);
+    rangeInfo.startContainer = result.parentNode;
+    rangeInfo.startOffset = result.startOffset;
   }
 
-  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(rangeInfo)
+  const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(rangeInfo);
   // console.log(behindNodeList, nextNodeList);
 
-  const clNodes = dom.cloneNodes(nextNodeList)
+  const clNodes = dom.cloneNodes(nextNodeList);
 
   if (clNodes.length) {
-    dom.toTargetAddNodes(lineDom, clNodes, false)
+    dom.toTargetAddNodes(lineDom, clNodes, false);
 
-    dom.removeNodes(nextNodeList)
+    dom.removeNodes(nextNodeList);
   } else {
-    const br = document.createElement('br')
-    dom.toTargetAddNodes(lineDom, [br])
+    const br = document.createElement("br");
+    dom.toTargetAddNodes(lineDom, [br]);
   }
 
   if (behindNodeList.length == 0 && nextNodeList.length) {
-    const br = document.createElement('br')
-    dom.toTargetAddNodes(rowElementNode, [br])
+    const br = document.createElement("br");
+    dom.toTargetAddNodes(rowElementNode, [br]);
   }
 
-  dom.toTargetAfterInsertNodes(rowElementNode, [lineDom])
+  dom.toTargetAfterInsertNodes(rowElementNode, [lineDom]);
 
   if (isNode.isDOMNode(lineDom.firstChild)) {
-    this.fishEditor.selection.setCursorPosition(lineDom.firstChild, 'before')
-    lineDom?.scrollIntoView({ block: 'end', inline: 'end' })
+    this.fishEditor.selection.setCursorPosition(lineDom.firstChild, "before");
+    lineDom?.scrollIntoView({ block: "end", inline: "end" });
 
-    callBack(true)
-    return
+    callBack(true);
+    return;
   }
 
-  callBack(false)
+  callBack(false);
 }
 
 function transformsEditNodes() {
-  const editNode = (this as Keyboard).fishEditor.root
+  const editNode = (this as Keyboard).fishEditor.root;
 
   /** 检测修补富文本的编辑行节点 */
   if (!isNode.isEditElement(editNode.firstChild as any)) {
-    ;(this as Keyboard).checkPatchEdittElement()
+    (this as Keyboard).checkPatchEdittElement();
   }
 }
 
 function isContentChangingKey(evt: KeyboardEvent): boolean {
-  const keyCode = evt.keyCode
+  const keyCode = evt.keyCode;
 
   // console.log(keyCode, evt)
 
   // 检查是否为组合键（如 Ctrl, Alt, Shift, Meta）
   if (evt.ctrlKey || evt.altKey || evt.shiftKey || evt.metaKey) {
-    return false
+    return false;
   }
 
   // 检查是否为字母键
   if (keyCode >= 65 && keyCode <= 90) {
-    return true
+    return true;
   }
 
   // 检查是否为数字键
   if (keyCode >= 48 && keyCode <= 57) {
-    return true
+    return true;
   }
 
   // 检查是否为数字键盘上的数字键
   if (keyCode >= 96 && keyCode <= 105) {
-    return true
+    return true;
   }
 
   // 检查是否为符号键
   if (keyCode >= 186 && keyCode <= 222) {
-    return true
+    return true;
   }
 
   // 拼音打字的时候
-  if (keyCode == 229 && evt.key == 'Process') {
-    return true
+  if (keyCode == 229 && evt.key == "Process") {
+    return true;
   }
 
   // 检查是否为空格键
   if (keyCode === 32) {
-    return true
+    return true;
   }
 
   // 检查是否为退格键或删除键
   if (keyCode === 8 || keyCode === 46) {
-    return true
+    return true;
   }
 
-  return false
+  return false;
 }
 
-export default Keyboard
+export default Keyboard;
