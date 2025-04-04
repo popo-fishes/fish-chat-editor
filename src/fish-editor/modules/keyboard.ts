@@ -171,7 +171,7 @@ class Keyboard extends Module<KeyboardOptions> {
     this.isLineFeedLock = true;
 
     this.fishEditor.selection.deleteRange(range, () => {
-      normalizeLineFeed.call(this, range, (success: boolean) => {
+      normalizeLineFeed.call(this, this.fishEditor.selection.getRange(), (success: boolean) => {
         if (success) {
           Promise.resolve().then(() => {
             this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE);
@@ -189,55 +189,72 @@ class Keyboard extends Module<KeyboardOptions> {
     if (editor.isEditorEmptyNode()) {
       return false;
     }
-
     // 2. 提行操作。
-    try {
-      // The position of the node at the start position in the edit line
-      const startLine = this.fishEditor.selection.getLine(range.startContainer);
-      if (startLine == null) {
-        return false;
-      }
-      // Not the first line, and the cursor is at the start position
-      if (startLine > 0 && range.startOffset == 0) {
-        const [startBehindNodeList, startNextNodeList] = dom.getRangeAroundNode({
-          startContainer: range.startContainer,
-          startOffset: range.startOffset
-        });
-        // console.log(startBehindNodeList, startNextNodeList)
-        const preRowNode = this.fishEditor.selection.getLineRow(startLine - 1);
-
-        if (startBehindNodeList.length == 0 && startNextNodeList.length) {
-          if (preRowNode) {
-            const cNode = dom.cloneNodes(startNextNodeList);
-            if (preRowNode.firstChild && preRowNode.firstChild.nodeName == "BR") {
-              dom.toTargetAddNodes(preRowNode as any, cNode, true);
-            } else {
-              dom.toTargetAddNodes(preRowNode as any, cNode, false);
-            }
-            // Delete current line
-            this.fishEditor.selection.getLineRow(startLine)?.remove();
-            this.fishEditor.selection.setCursorPosition(cNode[0], "before");
-            return false;
-          }
-        }
-        if (startBehindNodeList.length == 0 && startNextNodeList.length == 0) {
-          // Delete current line
-          this.fishEditor.selection.getLineRow(startLine)?.remove();
-          if (preRowNode && preRowNode.lastChild) {
-            this.fishEditor.selection.setCursorPosition(preRowNode.lastChild, "after");
-          }
+    const mergeRows = () => {
+      try {
+        // The position of the node at the start position in the edit line
+        const startLine = this.fishEditor.selection.getLine(range.startContainer);
+        if (startLine == null) {
           return false;
         }
+        // Not the first line, and the cursor is at the start position
+        if (startLine > 0 && range.startOffset == 0) {
+          const [startBehindNodeList, startNextNodeList] = dom.getRangeAroundNode({
+            startContainer: range.startContainer,
+            startOffset: range.startOffset
+          });
+          // console.log(startBehindNodeList, startNextNodeList)
+          const preRowNode = this.fishEditor.selection.getLineRow(startLine - 1);
+
+          if (startBehindNodeList.length == 0 && startNextNodeList.length) {
+            if (preRowNode) {
+              const cNode = dom.cloneNodes(startNextNodeList);
+              if (preRowNode.firstChild && preRowNode.firstChild.nodeName == "BR") {
+                dom.toTargetAddNodes(preRowNode as any, cNode, true);
+              } else {
+                dom.toTargetAddNodes(preRowNode as any, cNode, false);
+              }
+              // Delete current line
+              this.fishEditor.selection.getLineRow(startLine)?.remove();
+              this.fishEditor.selection.setCursorPosition(cNode[0], "before");
+              return true;
+            }
+          }
+          if (startBehindNodeList.length == 0 && startNextNodeList.length == 0) {
+            // Delete current line
+            this.fishEditor.selection.getLineRow(startLine)?.remove();
+            if (preRowNode && preRowNode.lastChild) {
+              this.fishEditor.selection.setCursorPosition(preRowNode.lastChild, "after");
+            }
+            return true;
+          }
+        }
+        return false;
+      } catch (error) {
+        console.error(error);
+        return false;
       }
-    } catch (error) {
-      console.error(error);
-      return true;
+    };
+
+    const state = mergeRows();
+    // console.log(state);
+    if (state) {
+      Promise.resolve().then(() => {
+        this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE);
+        this.emitThrottled();
+      });
+      return false;
     }
     return true;
   }
 
   handleDeleteRange(range: IRange) {
-    this.fishEditor.selection.deleteRange(range);
+    this.fishEditor.selection.deleteRange(range, () => {
+      Promise.resolve().then(() => {
+        this.fishEditor.emit(Emitter.events.EDITOR_INPUT_CHANGE);
+        this.emitThrottled();
+      });
+    });
   }
 
   /**
@@ -270,17 +287,8 @@ function normalize(binding: Binding): BindingObject | null {
 /** @name line feed */
 function normalizeLineFeed(rangeInfo: IRange, callBack: (success: boolean) => void) {
   if (!rangeInfo) return callBack(false);
-
   const rowElementNode = util.getNodeOfEditorElementNode(rangeInfo.startContainer);
-
   if (!rowElementNode) {
-    this.fishEditor.editor.setCursorEditorLast((node) => {
-      // reset
-      const resetRange = this.fishEditor.selection.getRange();
-      if (node) {
-        normalizeLineFeed(resetRange, callBack);
-      }
-    });
     return callBack(false);
   }
 

@@ -381,6 +381,7 @@ class Editor {
   }
 
   public blur() {
+    this.fishEditor.selection.removeAllRanges();
     this.container?.blur?.();
   }
 

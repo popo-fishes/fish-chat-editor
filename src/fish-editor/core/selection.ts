@@ -93,7 +93,7 @@ class Selection {
     if (this.lastRange != null) {
       this.savedRange = this.lastRange;
     }
-    console.log(lastRange, 2);
+    // console.log(lastRange, 2);
     if (!isEqual(oldRange, this.lastRange)) {
       //  console.log(3);
     }

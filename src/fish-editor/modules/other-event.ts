@@ -46,6 +46,7 @@ class OtherEvent extends Module {
     this.root.addEventListener("focus", () => {
       this.isInputFocused = true;
     });
+    this.root.addEventListener("blur", this.onBlur.bind(this));
 
     this.root.addEventListener("drop", (e) => {
       // Disable drag and drop operations. Dragging images in the editor will cause the image's address to be entered into rich text
@@ -85,6 +86,13 @@ class OtherEvent extends Module {
       });
       // Add click event listener for document
       document.addEventListener("click", this.handleClickOutside);
+    }
+  }
+
+  private onBlur(e: FocusEvent) {
+    this.isInputFocused = false;
+    if (this.fishEditor.selection.isSelected()) {
+      this.fishEditor.selection.removeAllRanges();
     }
   }
 
