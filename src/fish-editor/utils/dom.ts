@@ -3,6 +3,7 @@
  * @Description: dom
  */
 import { isNode, util } from ".";
+import { isEditElement } from "./isNode";
 const { isDOMText, isDOMElement, isDOMNode, isNodeNotTtxt } = isNode;
 
 const getDomPreviousOrnextSibling = (targetElement: Node): [][] => {
@@ -116,27 +117,21 @@ export const getRangeAroundNode = (range: { startContainer: Node | null; startOf
   // console.log(range);
 
   try {
-    if (isDOMElement(targetNode)) {
-      const startNode = range.startContainer;
+    if (isDOMElement(targetNode) && !isEditElement(targetNode)) {
+      if (range.startOffset == 0) {
+        const [pNode, nNode] = getDomPreviousOrnextSibling(targetNode);
+        nextNodeList = [targetNode, ...nNode];
+        behindNodeList = [...pNode];
+      } else if (range.startOffset == 1) {
+        const [pNode, nNode] = getDomPreviousOrnextSibling(targetNode);
 
-      const anchorOffset = range.startOffset;
-
-      if (anchorOffset == 0) {
-        nextNodeList = startNode?.childNodes ? [...(startNode as any).childNodes] : [];
-      } else {
-        const currentNode = startNode?.childNodes?.[anchorOffset - 1] || null;
-        if (currentNode) {
-          const [pNode, nNode] = getDomPreviousOrnextSibling(currentNode);
-          behindNodeList = [currentNode, ...pNode];
-          nextNodeList = [...nNode];
-        }
+        nextNodeList = [...nNode];
+        behindNodeList = [targetNode, ...pNode];
       }
     }
 
     if (isDOMText(targetNode)) {
-      const anchorOffset = range.startOffset;
-
-      const afterNode = (range.startContainer as any)?.splitText?.(anchorOffset) || null;
+      const afterNode = (range.startContainer as any)?.splitText?.(range.startOffset) || null;
 
       const [pNode, nNode] = getDomPreviousOrnextSibling(afterNode);
 

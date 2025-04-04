@@ -34,18 +34,27 @@ class Selection {
   constructor(root: HTMLElement, emitter: Emitter) {
     this.emitter = emitter;
     this.root = root;
-
+    this.savedRange = null;
+    this.lastRange = null;
     this.composing = false;
     this.mouseDown = false;
-    // savedRange is last non-null range
-    this.savedRange = {
-      startContainer: null,
-      startOffset: 0,
-      endContainer: null,
-      endOffset: 0,
-      collapsed: true
-    };
-    this.lastRange = this.savedRange;
+
+    if (this.root.firstChild) {
+      if (isNode.isEditElement(this.root.firstChild as any)) {
+        const targetDom = this.root.firstChild;
+        if (targetDom.firstChild) {
+          // savedRange is last non-null range
+          this.savedRange = {
+            startContainer: targetDom.firstChild,
+            startOffset: 0,
+            endContainer: targetDom.firstChild,
+            endOffset: 0,
+            collapsed: true
+          };
+          this.lastRange = this.savedRange;
+        }
+      }
+    }
 
     this.handleComposition();
     this.handleDragging();
@@ -64,18 +73,6 @@ class Selection {
     });
     this.emitter.on(Emitter.events.COMPOSITION_END, () => {
       this.composing = false;
-      // if (this.cursor.parent) {
-      //   const range = this.cursor.restore();
-      //   if (!range) return;
-      //   setTimeout(() => {
-      //     this.setNativeRange(
-      //       range.startNode,
-      //       range.startOffset,
-      //       range.endNode,
-      //       range.endOffset,
-      //     );
-      //   }, 1);
-      // }
     });
   }
 
@@ -90,17 +87,16 @@ class Selection {
   }
 
   private update() {
-    // const oldRange = cloneDeep(this.lastRange);
-    // const lastRange = this.getRange();
-    // //console.log(lastRange);
-    // this.lastRange = lastRange;
-    // if (this.lastRange != null) {
-    //   this.savedRange = this.lastRange;
-    // }
-    // //console.log(2);
-    // if (!isEqual(oldRange, this.lastRange)) {
-    //   //  console.log(3);
-    // }
+    const oldRange = cloneDeep(this.lastRange);
+    const lastRange = this.getRange();
+    this.lastRange = lastRange;
+    if (this.lastRange != null) {
+      this.savedRange = this.lastRange;
+    }
+    console.log(lastRange, 2);
+    if (!isEqual(oldRange, this.lastRange)) {
+      //  console.log(3);
+    }
   }
 
   private getSelection() {
@@ -169,6 +165,7 @@ class Selection {
           startContainer: range.startContainer,
           startOffset: range.startOffset
         });
+        // console.log(startBehindNodeList, startNextNodeList);
         // Retrieve the position again, otherwise calling getRangeAroundNode by the starting node will change the cursor node,
         //  causing the endContainer position to be incorrect
         const resetRange = this.getRange();
@@ -376,7 +373,6 @@ class Selection {
       end: { node: nativeRange.endContainer, offset: nativeRange.endOffset }
     };
 
-    // console.log(nativeRange);
     /**
      * 解决火狐浏览器光标节点异常问题
      */

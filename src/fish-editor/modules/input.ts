@@ -62,7 +62,22 @@ class Input extends Module<InputOptions> {
       this.handleBeforeInput(event);
     });
 
+    // Gboard with English input on Android triggers `compositionstart` sometimes even
+    // users are not going to type anything.
+    if (!/Android/i.test(navigator.userAgent)) {
+      fishEditor.on(Emitter.events.COMPOSITION_START, () => {
+        this.handleCompositionStart();
+      });
+    }
+
     fishEditor.root.addEventListener("input", this.handleInput.bind(this, true));
+  }
+
+  private handleCompositionStart() {
+    const range = this.fishEditor.selection.getRange();
+    if (range) {
+      this.replaceText(range);
+    }
   }
 
   private handleInput(isOriginalEvent: boolean) {
@@ -104,7 +119,7 @@ class Input extends Module<InputOptions> {
   }
 
   private replaceText(range: IRange, text = "") {
-    if (this.fishEditor.editor.isEditorEmptyNode()) {
+    if (range.collapsed) {
       return false;
     }
     if (text) {
