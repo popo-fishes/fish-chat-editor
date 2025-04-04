@@ -114,7 +114,6 @@ export const getRangeAroundNode = (range: { startContainer: Node | null; startOf
   if (!editTextNode) {
     return [behindNodeList, nextNodeList];
   }
-  // console.log(range);
 
   try {
     if (isDOMElement(targetNode) && !isEditElement(targetNode)) {
@@ -127,6 +126,20 @@ export const getRangeAroundNode = (range: { startContainer: Node | null; startOf
 
         nextNodeList = [...nNode];
         behindNodeList = [targetNode, ...pNode];
+      }
+    }
+
+    if (isDOMElement(targetNode) && isEditElement(targetNode)) {
+      if (range.startOffset == 0) {
+        nextNodeList = targetNode?.childNodes ? [...targetNode?.childNodes] : [];
+      } else {
+        const currentNode = targetNode?.childNodes?.[range.startOffset - 1] || null;
+
+        if (currentNode) {
+          const [pNode, nNode] = getDomPreviousOrnextSibling(currentNode);
+          behindNodeList = [currentNode, ...pNode];
+          nextNodeList = [...nNode];
+        }
       }
     }
 

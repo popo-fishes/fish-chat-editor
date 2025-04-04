@@ -306,7 +306,7 @@ function normalizeLineFeed(rangeInfo: IRange, callBack: (success: boolean) => vo
   }
 
   const [behindNodeList, nextNodeList] = dom.getRangeAroundNode(rangeInfo);
-  // console.log(behindNodeList, nextNodeList);
+  // console.log(behindNodeList, nextNodeList, rangeInfo);
 
   const clNodes = dom.cloneNodes(nextNodeList);
 

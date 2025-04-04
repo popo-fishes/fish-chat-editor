@@ -6,6 +6,7 @@ import merge from "lodash/merge";
 import { helper, base, dom, isNode, util, transforms } from "../utils";
 import type { IEmojiType } from "../../types";
 import type OtherEventType from "../modules/other-event";
+import type Keyboard from "../modules/keyboard";
 import type InputType from "../modules/input";
 import { emojiSize } from "../../config";
 import Emitter from "./emitter";
@@ -84,6 +85,7 @@ class FishEditor {
   emitter: Emitter;
   selection: Selection;
   theme: Theme;
+  keyboard: Keyboard;
   editor: Editor;
   isDestroyed: boolean;
   constructor(container: HTMLElement | string, options: IFishEditorOptions = {}) {
@@ -105,7 +107,7 @@ class FishEditor {
     this.selection = new Selection(this.root, this.emitter);
     this.composition = new Composition(this.root, this.emitter);
     this.theme = new Theme(this, this.options);
-    this.theme.addModule("keyboard");
+    this.keyboard = this.theme.addModule("keyboard");
     this.theme.addModule("clipboard");
     this.theme.addModule("other-event");
     this.theme.addModule("uploader");
