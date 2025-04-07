@@ -13,6 +13,10 @@
 
   p {
     line-height: 1.5;
+    // https://blog.csdn.net/weixin_40329396/article/details/137924560
+    white-space: break-spaces;
+    // https://developer.mozilla.org/zh-CN/docs/Web/CSS/overflow-wrap
+    overflow-wrap: break-word;
   }
 }
 

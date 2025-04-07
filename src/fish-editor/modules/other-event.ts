@@ -288,7 +288,7 @@ class OtherEvent extends Module {
 function createMenuWrapDom() {
   const menuWrapDom = document.createElement("div");
   menuWrapDom.className = "fb-editor-menu-wrap";
-  const cdn = "https://cdn.yupaowang.com/yupao_pc/images/im/icon";
+  const cdn = "http://43.136.119.145:83/image";
   const _html = `
   <div class="fb-menu-item" data-type="copy">
     <img src="${cdn}/editor-copy.png"/>
