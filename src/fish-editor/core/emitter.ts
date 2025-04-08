@@ -24,16 +24,21 @@ export interface IEmitter {
 
 const EVENTS = ['selectionchange', 'mousedown', 'mouseup', 'click']
 
-EVENTS.forEach((eventName) => {
-  document.addEventListener(eventName, (...args) => {
-    Array.from(document.querySelectorAll('.fb-editor-container')).forEach((node) => {
-      const fishEditor = store.instances.get(node)
-      if (fishEditor && fishEditor.emitter) {
-        fishEditor.emitter.handleDOM(...args)
-      }
+/** Is it a client */
+const isClient = typeof window !== 'undefined'
+
+if (isClient) {
+  EVENTS.forEach((eventName) => {
+    document.addEventListener(eventName, (...args) => {
+      Array.from(document.querySelectorAll('.fb-editor-container')).forEach((node) => {
+        const fishEditor = store.instances.get(node)
+        if (fishEditor && fishEditor.emitter) {
+          fishEditor.emitter.handleDOM(...args)
+        }
+      })
     })
   })
-})
+}
 
 class Emitter {
   static events = {
@@ -42,11 +47,10 @@ class Emitter {
     COMPOSITION_START: 'composition-start',
     COMPOSITION_END: 'composition-end',
     /** When rich text operations change, quickly trigger changes, such as line breaks and pasting */
-    EDITOR_INPUT_CHANGE: 'editor-input-change',
+    EDITOR_BEFORE_CHANGE: 'editor-before-change',
     /** on maxlength */
     EDITOR_MAXLENGTH: 'maxlength',
   } as const
-
   subscribes: Map<string, Array<SubscribeEvent>>
 
   protected domListeners: Record<string, { node: Node; handler: Function }[]>
@@ -84,6 +88,7 @@ class Emitter {
     // editor 销毁时，off 掉 destroyed listeners
     if (type === 'destroyed') {
       this.subscribes.clear()
+      this.domListeners = {}
     }
   }
 

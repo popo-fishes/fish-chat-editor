@@ -269,6 +269,7 @@ class OtherEvent extends Module {
     }
   }
 
+  /** Prevent document revocation event */
   private handleDocumentkeydown(evt: KeyboardEvent) {
     const isUndoKey = (evt.ctrlKey && evt.key == "z") || (evt.metaKey && evt.key == "z");
     if (isUndoKey && !this.isInputFocused) {

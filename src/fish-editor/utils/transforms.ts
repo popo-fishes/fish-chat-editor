@@ -106,7 +106,7 @@ export const getEditElementPlainText = (node: HTMLElement) => {
 }
 
 /** @name Get the pure text of the editor */
-export const handleEditTransformsPlainText = (node: HTMLElement): string => {
+export const handleEditTransformsPlainText = (node: HTMLElement, isPure = false): string => {
   const result: string[] = []
   if (!node || !node?.childNodes) return ''
 
@@ -121,6 +121,10 @@ export const handleEditTransformsPlainText = (node: HTMLElement): string => {
         result.push('')
       }
     }
+  }
+  // If it is pure content, the newline is removed
+  if (isPure) {
+    return result.join('')
   }
   const testStr = result.join('\n')
   return testStr
