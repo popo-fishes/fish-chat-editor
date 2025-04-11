@@ -18,7 +18,7 @@ class Theme {
     protected options: ThemeOptions,
   ) {}
 
-  init() {
+  public init() {
     Object.keys({ ...this.options.modules }).forEach((name) => {
       if (this.modules[name] == null) {
         this.addModule(name)
@@ -29,7 +29,7 @@ class Theme {
   addModule(name: 'keyboard'): Keyboard
   addModule(name: 'uploader'): Uploader
   addModule(name: string): unknown
-  addModule(name: string) {
+  public addModule(name: string) {
     // @ts-expect-error
     const ModuleClass = this.fishEditor.constructor.import(`modules/${name}`)
     this.modules[name] = new ModuleClass(this.fishEditor, this.options.modules[name])

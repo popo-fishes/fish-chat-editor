@@ -22,11 +22,11 @@ class Editor {
       dom.toTargetAddNodes(this.container, [node])
     }
   }
-  enable(enabled = true) {
+  public enable(enabled = true) {
     this.container.setAttribute('contenteditable', enabled ? 'true' : 'false')
   }
 
-  isEnabled() {
+  public isEnabled() {
     return this.container.getAttribute('contenteditable') === 'true'
   }
 
@@ -377,12 +377,8 @@ class Editor {
     if (!this.container) return null
     const node = base.createLineElement()
     dom.toTargetAddNodes(this.container, [node])
-    this.setCursorEditorLast((targetNode) => {
-      if (targetNode) {
-        this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
-        this.blur()
-      }
-    })
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
+    this.fishEditor.selection.initRange()
   }
 
   public blur() {

@@ -85,11 +85,21 @@ class Keyboard extends Module<KeyboardOptions> {
 
     // No selection, no backspace key
     this.addBinding({ key: 'Backspace' }, { collapsed: true }, this.handleBackspace)
-    this.addBinding({ key: 'Delete' }, { collapsed: true }, this.handleDelete)
+    this.addBinding({ key: 'Delete', ctrlKey: null }, { collapsed: true }, this.handleDelete)
     // There are selection, backspace keys
     this.addBinding({ key: 'Backspace' }, { collapsed: false }, this.handleDeleteRange)
     this.addBinding({ key: 'Delete' }, { collapsed: false }, this.handleDeleteRange)
-
+    this.addBinding(
+      {
+        key: 'Backspace',
+        altKey: null,
+        ctrlKey: null,
+        metaKey: null,
+        shiftKey: null,
+      },
+      { collapsed: true },
+      this.handleBackspace,
+    )
     this.listen()
   }
 
@@ -276,7 +286,7 @@ class Keyboard extends Module<KeyboardOptions> {
 
   // TODO： Add the function of deleting rows
   handleDelete(range: IRange) {
-    // console.log(range)
+    //  console.log(range)
   }
   handleDeleteRange(range: IRange) {
     this.fishEditor.selection.deleteRange(range, () => {

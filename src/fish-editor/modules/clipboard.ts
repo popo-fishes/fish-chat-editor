@@ -132,6 +132,7 @@ class Clipboard extends Module<IClipboardOptions> {
                   this.emitThrottled()
                 })
               }
+              // this.fishEditor.scrollSelectionIntoView()
               this.isPasteLock = false
             },
             true,

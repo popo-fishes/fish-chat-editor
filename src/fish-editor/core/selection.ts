@@ -51,7 +51,7 @@ class Selection {
     this.update()
   }
 
-  initRange() {
+  public initRange() {
     if (!this.root.firstChild) return
     if (isNode.isEditElement(this.root.firstChild as any)) {
       const targetDom = this.root.firstChild
@@ -68,7 +68,7 @@ class Selection {
       }
     }
   }
-  handleComposition() {
+  private handleComposition() {
     this.emitter.on(Emitter.events.COMPOSITION_START, () => {
       this.composing = true
     })
@@ -77,7 +77,7 @@ class Selection {
     })
   }
 
-  handleDragging() {
+  private handleDragging() {
     this.emitter.listenDOM('mousedown', document.body, () => {
       this.mouseDown = true
     })
@@ -94,9 +94,51 @@ class Selection {
     if (this.lastRange != null) {
       this.savedRange = this.lastRange
     }
-    // console.log(lastRange, 2);
+    console.log(lastRange)
     if (!isEqual(oldRange, this.lastRange)) {
       //  console.log(3);
+    }
+  }
+
+  public getBounds(rangeInfo: IRange) {
+    const range = document.createRange()
+    const node = rangeInfo.startContainer
+    const offset = rangeInfo.startOffset
+    let side: 'left' | 'right' = 'left'
+    let rect: DOMRect
+    if (!node) return null
+
+    if (node instanceof Text) {
+      // Return null if the text node is empty because it is
+      // not able to get a useful client rect:
+      // https://github.com/w3c/csswg-drafts/issues/2514.
+      // Empty text nodes are most likely caused by TextBlot#optimize()
+      // not getting called when editor content changes.
+      if (!node.data.length) {
+        return null
+      }
+      if (offset < node.data.length) {
+        range.setStart(node, offset)
+        range.setEnd(node, offset + 1)
+      } else {
+        range.setStart(node, offset - 1)
+        range.setEnd(node, offset)
+        side = 'right'
+      }
+      rect = range.getBoundingClientRect()
+    } else {
+      if (!(node instanceof Element)) return null
+      rect = node.getBoundingClientRect()
+      if (offset > 0) side = 'right'
+    }
+
+    return {
+      bottom: rect.top + rect.height,
+      height: rect.height,
+      left: rect[side],
+      right: rect[side],
+      top: rect.top,
+      width: 0,
     }
   }
 
