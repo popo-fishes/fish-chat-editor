@@ -6,6 +6,11 @@ import type FishEditor from '../core/fish-editor'
 import type { IRange } from '../core/selection'
 import { split, util, dom, base, isNode } from '../utils'
 
+/** Is it a client */
+const isClient = typeof window !== 'undefined'
+
+const SHORTKEY = isClient ? (/Mac/i.test(navigator.platform) ? 'metaKey' : 'ctrlKey') : 'ctrlKey'
+
 interface KeyboardOptions {
   /** can enter new line  */
   isEnterNewLine: boolean
@@ -23,6 +28,7 @@ interface Context {
 
 interface BindingObject extends Partial<Pick<Context, 'collapsed'>> {
   key: string | number
+  shortKey?: boolean | null
   shiftKey?: boolean | null
   altKey?: boolean | null
   metaKey?: boolean | null
@@ -63,7 +69,6 @@ class Keyboard extends Module<KeyboardOptions> {
     // add default bindings
     Object.keys(this.options.bindings).forEach((name) => {
       if (this.options.bindings[name]) {
-        // @ts-expect-error Fix me later
         this.addBinding(this.options.bindings[name])
       }
     })
@@ -306,6 +311,12 @@ function normalize(binding: Binding): BindingObject | null {
   } else {
     return null
   }
+
+  if (binding.shortKey) {
+    binding[SHORTKEY] = binding.shortKey
+    delete binding.shortKey
+  }
+
   return binding
 }
 

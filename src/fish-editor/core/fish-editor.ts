@@ -15,7 +15,7 @@ import Composition from './composition'
 import Theme from './theme'
 import Editor from './editor'
 import store from './store'
-import scrollRectIntoView, { type Rect } from './scrollRectIntoView'
+import scrollRectIntoView, { type Rect } from './scroll-rectInto-view'
 import { removeEditorImageBse64Map } from './helper'
 
 export interface IFishEditorOptions {
