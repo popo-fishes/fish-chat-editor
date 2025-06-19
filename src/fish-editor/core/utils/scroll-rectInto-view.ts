@@ -51,6 +51,16 @@ const getScrollDistance = (
   return 0
 }
 
+/**
+   @name Scroll the specified rectangular area (`targetRect`) into the visible viewport.
+    1. Traverse upward from the `root` element through its ancestor elements (including `document.body`).
+    2. For each scrollable container, calculate the required scroll distance (`scrollDistanceX` and `scrollDistanceY`).
+    3. If the container is the `body`, use `window.scrollBy` to scroll; otherwise, perform vertical or horizontal scrolling on the current element.
+    4. Update the position of the target rectangle to reflect its new relative location after scrolling.
+    5. Stop traversing when encountering a `fixed` positioned element or reaching the `body`.
+ * @param root 
+ * @param targetRect 
+ */
 const scrollRectIntoView = (root: HTMLElement, targetRect: Rect) => {
   const document = root.ownerDocument
 
@@ -86,13 +96,13 @@ const scrollRectIntoView = (root: HTMLElement, targetRect: Rect) => {
       paddingValueToInt(style.scrollPaddingTop),
       paddingValueToInt(style.scrollPaddingBottom),
     )
-    console.log(scrollDistanceY, scrollDistanceX)
+    // console.log(scrollDistanceY, scrollDistanceX)
     if (scrollDistanceX || scrollDistanceY) {
       if (isDocumentBody) {
         document.defaultView?.scrollBy(scrollDistanceX, scrollDistanceY)
       } else {
         const { scrollLeft, scrollTop } = current
-        console.log(current, scrollTop)
+        // console.log(current, scrollTop)
         if (scrollDistanceY) {
           current.scrollTop += scrollDistanceY
         }

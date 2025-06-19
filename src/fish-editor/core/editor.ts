@@ -237,7 +237,6 @@ class Editor {
         if (showCursor) {
           const referenceNode = focusNode.parentNode
           if (referenceNode) {
-            referenceNode?.scrollIntoView({ block: 'end', inline: 'end' })
             this.fishEditor.selection.setCursorPosition(focusNode, 'after')
           }
         }
@@ -301,7 +300,6 @@ class Editor {
       {
         const referenceNode = nodes[nodes.length - 1] as any
         if (isNode.isDOMElement(referenceNode)) {
-          referenceNode?.scrollIntoView({ block: 'end', inline: 'end' })
           this.fishEditor.selection.setCursorPosition(referenceNode, 'after')
           callBack?.(true)
           return
@@ -359,7 +357,12 @@ class Editor {
           for (let c = 0; c < pldNode.childNodes.length; c++) {
             const cldNode = pldNode.childNodes[c] as any
             const formatNode = formats.createNodeOptimize(cldNode)
-            dom.toTargetAddNodes(lineDom, formatNode as any, false)
+            if (formatNode.length == 0) {
+              const dom_br = document.createElement('br')
+              dom.toTargetAddNodes(lineDom, [dom_br], false)
+            } else {
+              dom.toTargetAddNodes(lineDom, formatNode as any, false)
+            }
           }
           newNode.push(lineDom)
         } else {

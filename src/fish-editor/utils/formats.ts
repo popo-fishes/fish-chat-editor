@@ -17,7 +17,8 @@ export const createNodeOptimize = (node: HTMLElement): (Text | HTMLElement)[] =>
     const strCont = dom.cloneNodes([clnode])[0]?.textContent || null
     if (strCont) {
       // 转换
-      formatNode = transforms.transformTextToNodes(strCont) as any
+      const semanticContent = transforms.labelRep(strCont)
+      formatNode = transforms.transformTextToNodes(semanticContent) as any
     }
   } else if (nodeName == 'span') {
     if (clnode.style.color) {

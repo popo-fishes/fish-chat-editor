@@ -112,6 +112,7 @@ class Clipboard extends Module<IClipboardOptions> {
             Promise.resolve().then(() => {
               this.emitThrottled()
             })
+            this.fishEditor.scrollSelectionIntoView()
           }
           this.isPasteLock = false
         })
@@ -131,8 +132,8 @@ class Clipboard extends Module<IClipboardOptions> {
                   this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
                   this.emitThrottled()
                 })
+                this.fishEditor.scrollSelectionIntoView()
               }
-              // this.fishEditor.scrollSelectionIntoView()
               this.isPasteLock = false
             },
             true,

@@ -12,10 +12,11 @@ import { emojiSize } from '../../config'
 import Emitter from './emitter'
 import Selection from './selection'
 import Composition from './composition'
+import Module from './module'
 import Theme from './theme'
 import Editor from './editor'
 import store from './store'
-import scrollRectIntoView, { type Rect } from './scroll-rectInto-view'
+import scrollRectIntoView, { type Rect } from './utils/scroll-rectInto-view'
 import { removeEditorImageBse64Map } from './helper'
 
 export interface IFishEditorOptions {
@@ -55,7 +56,13 @@ class FishEditor {
   }
   static events = Emitter.events
 
-  static imports: Record<string, unknown> = {}
+  static imports: Record<string, unknown> = {
+    'core/module': Module,
+    'core/theme': Theme,
+  }
+
+  static import(name: 'core/module'): typeof Module
+  static import(name: string): unknown
   static import(name: string) {
     if (this.imports[name] == null) {
       console.warn(`Unable to import ${name}. Are you sure it has already been registered?`)
@@ -103,6 +110,7 @@ class FishEditor {
     store.instances.set(this.container, this)
     // add root dom
     this.root = this.addContainer()
+
     this.emitter = new Emitter()
     this.editor = new Editor(this)
     this.selection = new Selection(this.root, this.emitter)
@@ -245,15 +253,16 @@ class FishEditor {
     return this.editor.isPureTextAndInlineElement()
   }
   scrollRectIntoView(rect: Rect) {
-    scrollRectIntoView(this.scrollDom, rect)
+    scrollRectIntoView(this.root, rect)
   }
   /**
    * Scroll the current selection into the visible area.
    * If the selection is already visible, no scrolling will occur.
    */
   scrollSelectionIntoView() {
-    const range = this.selection.lastRange
+    const range = this.selection.getRange()
     const bounds = range && this.selection.getBounds(range)
+    // console.log(range, bounds)
     if (bounds) {
       this.scrollRectIntoView(bounds)
     }
@@ -291,6 +300,7 @@ class FishEditor {
     this.editor.insertNode([imgNode], currentRange, (success) => {
       if (success) {
         this.emit(Emitter.events.EDITOR_CHANGE, this)
+        this.scrollSelectionIntoView()
       }
     })
   }
@@ -301,7 +311,12 @@ class FishEditor {
     ;(this.getModule('input') as InputType).destroy()
     // del dom
     this.root?.remove()
-    this.container?.remove()
+    this.scrollDom?.remove()
+
+    if (this.container) {
+      this.container.innerHTML = ''
+    }
+
     this.emit('destroyed')
     this.isDestroyed = true
   }
@@ -309,7 +324,6 @@ class FishEditor {
 
 function expandConfig(options: IFishEditorOptions): ExpandedFishEditorOptions {
   const { modules: moduleDefaults, ...restDefaults } = FishEditor.DEFAULTS
-
   const modules: ExpandedFishEditorOptions['modules'] = merge(
     {},
     expandModuleConfig(moduleDefaults),

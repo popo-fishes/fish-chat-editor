@@ -69,6 +69,7 @@ class Keyboard extends Module<KeyboardOptions> {
     // add default bindings
     Object.keys(this.options.bindings).forEach((name) => {
       if (this.options.bindings[name]) {
+        // @ts-expect-error Fix me later
         this.addBinding(this.options.bindings[name])
       }
     })
@@ -207,6 +208,7 @@ class Keyboard extends Module<KeyboardOptions> {
             this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
             this.emitThrottled()
           })
+          this.fishEditor.scrollSelectionIntoView()
         }
         this.isLineFeedLock = false
       })
@@ -364,8 +366,6 @@ function normalizeLineFeed(rangeInfo: IRange, callBack: (success: boolean) => vo
 
   if (isNode.isDOMNode(lineDom.firstChild)) {
     this.fishEditor.selection.setCursorPosition(lineDom.firstChild, 'before')
-    lineDom?.scrollIntoView({ block: 'end', inline: 'end' })
-
     callBack(true)
     return
   }
@@ -415,7 +415,7 @@ function isContentChangingKey(evt: KeyboardEvent): boolean {
 
   // 检查是否为退格键或删除键
   if (keyCode === 8 || keyCode === 46) {
-    return true
+    return false
   }
 
   return false

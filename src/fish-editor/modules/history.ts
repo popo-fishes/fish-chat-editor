@@ -3,10 +3,21 @@
  * @Description: Modify here please
  */
 import throttle from 'lodash/throttle'
-import { dom, transforms, helper, isNode } from '../utils'
+import { dom, transforms, helper, isNode, base } from '../utils'
 import Module from '../core/module'
 import Emitter from '../core/emitter'
 import type FishEditor from '../core/fish-editor'
+
+export type IDeltaSchemaContent = {
+  type: 'text' | 'image' | 'br'
+  text?: string
+  attrs?: { [key: string]: any }
+}
+
+export type IDeltaSchema = {
+  type: 'row'
+  content: IDeltaSchemaContent[]
+}
 
 export interface HistoryOptions {
   maxStack: number
@@ -14,7 +25,7 @@ export interface HistoryOptions {
 }
 
 export interface StackItem {
-  editorHtml: string
+  editorDelta: IDeltaSchema[]
   range: {
     nodeIndexPaths: number[]
     endOffset: number
@@ -72,32 +83,33 @@ class History extends Module<HistoryOptions> {
     this.ignoreChange = true
 
     const lastItem = source == 'undo' ? this.stack[source][this.stack[source].length - 1] : item
-    // console.log(lastItem)
-    if (lastItem?.editorHtml) {
-      this.fishEditor.setHtml(lastItem.editorHtml)
-      // console.log(lastItem)
-      const referenceNode = getNodeByIndexPaths(this.fishEditor.root, lastItem.range.nodeIndexPaths)
-      if (referenceNode && isNode.isDOMElement(referenceNode)) {
-        this.fishEditor.selection.setCursorPosition(referenceNode, 'after')
-      } else {
-        this.fishEditor.selection.setCursorPosition(referenceNode, null, lastItem.range.endOffset)
-      }
+    if (lastItem?.editorDelta) {
+      renderDeltaSchema.call(this, lastItem.editorDelta, () => {
+        const referenceNode = getNodeByIndexPaths(this.fishEditor.root, lastItem.range.nodeIndexPaths)
+        if (referenceNode && isNode.isDOMElement(referenceNode)) {
+          this.fishEditor.selection.setCursorPosition(referenceNode, 'after')
+        } else {
+          this.fishEditor.selection.setCursorPosition(referenceNode, null, lastItem.range.endOffset)
+        }
+        this.fishEditor.scrollSelectionIntoView()
+        this.ignoreChange = false
+      })
     } else {
       this.fishEditor.clear()
       this.fishEditor.focus()
+      this.ignoreChange = false
     }
-
-    this.ignoreChange = false
   }
 
   record() {
     this.stack.redo = []
-    let undoVal = this.fishEditor.editor.getProtoHTML()
+    const cloneEditeNode = this.fishEditor.root.cloneNode(true) as any
+    const undoVal = createDeltaSchema(cloneEditeNode)
     const currentRange = this.fishEditor.selection.getRange()
 
     if (!currentRange) return
 
-    let undoRange: StackItem['range'] = {
+    const undoRange: StackItem['range'] = {
       endOffset: currentRange.endOffset,
       nodeIndexPaths: getIndexPathToParentWithElementNode.call(this, currentRange.startContainer),
     }
@@ -110,7 +122,7 @@ class History extends Module<HistoryOptions> {
     }
     if (!undoVal) return
 
-    this.stack.undo.push({ editorHtml: undoVal, range: undoRange })
+    this.stack.undo.push({ editorDelta: undoVal, range: undoRange })
     if (this.stack.undo.length > this.options.maxStack) {
       this.stack.undo.shift()
     }
@@ -156,7 +168,7 @@ function getIndexPathToParentWithElementNode(node, indexes = []) {
   }
 }
 
-function getNodeByIndexPaths(root: any, paths: number[]) {
+function getNodeByIndexPaths(root: HTMLDivElement, paths: number[]) {
   if (!paths || paths.length == 0) return null
 
   let currentNode: Node | null = root
@@ -173,6 +185,104 @@ function getNodeByIndexPaths(root: any, paths: number[]) {
   }
 
   return currentNode
+}
+
+function createDeltaSchema(root: HTMLDivElement) {
+  const result: IDeltaSchema[] = []
+  if (!root || !root?.childNodes) return []
+
+  const nodes: ChildNode[] = Array.from(root.childNodes)
+
+  function createEditElementContent(node: HTMLElement) {
+    const content: IDeltaSchemaContent[] = []
+    const nodes = Array.from(node.childNodes)
+
+    for (const node of nodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        // 文本节点
+        content.push({
+          type: 'text',
+          text: node.textContent,
+        })
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement
+        if (isNode.isEmojiImgNode(el)) {
+          // 图片
+          content.push({
+            type: 'image',
+            attrs: serializeAttributes(el),
+          })
+        }
+        if (isNode.isImageNode(el)) {
+          // 图片
+          content.push({
+            type: 'image',
+            attrs: serializeAttributes(el),
+          })
+        }
+      }
+    }
+
+    return content
+  }
+
+  for (const cld of Array.from(nodes)) {
+    if (isNode.isEditElement(cld as HTMLElement)) {
+      const content = createEditElementContent(cld as any)
+      if (content.length) {
+        result.push({
+          type: 'row',
+          content: content,
+        })
+      } else {
+        result.push({
+          type: 'row',
+          content: [{ type: 'br' }],
+        })
+      }
+    }
+  }
+  // console.log(result)
+  return result
+}
+
+function renderDeltaSchema(schema: IDeltaSchema[], cb: () => void) {
+  const nodes = []
+
+  for (const item of schema) {
+    if (item.type === 'row') {
+      const row = base.createLineElement(true)
+      if (item.content.length == 1 && item.content[0].type === 'br') {
+        const dom_br = document.createElement('br')
+        row.appendChild(dom_br)
+      } else {
+        for (const content of item.content) {
+          if (content.type === 'text') {
+            const text = document.createTextNode(content.text)
+            row.appendChild(text)
+          } else if (content.type === 'image') {
+            const img = document.createElement('img')
+            for (const [key, value] of Object.entries(content.attrs)) {
+              img.setAttribute(key, value)
+            }
+            row.appendChild(img)
+          }
+        }
+      }
+      nodes.push(row)
+    }
+  }
+  dom.toTargetAddNodes(this.fishEditor.root, nodes)
+  this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
+  requestAnimationFrame(cb)
+}
+
+function serializeAttributes(el: HTMLElement): Record<string, any> {
+  const attrs: Record<string, any> = {}
+  for (const attr of Array.from(el.attributes)) {
+    attrs[attr.name] = attr.value
+  }
+  return attrs
 }
 
 export default History
