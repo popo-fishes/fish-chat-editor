@@ -24,4 +24,6 @@ FishEditor.register({
   'modules/history': History,
 })
 
+export { default as Module } from './core/module'
+
 export default FishEditor

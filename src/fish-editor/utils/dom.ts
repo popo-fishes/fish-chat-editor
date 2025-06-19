@@ -3,7 +3,7 @@
  * @Description: dom
  */
 import { isNode, util } from '.'
-import { isEditElement } from './isNode'
+import { isEditElement } from './is-node'
 const { isDOMText, isDOMElement, isDOMNode, isNodeNotTtxt } = isNode
 
 const getDomPreviousOrnextSibling = (targetElement: Node): [][] => {

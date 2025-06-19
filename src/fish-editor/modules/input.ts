@@ -163,6 +163,7 @@ class Input extends Module<InputOptions> {
                 this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
                 this.emitThrottled()
               })
+              this.fishEditor.scrollSelectionIntoView()
               // console.timeEnd('replaceText')
             }
           },

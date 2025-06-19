@@ -22,11 +22,11 @@ class Editor {
       dom.toTargetAddNodes(this.container, [node])
     }
   }
-  enable(enabled = true) {
+  public enable(enabled = true) {
     this.container.setAttribute('contenteditable', enabled ? 'true' : 'false')
   }
 
-  isEnabled() {
+  public isEnabled() {
     return this.container.getAttribute('contenteditable') === 'true'
   }
 
@@ -237,7 +237,6 @@ class Editor {
         if (showCursor) {
           const referenceNode = focusNode.parentNode
           if (referenceNode) {
-            referenceNode?.scrollIntoView({ block: 'end', inline: 'end' })
             this.fishEditor.selection.setCursorPosition(focusNode, 'after')
           }
         }
@@ -301,7 +300,6 @@ class Editor {
       {
         const referenceNode = nodes[nodes.length - 1] as any
         if (isNode.isDOMElement(referenceNode)) {
-          referenceNode?.scrollIntoView({ block: 'end', inline: 'end' })
           this.fishEditor.selection.setCursorPosition(referenceNode, 'after')
           callBack?.(true)
           return
@@ -338,51 +336,54 @@ class Editor {
   }
 
   public setHtml(html: string, notChange?: boolean) {
-    if (!html) return null
+    try {
+      if (!html) return null
 
-    const tempDiv = document.createElement('div')
-    tempDiv.innerHTML = html
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = html
 
-    const pElements = tempDiv.querySelectorAll('p')
+      const pElements = tempDiv.querySelectorAll('p')
 
-    const nodes = Array.from(pElements)
+      const nodes = Array.from(pElements)
 
-    if (nodes.length == 0) return null
+      if (nodes.length == 0) return null
 
-    const newNode = []
-    // nodes
-    for (let i = 0; i < nodes.length; i++) {
-      const pldNode = nodes[i]
-      if (pldNode.childNodes.length > 0) {
-        const lineDom = base.createLineElement(true)
-        for (let c = 0; c < pldNode.childNodes.length; c++) {
-          const cldNode = pldNode.childNodes[c] as any
-          const formatNode = formats.createNodeOptimize(cldNode)
-          if (formatNode) {
-            lineDom.appendChild(formatNode)
+      const newNode = []
+      // nodes
+      for (let i = 0; i < nodes.length; i++) {
+        const pldNode = nodes[i]
+        if (pldNode.childNodes.length > 0) {
+          const lineDom = base.createLineElement(true)
+          for (let c = 0; c < pldNode.childNodes.length; c++) {
+            const cldNode = pldNode.childNodes[c] as any
+            const formatNode = formats.createNodeOptimize(cldNode)
+            if (formatNode.length == 0) {
+              const dom_br = document.createElement('br')
+              dom.toTargetAddNodes(lineDom, [dom_br], false)
+            } else {
+              dom.toTargetAddNodes(lineDom, formatNode as any, false)
+            }
           }
+          newNode.push(lineDom)
+        } else {
+          newNode.push(base.createLineElement())
         }
-        newNode.push(lineDom)
-      } else {
-        newNode.push(base.createLineElement())
       }
+
+      dom.toTargetAddNodes(this.container, newNode)
+
+      this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor, notChange)
+    } catch (error) {
+      console.error(error)
     }
-
-    dom.toTargetAddNodes(this.container, newNode)
-
-    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor, notChange)
   }
 
   public clear() {
     if (!this.container) return null
     const node = base.createLineElement()
     dom.toTargetAddNodes(this.container, [node])
-    this.setCursorEditorLast((targetNode) => {
-      if (targetNode) {
-        this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
-        this.blur()
-      }
-    })
+    this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
+    this.fishEditor.selection.initRange()
   }
 
   public blur() {
