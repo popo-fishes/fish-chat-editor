@@ -3,7 +3,7 @@
  * @LastEditors: Please set LastEditors
  */
 import merge from 'lodash/merge'
-import { helper, base, dom, util } from '../utils'
+import { helper, base, dom, util, transforms } from '../utils'
 import type { IEmojiType } from '../../types'
 import type OtherEventType from '../modules/other-event'
 import type Keyboard from '../modules/keyboard'
@@ -34,6 +34,8 @@ export interface IFishEditorOptions {
   maxHeight?: number | null
   /** minHeight? Minimum height of editor; When the maximum height is not applicable; Editor height self increasing */
   minHeight?: number | null
+  /** Does a newline character count as the number of characters */
+  isLineBreakCount?: boolean
 }
 
 export type ExpandedFishEditorOptions = Required<IFishEditorOptions> & Record<string, unknown>
@@ -50,6 +52,7 @@ class FishEditor {
     placeholder: '请输入内容',
     maxLength: null,
     showCustomizeMenu: false,
+    isLineBreakCount: false,
     readOnly: false,
     maxHeight: null,
     minHeight: 75,
@@ -133,10 +136,15 @@ class FishEditor {
         if (!notChange) {
           const length = this.editor.getLength()
           const maxLength = this.options.maxLength
+          // console.log(length, maxLength)
           if (maxLength && length && length > maxLength) {
             console.time('truncate-editor-string')
             const editorText = this.editor.getText()
-            const ntext = helper.truncateString(editorText, maxLength)
+            // 这里需要吧特殊字符转义回来，不然会导致长度有误，因为我们获取文本的时候会转义特殊字符。
+            const reqText = transforms.labelRep(editorText, true)
+            // console.log(reqText, reqText.length)
+            const ntext = helper.truncateString(reqText, maxLength, this.options.isLineBreakCount)
+            // console.log(ntext, ntext.length)
             const lines = ntext?.split(/\r\n|\r|\n/) || []
             const data = []
             for (let i = 0; i < lines.length; i++) {
