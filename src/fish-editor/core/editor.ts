@@ -73,6 +73,17 @@ class Editor {
 
     return result
   }
+
+  public getLength() {
+    /** Does a newline character count as the number of characters */
+    const isLineBreakCount = this.fishEditor.options.isLineBreakCount
+    const text = this.getText(isLineBreakCount ? false : true)
+    // 这里需要吧特殊字符转义回来，不然会导致长度有误，因为我们获取文本的时候会转义特殊字符。
+    const reqText = transforms.labelRep(text, true)
+    // console.log(reqText, reqText.length, text, text.length)
+    return reqText?.length || 0
+  }
+
   /**
    * @name Retrieve semantic HTML of editor content
    */
@@ -309,10 +320,6 @@ class Editor {
       console.error(error)
       callBack?.(false)
     }
-  }
-
-  public getLength() {
-    return this.getText(true)?.length || 0
   }
 
   public setText(content: string) {

@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 export const generateRandomString = (length = 5) => {
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   let result = ''
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length))
@@ -33,11 +33,11 @@ export const removeTailLineFeed = (content: string) => {
   return content
 }
 
-export const truncateString = (str: string, x: number) => {
+export const truncateString = (str: string, x: number, isLineBreakCount: boolean) => {
   let result = ''
   let count = 0
   for (let i = 0; i < str.length; i++) {
-    if (str[i] === '\n') {
+    if (str[i] === '\n' && !isLineBreakCount) {
       result += str[i]
       continue
     }
