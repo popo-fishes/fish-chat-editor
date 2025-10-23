@@ -71,7 +71,7 @@ export const createChunkEmojiElement = (url: string, size: number, emijiName: st
   node.src = url || null;
   node.id = `${prefixNmae}emoji-` + helper.generateRandomString();
   node.classList.add(`${prefixNmae}emoji`);
-  node.setAttribute("style", `width:${size}px;height:${size}px`);
+  node.setAttribute("style", `width:${size}px;height:${size}px;vertical-align: middle;`);
   const emojiNodeKey = getElementAttributeKey("emojiNode");
   node.setAttribute(emojiNodeKey, emijiName);
   return node;

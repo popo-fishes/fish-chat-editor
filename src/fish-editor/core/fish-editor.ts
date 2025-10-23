@@ -3,7 +3,7 @@
  * @LastEditors: Please set LastEditors
  */
 import merge from 'lodash/merge'
-import { helper, base, dom, util, transforms } from '../utils'
+import { base, dom, util } from '../utils'
 import type { IEmojiType } from '../../types'
 import type OtherEventType from '../modules/other-event'
 import type Keyboard from '../modules/keyboard'
@@ -117,7 +117,7 @@ class FishEditor {
     this.emitter = new Emitter()
     this.editor = new Editor(this)
     this.selection = new Selection(this.root, this.emitter)
-    this.composition = new Composition(this.root, this.emitter)
+    this.composition = new Composition(this, this.root, this.emitter)
     this.theme = new Theme(this, this.options)
     this.keyboard = this.theme.addModule('keyboard')
     this.theme.addModule('clipboard')
@@ -127,36 +127,12 @@ class FishEditor {
     this.theme.addModule('input')
     this.theme.init()
 
-    this.emitter.on(Emitter.events.EDITOR_CHANGE, ({ editor }, notChange?: boolean) => {
+    this.emitter.on(Emitter.events.EDITOR_CHANGE, ({ editor }) => {
       // Update placeholder visibility
       const hasEmpty = (editor as Editor).isEmpty()
       this.container.classList.toggle('is-placeholder-visible', hasEmpty)
       // removeEditorImageBse64Map Promise asynchronous execution
       return new Promise((resolve, reject) => {
-        if (!notChange) {
-          const length = this.editor.getLength()
-          const maxLength = this.options.maxLength
-          // console.log(length, maxLength)
-          if (maxLength && length && length > maxLength) {
-            console.time('truncate-editor-string')
-            const editorText = this.editor.getText()
-            // 这里需要吧特殊字符转义回来，不然会导致长度有误，因为我们获取文本的时候会转义特殊字符。
-            const reqText = transforms.labelRep(editorText, true)
-            // console.log(reqText, reqText.length)
-            const ntext = helper.truncateString(reqText, maxLength, this.options.isLineBreakCount)
-            // console.log(ntext, ntext.length)
-            const lines = ntext?.split(/\r\n|\r|\n/) || []
-            const data = []
-            for (let i = 0; i < lines.length; i++) {
-              data.push(`<p>${lines[i] || ''}</p>`)
-            }
-            this.editor.setHtml(data.join(''), true)
-            console.timeEnd('truncate-editor-string')
-            this.blur()
-            this.emit(Emitter.events.EDITOR_MAXLENGTH)
-          }
-        }
-
         removeEditorImageBse64Map(hasEmpty, this.root)
           .then(() => {
             resolve(true)
@@ -178,6 +154,11 @@ class FishEditor {
     //     '<p>哈哈<span style="color: red">1212</span><strong>湿哒哒</strong><em>我是斜体</em><u>下划线</u><del>我被删除了</del><a target="_blank">link</a></p>',
     //   )
     // })
+  }
+
+  // set editorDom height
+  setEditHeight(height: number) {
+    this.root.style.minHeight = `${height}px`
   }
 
   addContainer(): HTMLDivElement {
@@ -242,6 +223,53 @@ class FishEditor {
   }
   setText(value: string) {
     return this.editor.setText(value)
+  }
+  /**
+   * @name Get: How many more characters can be inserted when the distance triggers maxLength
+   */
+  getLeftLengthOfMaxLength() {
+    const maxLength = this.options.maxLength
+
+    if (typeof maxLength !== 'number' || maxLength <= 0) return Infinity
+
+    const curLength = this.editor.getLength()
+    const leftLength = maxLength - curLength
+
+    if (leftLength <= 0) {
+      this.emit(Emitter.events.EDITOR_MAXLENGTH)
+    }
+
+    return leftLength
+  }
+  /**
+   * @name insert Text Interceptor
+   * @param contentText
+   * @param showCursor Do I need to set a cursor after successful insertion
+   * @param callBack?: (success: boolean) => void,
+   */
+  insertTextInterceptor(contentText: string, showCursor: boolean, callBack?: (success: boolean) => void): void {
+    const rangeInfo = this.selection.getRange()
+    const maxLength = this.options.maxLength
+    const insertTextFn = (text: string) => {
+      this.editor.insertText(text, rangeInfo, showCursor, (success) => {
+        callBack && callBack(success)
+      })
+    }
+
+    if (!maxLength) {
+      insertTextFn(contentText)
+    } else {
+      const leftLength = this.getLeftLengthOfMaxLength()
+      if (leftLength <= 0) {
+        return
+      }
+      if (leftLength < contentText.length) {
+        insertTextFn(contentText.slice(0, leftLength))
+        return
+      }
+
+      insertTextFn(contentText)
+    }
   }
   getText(isPure = false) {
     return this.editor.getText(isPure)

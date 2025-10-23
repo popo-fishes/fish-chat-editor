@@ -32,20 +32,3 @@ export const removeTailLineFeed = (content: string) => {
   }
   return content
 }
-
-export const truncateString = (str: string, x: number, isLineBreakCount: boolean) => {
-  let result = ''
-  let count = 0
-  for (let i = 0; i < str.length; i++) {
-    if (str[i] === '\n' && !isLineBreakCount) {
-      result += str[i]
-      continue
-    }
-    result += str[i]
-    count++
-    if (count === x) {
-      break
-    }
-  }
-  return result
-}
