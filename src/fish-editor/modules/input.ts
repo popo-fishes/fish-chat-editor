@@ -8,6 +8,7 @@ import Module from '../core/module'
 import Emitter from '../core/emitter'
 import type { IRange } from '../core/selection'
 import type FishEditor from '../core/fish-editor'
+import { recordCompositionStartContainer, handleMaxLengthFn } from './utils/maximum'
 
 const INSERT_TYPES = ['insertText', 'insertReplacementText']
 
@@ -63,50 +64,69 @@ class Input extends Module<InputOptions> {
     // Gboard with English input on Android triggers `compositionstart` sometimes even
     // users are not going to type anything.
     if (!/Android/i.test(navigator.userAgent)) {
-      fishEditor.on(Emitter.events.COMPOSITION_START, () => {
-        this.handleCompositionStart()
+      fishEditor.on(Emitter.events.COMPOSITION_START, (_, contextFishEditor: any) => {
+        this.handleCompositionStart(contextFishEditor)
       })
     }
 
-    this.fishEditor.on(Emitter.events.COMPOSITION_END, (event: CompositionEvent) => {
-      // let data = ''
-      // if (typeof event.data === 'string') {
-      //   data = event.data
-      // }
-      // if (!data) return
-
-      // console.log(data, this.fishEditor.selection.savedRange)
-
-      this.handleInput(false)
+    // 360 browser won't trigger, Google will
+    this.fishEditor.on(Emitter.events.COMPOSITION_END, (event: CompositionEvent, contextFishEditor: any) => {
+      this.handleCompositionEnd(event, contextFishEditor)
     })
 
-    fishEditor.root.addEventListener('input', this.handleInput.bind(this, true))
+    fishEditor.root.addEventListener('input', this.handleInput.bind(this))
   }
 
-  private handleCompositionStart() {
+  /** @name Google - Chinese composition Start will be triggered */
+  private handleCompositionStart(contextFishEditor: any) {
     const range = this.fishEditor.selection.getRange()
     if (range) {
-      this.replaceText(range)
+      // replaceText
+      const flag = this.replaceText(range)
+      // After deleting the selection in replaceText, obtain the selection again
+      const range2 = this.fishEditor.selection.getRange()
+      // The CompositionStart process records the current selection area information for use when maxLength is triggered
+      recordCompositionStartContainer(flag, range2, contextFishEditor)
     }
   }
 
-  private handleInput(isOriginalEvent: boolean) {
-    if (isOriginalEvent) {
-      Promise.resolve().then(() => {
-        // Update placeholder visibility
-        const hasEmpty = this.fishEditor.editor.isEmpty()
-        this.fishEditor.container.classList.toggle('is-placeholder-visible', hasEmpty)
-
-        if (this.matchWordsList?.length) {
-          handleInputTransforms.call(this)
-        }
-      })
+  /** @name Google - Chinese composition will be triggered when it ends */
+  private handleCompositionEnd(event: CompositionEvent, contextFishEditor: any) {
+    /** the current composition content */
+    let data = ''
+    if (typeof event.data === 'string') {
+      data = event.data
     }
-    /** isComposing ?? */
+    if (!data) return
+    // handle the maximum input length
+    if (this.fishEditor.options.maxLength) {
+      handleMaxLengthFn.call(this, data, contextFishEditor)
+    }
+    // trigger an update
+    this.emitThrottled()
+  }
+
+  private handleInput() {
+    Promise.resolve().then(() => {
+      // Update placeholder visibility
+      const hasEmpty = this.fishEditor.editor.isEmpty()
+      this.fishEditor.container.classList.toggle('is-placeholder-visible', hasEmpty)
+
+      if (this.matchWordsList?.length) {
+        handleInputTransforms.call(this)
+      }
+    })
+    // /** isComposing ?? */
     if (this.fishEditor.composition.isComposing) return
     this.emitThrottled()
   }
 
+  /**
+   * @name handleBeforeInput
+   * @desc 当执行了event.preventDefault() input事件将不会触发
+   * @param event
+   * @returns
+   */
   private handleBeforeInput(event: InputEvent) {
     /**
      * 注意点:
@@ -121,7 +141,10 @@ class Input extends Module<InputOptions> {
 
     const staticRange = event.getTargetRanges ? event.getTargetRanges()[0] : null
 
-    // Maximum word count limit
+    /**
+     * 非作曲时的输入，需要判断最大值
+     * Maximum word count limit
+     */
     const length = this.fishEditor.editor.getLength() + 1
     const maxLength = this.fishEditor.options.maxLength
     if (staticRange.collapsed === true && maxLength && length && length > maxLength) {
@@ -130,45 +153,56 @@ class Input extends Module<InputOptions> {
       return
     }
 
-    // Overlap and return directly
-    if (!staticRange || staticRange.collapsed === true) {
-      return
-    }
-
     const text = getPlainTextFromInputEvent(event)
     if (text == null) {
       return
     }
 
+    /** no range */
+    if (!staticRange || staticRange.collapsed === true) {
+      event.preventDefault()
+      this.fishEditor.insertTextInterceptor(text, true, (success) => {
+        if (success) {
+          Promise.resolve().then(() => {
+            this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
+            this.emitThrottled()
+          })
+          this.fishEditor.scrollSelectionIntoView()
+        }
+      })
+      return
+    }
+
     // If there is a selection, delete and replace it
     const range = this.fishEditor.selection.normalizeNative(staticRange as Range)
-    if (range && this.replaceText(range, text)) {
+    // 360- It will trigger the insertion after deleting the selection area here
+    const flag = this.replaceText(range, text)
+    if (range && flag) {
       event.preventDefault()
     }
   }
 
+  /**
+   * 存在选区，删除选区
+   * @param range
+   * @param text
+   * @returns
+   */
   private replaceText(range: IRange, text = '') {
     if (range.collapsed) {
       return false
     }
     if (text) {
-      // console.time('replaceText')
       this.fishEditor.selection.deleteRange(range, () => {
-        this.fishEditor.editor.insertText(
-          text,
-          this.fishEditor.selection.getRange(),
-          (success) => {
-            if (success) {
-              Promise.resolve().then(() => {
-                this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
-                this.emitThrottled()
-              })
-              this.fishEditor.scrollSelectionIntoView()
-              // console.timeEnd('replaceText')
-            }
-          },
-          true,
-        )
+        this.fishEditor.insertTextInterceptor(text, true, (success) => {
+          if (success) {
+            Promise.resolve().then(() => {
+              this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
+              this.emitThrottled()
+            })
+            this.fishEditor.scrollSelectionIntoView()
+          }
+        })
       })
     } else {
       this.fishEditor.selection.deleteRange(range)

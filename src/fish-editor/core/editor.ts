@@ -80,7 +80,6 @@ class Editor {
     const text = this.getText(isLineBreakCount ? false : true)
     // 这里需要吧特殊字符转义回来，不然会导致长度有误，因为我们获取文本的时候会转义特殊字符。
     const reqText = transforms.labelRep(text, true)
-    // console.log(reqText, reqText.length, text, text.length)
     return reqText?.length || 0
   }
 
@@ -108,14 +107,14 @@ class Editor {
    * @name Insert text in the selection area
    * @param contentText
    * @param range
-   * @param callBack （success?）=> void
    * @param showCursor Do I need to set a cursor after successful insertion
+   * @param callBack? （success?）=> void
    */
   public insertText(
     contentText: string,
     range: IRange,
+    showCursor: boolean,
     callBack?: (success: boolean) => void,
-    showCursor?: boolean,
   ): void {
     const cloneRange = cloneDeep(range) as IRange
 
@@ -324,25 +323,21 @@ class Editor {
 
   public setText(content: string) {
     if (!content || !this.container) return
-    this.setCursorEditorLast((node) => {
-      if (node) {
-        const rangeInfo = this.fishEditor.selection.getRange()
-        this.insertText(
-          content,
-          rangeInfo,
-          (success) => {
+    this.clear(() => {
+      this.setCursorEditorLast((node) => {
+        if (node) {
+          this.fishEditor.insertTextInterceptor(content, true, (success) => {
             if (success) {
               this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
               this.blur()
             }
-          },
-          true,
-        )
-      }
+          })
+        }
+      })
     })
   }
 
-  public setHtml(html: string, notChange?: boolean) {
+  public setHtml(html: string) {
     try {
       if (!html) return null
 
@@ -379,18 +374,19 @@ class Editor {
 
       dom.toTargetAddNodes(this.container, newNode)
 
-      this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor, notChange)
+      this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
     } catch (error) {
       console.error(error)
     }
   }
 
-  public clear() {
+  public clear(cb?: () => void) {
     if (!this.container) return null
     const node = base.createLineElement()
     dom.toTargetAddNodes(this.container, [node])
     this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor)
     this.fishEditor.selection.initRange()
+    cb && requestAnimationFrame(cb)
   }
 
   public blur() {

@@ -123,21 +123,16 @@ class Clipboard extends Module<IClipboardOptions> {
         this.isPasteLock = true
         // delay insert
         requestAnimationFrame(() => {
-          this.fishEditor.editor.insertText(
-            content,
-            this.fishEditor.selection.getRange(),
-            (success) => {
-              if (success) {
-                Promise.resolve().then(() => {
-                  this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
-                  this.emitThrottled()
-                })
-                this.fishEditor.scrollSelectionIntoView()
-              }
-              this.isPasteLock = false
-            },
-            true,
-          )
+          this.fishEditor.insertTextInterceptor(content, true, (success) => {
+            if (success) {
+              Promise.resolve().then(() => {
+                this.fishEditor.emit(Emitter.events.EDITOR_BEFORE_CHANGE)
+                this.emitThrottled()
+              })
+              this.fishEditor.scrollSelectionIntoView()
+            }
+            this.isPasteLock = false
+          })
         })
       })
     }

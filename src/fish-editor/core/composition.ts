@@ -2,12 +2,14 @@
  * @Date: 2025-03-13 17:05:03
  * @Description: Modify here please
  */
+import type FishEditor from './fish-editor'
 import Emitter from './emitter'
 
 class Composition {
   isComposing = false
 
   constructor(
+    protected fishEditor: FishEditor,
     private root: HTMLDivElement,
     private emitter: Emitter,
   ) {
@@ -35,12 +37,12 @@ class Composition {
 
   private handleCompositionStart(event: CompositionEvent) {
     this.isComposing = true
-    this.emitter.emit(Emitter.events.COMPOSITION_START, event)
+    this.emitter.emit(Emitter.events.COMPOSITION_START, event, this.fishEditor)
   }
 
   private handleCompositionEnd(event: CompositionEvent) {
     this.isComposing = false
-    this.emitter.emit(Emitter.events.COMPOSITION_END, event)
+    this.emitter.emit(Emitter.events.COMPOSITION_END, event, this.fishEditor)
   }
 }
 
