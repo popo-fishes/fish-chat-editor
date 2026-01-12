@@ -50,6 +50,8 @@ class Emitter {
     EDITOR_BEFORE_CHANGE: 'editor-before-change',
     /** on maxlength */
     EDITOR_MAXLENGTH: 'maxlength',
+    EDITOR_FOCUS: 'editor-focus',
+    EDITOR_BLUR: 'editor-blur',
   } as const
   subscribes: Map<string, Array<SubscribeEvent>>
 

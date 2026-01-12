@@ -10,6 +10,15 @@
   border-top: 1px solid rgba(233, 237, 243, 1);
   position: relative;
 }
+.fb-drag-line{
+  width: 100%;
+  height: 10px;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  cursor: move;
+}
 
 // 工具栏
 .fb-chat-toolbar {
@@ -88,11 +97,13 @@
   z-index: 10;
   .emoji-panel-scroller {
     width: 100%;
-    max-height: 240px;
+    max-height: 254px;
     box-sizing: border-box;
     overflow-y: overlay;
+    scrollbar-width: none;
     overflow-x: hidden;
-    padding: 16px 12px;
+    padding: 12px;
+    border-radius: 12px;
 
     &::-webkit-scrollbar {
       width: 4px;
@@ -119,6 +130,7 @@
         align-items: center;
         transition: all 0.3s;
         background-color: #fff;
+        border-radius: 8px;
         &:hover {
           background-color: rgba(245, 246, 250, 1);
         }

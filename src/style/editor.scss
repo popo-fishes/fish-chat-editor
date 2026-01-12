@@ -48,6 +48,8 @@
   background-color: #fff;
   flex: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
   &.is-placeholder-visible .fb-placeholder {
     display: block;
   }
@@ -58,6 +60,8 @@
   overflow-y: auto;
   overscroll-behavior: none;
   position: relative;
+  margin-top: 1px;
+  height: 100%;
   &::-webkit-scrollbar {
     width: 4px;
     height: 4px;
@@ -72,8 +76,8 @@
 
 .fb-editor {
   width: 100%;
-  border: none;
-  outline: none;
+  border: none !important;
+  outline: none !important;
   background-color: transparent;
   line-height: 18px;
   color: #333;
@@ -103,11 +107,11 @@
   user-select: none;
   color: #8f959e;
   cursor: text;
-  font-style: italic;
+  // font-style: italic;
   display: none;
   font-size: 14px;
   left: 0;
-  top: -1px;
+  top: 1px;
   width: 90%;
   z-index: 10;
 }

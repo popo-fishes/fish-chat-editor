@@ -3,6 +3,7 @@
  * @Description: Modify here please
  */
 import Module from "../core/module";
+import Emitter from "../core/emitter";
 import type Clipboard from "./clipboard";
 import type FishEditor from "../core/fish-editor";
 
@@ -45,6 +46,7 @@ class OtherEvent extends Module {
     });
     this.root.addEventListener("focus", () => {
       this.isInputFocused = true;
+      this.fishEditor.emit(Emitter.events.EDITOR_FOCUS);
     });
     this.root.addEventListener("blur", this.onBlur.bind(this));
 
@@ -94,6 +96,7 @@ class OtherEvent extends Module {
     if (this.fishEditor.selection.isSelected()) {
       this.fishEditor.selection.removeAllRanges();
     }
+    this.fishEditor.emit(Emitter.events.EDITOR_BLUR, e);
   }
 
   private onClick(e: MouseEvent) {
