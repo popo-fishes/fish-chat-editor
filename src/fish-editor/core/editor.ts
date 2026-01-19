@@ -462,11 +462,13 @@ class Editor {
     const node = base.createLineElement();
     dom.toTargetAddNodes(this.container, [node]);
     // console.log(notUpdate)
-    if (!notUpdate) {
-      this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
-    }
     this.fishEditor.selection.initRange();
-    cb && requestAnimationFrame(cb);
+    requestAnimationFrame(() => {
+      if (!notUpdate) {
+        this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+      }
+      cb && cb();
+    });
   }
 
   public blur() {
