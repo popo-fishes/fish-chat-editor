@@ -101,6 +101,8 @@ class Input extends Module<InputOptions> {
     // handle the maximum input length
     if (this.fishEditor.options.maxLength) {
       handleMaxLengthFn.call(this, data, contextFishEditor);
+      // !!! clearTextCache
+      this.fishEditor.editor.clearTextCache();
     }
     // trigger an update
     this.emitThrottled();

@@ -39,6 +39,14 @@ class Editor {
     });
   }
 
+  /**
+   * 主动清除textCache标记，有些场景不清除老是走缓存导致内容异常：比如
+   * handleCompositionEnd方法里面判断最大字符，当已经到达最大字符时再次输入，导致内容出错。
+   */
+  public clearTextCache() {
+    this.textCache = {};
+  }
+
   private init() {
     if (this.container) {
       const node = base.createLineElement();
@@ -94,22 +102,31 @@ class Editor {
 
   /**
    * @name Retrieve the plain text content of the editor
+   * @param isPure 是否获取纯内容，不需要换行符。
+   * @param caller 调用这函数的函数名（来源）,如果是来源getLength，则需要过滤表情图片。
    * @desc textCache：Mainly solves the problem of triggering the getText method multiple times every time input
    * @desc 因为这里涉及到缓存优化，所以在触发EDITOR_CHANGE事件时，一定要延迟触发;
    * ......因为我们需要先判断contentVersion变化, 不然导致getText一直是缓存值。
    */
-  public getText(isPure = false) {
-    const cacheKey = isPure ? "pure" : "normal";
-
+  public getText(isPure = false, caller?: string) {
+    // 根据caller创建不同的缓存键
+    const cacheKey = caller ? `${isPure ? "pure" : "normal"}_${caller}` : isPure ? "pure" : "normal";
     // console.log(JSON.stringify(this.textCache), this.textCache)
+
     // 检查缓存是否存在且为最新版本
     if (!isEmpty(this.textCache) && this.textCache[cacheKey] && this.textCache[cacheKey].version === this.contentVersion) {
       return this.textCache[cacheKey].value;
     }
 
-    const result = transforms.handleEditTransformsPlainText(this.container, isPure);
+    // 如果是来源getLength
+    if (caller === "getLength") {
+      console.warn("getText is called by getLength");
+    }
 
-    //  console.log(result)
+    const isExcludeEmoji = caller && caller === "getLength";
+    const result = transforms.handleEditTransformsPlainText(this.container, isPure, isExcludeEmoji);
+
+    // console.log(result)
 
     // Update cache
     this.textCache[cacheKey] = {
@@ -125,7 +142,7 @@ class Editor {
   public getLength() {
     /** Does a newline character count as the number of characters */
     const isLineBreakCount = this.fishEditor.options.isLineBreakCount;
-    const text = this.getText(isLineBreakCount ? false : true);
+    const text = this.getText(isLineBreakCount ? false : true, "getLength");
     // 这里需要吧特殊字符转义回来，不然会导致长度有误，因为我们获取文本的时候会转义特殊字符。
     const reqText = transforms.labelRep(text, true);
     return reqText?.length || 0;
@@ -364,7 +381,7 @@ class Editor {
     }
   }
 
-  public setText(v: string) {
+  public setText(v: string, cb?: () => void) {
     const content = `${v}`;
     if (!this.container) return;
     // 如果设置的文本为空，则clear方法触发更新; 如果有值就不触发更新。
@@ -380,6 +397,7 @@ class Editor {
               requestAnimationFrame(() => {
                 this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
                 this.blur();
+                cb?.();
               });
             }
           });

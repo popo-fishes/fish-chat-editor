@@ -3,7 +3,7 @@
  * @LastEditors: Please set LastEditors
  */
 import merge from "lodash/merge";
-import { base, dom, util } from "../utils";
+import { base, dom, util, isNode } from "../utils";
 import type { IEmojiType } from "../../types";
 import type OtherEventType from "../modules/other-event";
 import type Keyboard from "../modules/keyboard";
@@ -36,6 +36,8 @@ export interface IFishEditorOptions {
   minHeight?: number | null;
   /** Does a newline character count as the number of characters */
   isLineBreakCount?: boolean;
+  /** The upper limit of emoji images */
+  emojiMaxCount?: number;
 }
 
 export type ExpandedFishEditorOptions = Required<IFishEditorOptions> & Record<string, unknown>;
@@ -55,7 +57,8 @@ class FishEditor {
     isLineBreakCount: false,
     readOnly: false,
     maxHeight: null,
-    minHeight: 75
+    minHeight: 75,
+    emojiMaxCount: 50
   };
   static events = Emitter.events;
 
@@ -198,6 +201,15 @@ class FishEditor {
     this.placeholderDom.innerHTML = v;
   }
 
+  getScrollDomTop() {
+    return this.scrollDom.scrollTop || 0;
+  }
+  setScrollDomTop(top: number) {
+    if (this.scrollDom) {
+      this.scrollDom.scrollTop = top || 0;
+    }
+  }
+
   setScrollDomHeight(maxHeight: number) {
     if (maxHeight) {
       this.scrollDom.style.maxHeight = `${maxHeight}px`;
@@ -227,8 +239,8 @@ class FishEditor {
   focus() {
     this.editor.focus();
   }
-  setText(value: string) {
-    return this.editor.setText(value);
+  setText(value: string, cb?: () => void) {
+    return this.editor.setText(value, cb);
   }
   /**
    * @name Get: How many more characters can be inserted when the distance triggers maxLength
@@ -267,6 +279,7 @@ class FishEditor {
     } else {
       const leftLength = this.getLeftLengthOfMaxLength();
       if (leftLength <= 0) {
+        callBack(false);
         return;
       }
       if (leftLength < contentText.length) {
@@ -339,10 +352,34 @@ class FishEditor {
 
     if (!editorElementNode) return;
 
+    /** 获取表情图片的数量 */
+    const getEditEmojiAmount = (node: (typeof FishEditor)["prototype"]["root"]): number => {
+      let amount = 0;
+      if (isNode.isDOMElement(node)) {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          amount += getEditEmojiAmount((node as any).childNodes[i]);
+        }
+
+        if (isNode.isEmojiImgNode(node)) {
+          amount += 1;
+        }
+      }
+      return amount;
+    };
+    const amount = getEditEmojiAmount(this.root);
+
+    // 大于最大数量直接返回
+    if (amount >= this.options.emojiMaxCount) {
+      console.warn("Maximum limit for emoji images------------");
+      return;
+    }
+
     this.editor.insertNode([imgNode], currentRange, (success) => {
       if (success) {
-        this.emit(Emitter.events.EDITOR_CHANGE, this);
-        this.scrollSelectionIntoView();
+        requestAnimationFrame(() => {
+          this.emit(Emitter.events.EDITOR_CHANGE, this);
+          this.scrollSelectionIntoView();
+        });
       }
     });
   }

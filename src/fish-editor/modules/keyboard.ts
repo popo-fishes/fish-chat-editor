@@ -194,6 +194,21 @@ class Keyboard extends Module<KeyboardOptions> {
   handleLineFeed(range: IRange) {
     if (this.isLineFeedLock) return;
 
+    /**
+     * @name 判断是否超出了输入上限? 如果上限，则不许换行
+     * range.collapsed 没有选择内容
+     * leftLength 还可输入的字符数
+     * isLineBreakCount: 换行符是否算作字符数量
+     */
+    /** Does a newline character count as the number of characters */
+    const isLineBreakCount = this.fishEditor.options.isLineBreakCount;
+    // 还可输入的字符数
+    const leftLength = this.fishEditor.getLeftLengthOfMaxLength();
+    if (range.collapsed && leftLength <= 0 && isLineBreakCount) {
+      console.warn("editor input limit------------");
+      return;
+    }
+
     this.isLineFeedLock = true;
 
     this.fishEditor.selection.deleteRange(range, () => {
