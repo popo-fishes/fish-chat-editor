@@ -165,6 +165,12 @@ class FishEditor {
     this.root.style.minHeight = `${height}px`;
   }
 
+  setScrollDomHeight(maxHeight: number) {
+    if (maxHeight) {
+      this.scrollDom.style.maxHeight = `${maxHeight}px`;
+    }
+  }
+
   addContainer(): HTMLDivElement {
     this.container.classList.add(...["fb-editor-container", "is-placeholder-visible"]);
 
@@ -214,12 +220,6 @@ class FishEditor {
   setScrollDomTop(top: number) {
     if (this.scrollDom) {
       this.scrollDom.scrollTop = top || 0;
-    }
-  }
-
-  setScrollDomHeight(maxHeight: number) {
-    if (maxHeight) {
-      this.scrollDom.style.maxHeight = `${maxHeight}px`;
     }
   }
 

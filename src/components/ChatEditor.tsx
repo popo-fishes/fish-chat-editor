@@ -5,14 +5,14 @@
 import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo, useEffect } from "react";
 import classNames from "classnames";
 import { Tooltip, Image } from "antd";
-import useClickAway from "./useClickAway";
+import { useClickAway } from "../hooks";
 
 import type { IChatEditorProps, IChatEditorRef } from "../types";
 
 import FishEditor from "../fish-editor";
 import { getDefaultEmojiData } from "../config";
 
-const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
+const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   const { onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -165,4 +165,4 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
   );
 });
 
-export default ChatWrapper;
+export default ChatEditor;

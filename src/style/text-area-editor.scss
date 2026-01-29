@@ -1,0 +1,74 @@
+.textAreaEditor {
+  border: 1px solid #e9edf3;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  &:hover {
+    border-color: #0092ff;
+  }
+
+  .focusSty {
+    border-color: #0092ff;
+  }
+
+  .drag {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 56px;
+    height: 16px;
+    cursor: s-resize;
+  }
+
+  .total {
+    user-select: none;
+    color: #00000073;
+    font-size: 14px;
+    flex-shrink: 0;
+    font-family: "PingFang SC";
+    font-weight: 400;
+    padding-right: 10px;
+    height: 40px;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: end;
+  }
+
+  .error {
+    color: #f04150 !important;
+  }
+
+  .normal {
+    color: #0092ffff;
+  }
+
+  // 修改富文本样式
+  .fb-editor-scroll {
+    padding: 10px;
+  }
+  .fb-editor-container {
+    border-radius: 8px;
+  }
+  .fb-placeholder {
+    color: #00000040;
+    font-style: inherit;
+    line-height: 20px;
+    width: 100%;
+    padding: 10px;
+  }
+  .fb-cover-mask-box {
+    p {
+      // overflow-wrap: break-word;
+      // white-space: break-spaces;
+      word-break: break-all;
+      white-space: break-spaces;
+    }
+  }
+  .fb-editor {
+    word-break: break-all;
+    height: 100% !important;
+  }
+}

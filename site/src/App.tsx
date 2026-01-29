@@ -5,12 +5,13 @@
 import { useRef, useState } from "react";
 // 正式使用时应该：
 // import FbChatEditor, { type IChatEditorRef, type FishEditor } from "fish-chat-editor";
-import FbChatEditor, { type IChatEditorRef, type FishEditor } from "../../src";
+import FbChatEditor, { TextAreaEditor, type IChatEditorRef, type FishEditor } from "../../src";
 import "./App.css";
 
 function App() {
   const [html, setHtml] = useState("");
   const editorRef = useRef<IChatEditorRef>(null);
+  const textAreaEditorRef = useRef<any>(null);
 
   // 发送文本消息
   const onSend = async (editor: FishEditor["editor"]) => {
@@ -61,6 +62,9 @@ function App() {
         <textarea className="editor-textarea-view" readOnly value={html} />
       </div>
       {html && html !== "<p><br></p>" && <div className="editor-content-view" dangerouslySetInnerHTML={{ __html: html }} />}
+
+      <h2>Text Area Editor</h2>
+      <TextAreaEditor textAreaEditorRef={textAreaEditorRef} placeholder={"我是TextAreaEditor"} minHeight={200} maxHeight={540} maxLength={5000} />
     </>
   );
 }
