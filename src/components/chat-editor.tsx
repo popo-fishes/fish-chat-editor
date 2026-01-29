@@ -1,64 +1,51 @@
 /*
- * @Date: 2024-3-14 15:40:27
- * @LastEditors: Please set LastEditors
+ * @Date: 2025-04-27 13:38:56
+ * @Description: Modify here please
  */
 import { useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo, useEffect } from "react";
 import classNames from "classnames";
-
 import { Tooltip, Image } from "antd";
-import { useClickAway } from "../../hooks";
+import useClickAway from "./useClickAway";
 
-import { setEmojiData } from "../../utils";
-import { emoji as defaultEmojiData } from "../../config";
+import type { IChatEditorProps, IChatEditorRef } from "../types";
 
-import type { IChatEditorProps, IChatEditorRef, IEmojiType } from "../../types";
-
-import FishEditor from "../../fish-editor";
+import FishEditor from "../fish-editor";
+import { getDefaultEmojiData } from "../config";
 
 const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
-  // 解析值
   const { onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
-  // 表情的弹窗
+
   const modalRef = useRef<HTMLDivElement>(null);
-  // 触发器
+
   const emotionTarget = useRef<HTMLDivElement>(null);
-  // 显示表情弹窗
+
   const [openEmoji, setOpen] = useState<boolean>(false);
-  // 可以点击发送按钮？?
+
   const [isSend, setSend] = useState<boolean>(false);
 
+  const [count, setCount] = useState<number>(0);
+
   const fishEditor = useRef<FishEditor>(null);
-  const demoref = useRef<HTMLDivElement>(null);
+
+  const domRef = useRef();
 
   const mergeEmojiList = useMemo(() => {
-    // 如果外面传递了表情数据用外面的
-    if (emojiList?.length) {
-      setEmojiData([...emojiList]);
-      return [...emojiList];
-    }
-
-    const data: IEmojiType[] = [];
-    for (const i in defaultEmojiData) {
-      const bli = i.replace("[", "");
-      const cli = bli.replace("]", "");
-      data.push({
-        url: `http://43.136.119.145:83/image/${defaultEmojiData[i]}`,
-        name: i,
-        title: cli
-      });
-    }
-    setEmojiData(data);
-    return data;
+    const defaultEmojiList = getDefaultEmojiData();
+    // 把 defaultEmojiList 和 emojiList 合并去重，优先使用 emojiList 中的表情包
+    const mergeEmojiList = [...emojiList, ...defaultEmojiList];
+    const uniqueEmojiList = mergeEmojiList.filter((item, index, self) => index === self.findIndex((t) => t.name == item.name));
+    // console.log(fishEditor.current)
+    fishEditor.current?.setEditorEmojiList(uniqueEmojiList);
+    return [...uniqueEmojiList];
   }, [emojiList]);
 
+  /**
+   * !!! 可以动态监听值，进行多次实例化，但是不建议
+   */
   useEffect(() => {
-    fishEditor.current = new FishEditor(demoref.current, {
+    fishEditor.current = new FishEditor(domRef.current, {
       placeholder: restProps.placeholder,
-      modules: {
-        uploader: {
-          beforeUpload: restProps.beforePasteImage || null
-        }
-      }
+      minHeight: 75
     });
     return () => {
       if (fishEditor.current == null) return;
@@ -67,9 +54,9 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     };
   }, []);
 
-  /** @name 富文本值变化时 */
   const onEditableChange = (fishEditor: FishEditor) => {
-    setSend(!fishEditor.isEmpty());
+    setSend(!fishEditor.isPureTextAndInlineElement());
+    setCount(fishEditor.getLength() || 0);
     onChange?.(fishEditor.editor);
   };
 
@@ -81,10 +68,9 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     };
   }, []);
 
-  /** @name 点击回车事件 */
-  const onEnterDownEvent = (fishEditor: FishEditor) => {
+  const onEnterDownEvent = async (editor: FishEditor) => {
     if (!isSend) return;
-    onEnterDown?.(fishEditor.editor);
+    onEnterDown?.(editor.editor);
   };
 
   useEffect(() => {
@@ -95,31 +81,27 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
     };
   }, [isSend, onEnterDown]);
 
-  /** @name 暴露方法 */
   useImperativeHandle(ref, () => {
     return {
       clear: () => fishEditor.current?.clear(),
       focus: () => fishEditor.current?.focus(),
       blur: () => fishEditor.current?.blur(),
-      setText: (value: string) => fishEditor.current?.setText(value),
+      setText: (value: string, cb) => fishEditor.current?.setText(value, false, cb),
+      getText: () => fishEditor.current?.getText(),
       fishEditor
     };
   });
 
-  /** @name 设置表情弹窗隐藏 */
   const closeEmojiPop = () => {
     setOpen(false);
   };
 
-  /** @name 点击外面元素隐藏弹窗 */
   useClickAway(closeEmojiPop, [modalRef, emotionTarget]);
 
-  /** @name 发送消息 */
   const onSubmit = useCallback(() => {
-    // 没有输入值
     if (!isSend) return;
+
     if (fishEditor?.current) {
-      // 发送消息
       onSend?.(fishEditor.current.editor);
     }
   }, [onSend, isSend]);
@@ -142,12 +124,15 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
             onClick={() => {
               setOpen(!openEmoji);
             }}
+            style={{
+              marginRight: "16px"
+            }}
           />
         </Tooltip>
         {restProps?.toolbarRender?.()}
       </div>
 
-      <div ref={demoref}></div>
+      <div ref={domRef} style={{ flex: 1, height: 0 }}></div>
 
       <div className="fb-chat-footer">
         <span className="tip">按Enter键发送，按Ctrl+Enter键换行</span>
@@ -168,8 +153,9 @@ const ChatWrapper = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) =>
                   setOpen(false);
                   fishEditor.current?.insertEmoji(item);
                 }}
+                style={{ lineHeight: "normal" }}
               >
-                <Image src={item.url} preview={false} width={22} height={22} />
+                <Image src={item.url} preview={false} width={28} height={28} />
               </div>
             ))}
           </div>

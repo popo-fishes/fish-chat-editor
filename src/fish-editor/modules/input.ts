@@ -325,13 +325,17 @@ class Input extends Module<InputOptions> {
 
   /** @name Set matching word data */
   public setMatchWords(list: string[], cb?: () => void) {
+    // If the same value is set, return
+    if (JSON.stringify(this.matchWordsList) === JSON.stringify(list)) return;
+
     if (list.length) {
       this.removeHighlightCoverDom();
-      this.fishEditor.clear();
-      this.matchWordsList = list;
-      requestAnimationFrame(() => {
-        this.addHighlightCoverDom();
-        cb?.();
+      this.fishEditor.clear(() => {
+        this.matchWordsList = list;
+        requestAnimationFrame(() => {
+          this.addHighlightCoverDom();
+          cb?.();
+        });
       });
     } else {
       this.removeHighlightCoverDom();

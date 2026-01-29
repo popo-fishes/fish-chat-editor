@@ -7,4 +7,16 @@ export const emoji: { [key: string]: string } = {
   "[不看]": "[不看].png"
 };
 
-export const emojiSize = 18;
+export const getDefaultEmojiData = () => {
+  const data = [];
+  for (const i in emoji) {
+    const bli = i.replace("[", "");
+    const cli = bli.replace("]", "");
+    data.push({
+      url: "http://43.136.119.145:83/image/" + emoji[i],
+      name: i,
+      title: cli
+    });
+  }
+  return data;
+};

@@ -40,7 +40,7 @@ class Editor {
   }
 
   /**
-   * 主动清除textCache标记，有些场景不清除老是走缓存导致内容异常：比如
+   * @name 主动清除textCache标记，有些场景不清除老是走缓存导致内容异常：比如
    * handleCompositionEnd方法里面判断最大字符，当已经到达最大字符时再次输入，导致内容出错。
    */
   public clearTextCache() {
@@ -381,15 +381,43 @@ class Editor {
     }
   }
 
-  public setText(v: string, cb?: () => void) {
+  /**
+   * @name Set Rich Text Content
+   * @param v value
+   * @param isClear Do you want to clear before setting the value?
+   * @param cb Callback after completion
+   * @returns void
+   */
+  public setText(v: string, isClear = true, cb?: () => void) {
     const content = `${v}`;
     if (!this.container) return;
     // 如果设置的文本为空，则clear方法触发更新; 如果有值就不触发更新。
     const notUpdate = content ? true : false;
+
+    if (!isClear) {
+      this.setCursorEditorLast((node) => {
+        if (node) {
+          this.fishEditor.insertTextInterceptor(content, true, (success) => {
+            if (success) {
+              requestAnimationFrame(() => {
+                this.fishEditor.emit(Emitter.events.EDITOR_CHANGE, this.fishEditor);
+                this.blur();
+                cb?.();
+              });
+            }
+          });
+        }
+      });
+      return;
+    }
+
     // Clear first
     this.clear(() => {
       // If there is no value returned.
-      if (!content) return;
+      if (!content) {
+        cb?.();
+        return;
+      }
       this.setCursorEditorLast((node) => {
         if (node) {
           this.fishEditor.insertTextInterceptor(content, true, (success) => {
@@ -477,7 +505,11 @@ class Editor {
   }
 
   public focus() {
-    requestAnimationFrame(() => this.setCursorEditorLast());
+    requestAnimationFrame(() =>
+      this.setCursorEditorLast(() => {
+        this.fishEditor.scrollSelectionIntoView();
+      })
+    );
   }
   /**
    * @name Set the cursor to the last child node below the last line node in the editor

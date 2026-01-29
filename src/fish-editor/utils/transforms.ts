@@ -3,8 +3,7 @@
  * @Description: Modify here please
  */
 import { base, isNode } from ".";
-import { emojiSize } from "../../config";
-import { getEmojiData } from "../../utils";
+import { emojiSize, getEditorEmojiList } from "../config";
 import { isEditElement } from "./is-node";
 import store from "../core/store";
 
@@ -35,7 +34,7 @@ export const labelRep = (str: string, reversal?: boolean): string => {
  */
 export const transformTextToNodes = (content: string, size?: number): Node[] | [] => {
   if (!content) return [];
-  const emojiList = getEmojiData();
+  const emojiList = getEditorEmojiList();
   const nodes: Node[] = [];
 
   let strCont = content;
@@ -70,6 +69,39 @@ export const transformTextToNodes = (content: string, size?: number): Node[] | [
   }
 
   return nodes;
+};
+
+/**
+ * @name Text message conversion, batch replacement method
+ * @msgText
+ * @size
+ */
+export const replaceMsgText = (msgText?: string, size?: number): string => {
+  const semanticContent = labelRep(msgText);
+
+  const lines = semanticContent?.split("\n") || [];
+
+  const data: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineContent = lines[i];
+    const childNodes = transformTextToNodes(lineContent, size);
+
+    const node = document.createElement("p");
+
+    if (childNodes.length) {
+      const fragment = new DocumentFragment();
+      for (let i = 0; i < childNodes.length; i++) {
+        fragment.appendChild(childNodes[i]);
+      }
+      node.appendChild(fragment);
+    } else {
+      node.innerHTML = "<br/>";
+    }
+    data.push(node.outerHTML);
+  }
+  // console.log(data, semanticContent, size)
+  return data.join("");
 };
 
 /**

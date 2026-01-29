@@ -3,32 +3,23 @@
  * @Description: file content
  */
 import type { ReactNode } from "react";
-import type { default as FishEditor } from "../fish-editor";
-
-export type IEmojiType = {
-  /** 表情的url地址 */
-  url: string;
-  /** 表情的名称，必须是“[爱心]”的格式 */
-  name: string;
-  /** 表情的tip提示名 */
-  title: string;
-};
+import type { default as FishEditor, IEmojiType } from "../fish-editor";
 
 /** 聊天组件的ref */
 export interface IChatEditorRef {
   focus: () => void;
   clear: () => void;
   blur: () => void;
-  setText: (v: string) => void;
+  setText: (v: string, cb?: () => void) => void;
   fishEditor: React.MutableRefObject<FishEditor>;
 }
 
 /** 聊天组件的props */
 export interface IChatEditorProps {
+  /** 表情列表数据 */
+  emojiList: IEmojiType[];
   /** 扩展类名 */
   className?: string;
-  /** 表情列表数据 */
-  emojiList?: IEmojiType[];
   /** 提示占位符 */
   placeholder?: string;
   /** 自定义工具栏内容 */

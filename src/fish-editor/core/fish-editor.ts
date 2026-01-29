@@ -4,11 +4,10 @@
  */
 import merge from "lodash/merge";
 import { base, dom, util, isNode } from "../utils";
-import type { IEmojiType } from "../../types";
 import type OtherEventType from "../modules/other-event";
 import type Keyboard from "../modules/keyboard";
 import type InputType from "../modules/input";
-import { emojiSize } from "../../config";
+import { emojiSize, setEditorEmojiList, getEditorEmojiList, type IEmojiType } from "../config";
 import Emitter from "./emitter";
 import Selection from "./selection";
 import Composition from "./composition";
@@ -201,6 +200,14 @@ class FishEditor {
     this.placeholderDom.innerHTML = v;
   }
 
+  setEditorEmojiList(data: IEmojiType[]) {
+    setEditorEmojiList(data);
+  }
+
+  getEditorEmojiList(): IEmojiType[] {
+    return getEditorEmojiList();
+  }
+
   getScrollDomTop() {
     return this.scrollDom.scrollTop || 0;
   }
@@ -239,8 +246,16 @@ class FishEditor {
   focus() {
     this.editor.focus();
   }
-  setText(value: string, cb?: () => void) {
-    return this.editor.setText(value, cb);
+
+  /**
+   * @name Set Rich Text Content
+   * @param v value
+   * @param isClear Do you want to clear before setting the value?
+   * @param cb Callback after completion
+   * @returns void
+   */
+  setText(value: string, isClear?: boolean, cb?: () => void) {
+    this.editor.setText(value, isClear, cb);
   }
   /**
    * @name Get: How many more characters can be inserted when the distance triggers maxLength
@@ -278,10 +293,14 @@ class FishEditor {
       insertTextFn(contentText);
     } else {
       const leftLength = this.getLeftLengthOfMaxLength();
+      const emojiList = getEditorEmojiList();
+      // todo：表情不算字符拦截。
+      // console.log(leftLength, emojiList)
       if (leftLength <= 0) {
         callBack(false);
         return;
       }
+      // console.log(contentText.length, contentText)
       if (leftLength < contentText.length) {
         insertTextFn(contentText.slice(0, leftLength));
         return;
@@ -343,6 +362,11 @@ class FishEditor {
 
   insertEmoji(item: IEmojiType) {
     if (!this.editor) return;
+    const emojiList = getEditorEmojiList();
+    if (!emojiList || emojiList.length == 0) {
+      console.warn("No emoji data, Please use the setEditorEmojiList method to set data");
+      return;
+    }
 
     const imgNode = base.createChunkEmojiElement(item.url, emojiSize, item.name);
 

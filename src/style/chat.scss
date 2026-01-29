@@ -1,5 +1,5 @@
 @function imgcdn($img) {
-  @return 'http://43.136.119.145:83/image/' + $img;
+  @return "http://43.136.119.145:83/image/" + $img;
 }
 
 // 富文本样式
@@ -9,15 +9,6 @@
   padding: 0 24px;
   border-top: 1px solid rgba(233, 237, 243, 1);
   position: relative;
-}
-.fb-drag-line{
-  width: 100%;
-  height: 10px;
-  background: transparent;
-  position: absolute;
-  top: 0;
-  z-index: 10;
-  cursor: move;
 }
 
 // 工具栏
@@ -33,14 +24,14 @@
   .emotion {
     width: 21px;
     height: 21px;
-    background: url(imgcdn('emote.svg')) no-repeat;
+    background: url(imgcdn("emote.svg")) no-repeat;
     opacity: 0.9;
     background-size: cover;
     transition: none;
     margin-right: 23px;
     cursor: pointer;
     &:hover {
-      background: url(imgcdn('emote2.svg')) no-repeat;
+      background: url(imgcdn("emote2.svg")) no-repeat;
       background-size: cover;
     }
   }

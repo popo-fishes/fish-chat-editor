@@ -32,6 +32,7 @@ function App() {
       <div style={{ marginTop: "180px" }}>
         <FbChatEditor
           onEnterDown={onSend}
+          emojiList={[]}
           onSend={onSend}
           ref={editorRef}
           onChange={(editor: FishEditor["editor"]) => {

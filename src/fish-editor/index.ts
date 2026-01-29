@@ -10,10 +10,12 @@ import Uploader from "./modules/uploader";
 import Keyboard from "./modules/keyboard";
 import History from "./modules/history";
 
-export { labelRep } from "./utils/transforms";
+export { labelRep, replaceMsgText } from "./utils/transforms";
 export { default as Emitter } from "./core/emitter";
 
 export type { IEmitter } from "./core/emitter";
+
+export type { IEmojiType } from "./config";
 
 FishEditor.register({
   "modules/input": Input,
