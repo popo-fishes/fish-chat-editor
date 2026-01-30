@@ -12,6 +12,11 @@ import type { IChatEditorProps, IChatEditorRef } from "../types";
 import FishEditor from "../fish-editor";
 import { getDefaultEmojiData } from "../config";
 
+/**
+ * @name 富文本编辑器
+ * @param props
+ * @returns
+ */
 const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => {
   const { onChange, onEnterDown, onSend, emojiList = [], ...restProps } = props;
 
@@ -34,10 +39,9 @@ const ChatEditor = forwardRef<IChatEditorRef, IChatEditorProps>((props, ref) => 
     // 把 defaultEmojiList 和 emojiList 合并去重，优先使用 emojiList 中的表情包
     const mergeEmojiList = [...emojiList, ...defaultEmojiList];
     const uniqueEmojiList = mergeEmojiList.filter((item, index, self) => index === self.findIndex((t) => t.name == item.name));
-    // console.log(fishEditor.current)
     fishEditor.current?.setEditorEmojiList(uniqueEmojiList);
     return [...uniqueEmojiList];
-  }, [emojiList]);
+  }, [emojiList, fishEditor.current]);
 
   /**
    * !!! 可以动态监听值，进行多次实例化，但是不建议

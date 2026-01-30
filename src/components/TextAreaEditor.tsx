@@ -5,8 +5,6 @@ import classNames from "classnames";
 import isFunction from "lodash/isFunction";
 
 type Props = {
-  /** ref */
-  textAreaEditorRef: any;
   /** 最小高度 */
   minHeight: number;
   /** 内容 */
@@ -15,10 +13,13 @@ type Props = {
   maxHeight?: number;
   /** 最大字数限制  */
   maxLength?: number;
+  /** 是否禁用状态 */
+  disabled?: boolean;
   /** 提示文字 */
   placeholder?: string;
   /** 敏感词列表 */
   matchWordsList?: string[];
+  textAreaEditorRef?: any;
   classnames?: string;
   onBlur?: (event) => void;
   /** 值变化时 */
@@ -40,6 +41,7 @@ const TextAreaEditor = (props: Props) => {
     maxLength,
     maxHeight,
     minHeight,
+    disabled,
     placeholder = "",
     matchWordsList = [],
     onMaxLength,
@@ -116,6 +118,16 @@ const TextAreaEditor = (props: Props) => {
     if (!fishEditor.current) return;
     fishEditor.current.setPlaceholder(placeholder);
   }, [placeholder]);
+
+  // 动态设置富文本是否可以编辑
+  useEffect(() => {
+    if (!fishEditor.current) return;
+    if (disabled) {
+      fishEditor.current.disable();
+    } else {
+      fishEditor.current.enable();
+    }
+  }, [disabled]);
 
   /** @name 初始化时回显数据 */
   useEffect(() => {
@@ -219,7 +231,7 @@ const TextAreaEditor = (props: Props) => {
   }, [inputVal]);
 
   return (
-    <div ref={containerRef} className={classNames("textAreaEditor", isfocus && "focusSty", props.classnames)}>
+    <div ref={containerRef} className={classNames("textAreaEditor", isfocus && "focusSty", disabled && "disabled", props.classnames)}>
       <div ref={demoref} style={{ flex: 1, height: 0 }}></div>
 
       <div className={"drag"} onMouseDown={handleMouseDown}>

@@ -72,3 +72,13 @@
     height: 100% !important;
   }
 }
+
+.disabled {
+  background-color: #f5f6fa !important;
+  .fb-editor-container {
+    background-color: transparent;
+    p {
+      color: rgba(0, 0, 0, 0.25) !important;
+    }
+  }
+}

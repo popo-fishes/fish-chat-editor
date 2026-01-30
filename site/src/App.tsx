@@ -13,6 +13,23 @@ function App() {
   const editorRef = useRef<IChatEditorRef>(null);
   const textAreaEditorRef = useRef<any>(null);
 
+  const value =
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md" +
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md" +
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md" +
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md" +
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md" +
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md" +
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md" +
+    "https://github.com/popo-fishes/fish-chat-editor/blob/main/README.mdhttps://gith" +
+    "ub.com/popo-fishes/fih-chat-editor/blob/main/README.mdht/README.md";
   // 发送文本消息
   const onSend = async (editor: FishEditor["editor"]) => {
     // 清空输入框
@@ -64,7 +81,15 @@ function App() {
       {html && html !== "<p><br></p>" && <div className="editor-content-view" dangerouslySetInnerHTML={{ __html: html }} />}
 
       <h2>Text Area Editor</h2>
-      <TextAreaEditor textAreaEditorRef={textAreaEditorRef} placeholder={"我是TextAreaEditor"} minHeight={200} maxHeight={540} maxLength={5000} />
+      <TextAreaEditor
+        value={value}
+        disabled
+        textAreaEditorRef={textAreaEditorRef}
+        placeholder={"我是TextAreaEditor"}
+        minHeight={100}
+        maxHeight={150}
+        maxLength={5000}
+      />
     </>
   );
 }
