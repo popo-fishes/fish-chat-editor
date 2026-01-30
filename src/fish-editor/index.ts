@@ -2,9 +2,9 @@
  * @Date: 2024-11-04 09:26:21
  * @Description: Modify here please
  */
-import FishEditor from "./core/fish-editor";
+import FishEditor from "./core/fishEditor";
 import Input from "./modules/input";
-import OtherEvent from "./modules/other-event";
+import OtherEvent from "./modules/otherEvent";
 import Clipboard from "./modules/clipboard";
 import Uploader from "./modules/uploader";
 import Keyboard from "./modules/keyboard";

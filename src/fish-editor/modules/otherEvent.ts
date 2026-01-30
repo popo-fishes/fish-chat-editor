@@ -5,7 +5,7 @@
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type Clipboard from "./clipboard";
-import type FishEditor from "../core/fish-editor";
+import type FishEditor from "../core/fishEditor";
 
 import { util, helper, isNode, ua } from "../utils";
 

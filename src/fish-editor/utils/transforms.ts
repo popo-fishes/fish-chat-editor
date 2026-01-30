@@ -4,7 +4,7 @@
  */
 import { base, isNode } from ".";
 import { emojiSize, getEditorEmojiList } from "../config";
-import { isEditElement } from "./is-node";
+import { isEditElement } from "./isNode";
 import store from "../core/store";
 
 /**

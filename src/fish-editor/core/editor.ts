@@ -6,7 +6,7 @@ import cloneDeep from "lodash/cloneDeep";
 import isEmpty from "lodash/isEmpty";
 import { helper, base, dom, isNode, util, transforms, split, formats } from "../utils";
 import type { IRange } from "./selection";
-import type FishEditor from "./fish-editor";
+import type FishEditor from "./fishEditor";
 import Emitter from "./emitter";
 
 class Editor {

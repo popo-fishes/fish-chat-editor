@@ -2,7 +2,7 @@ import throttle from "lodash/throttle";
 import cloneDeep from "lodash/cloneDeep";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
-import type FishEditor from "../core/fish-editor";
+import type FishEditor from "../core/fishEditor";
 import type { IRange } from "../core/selection";
 import { split, util, dom, base, isNode } from "../utils";
 

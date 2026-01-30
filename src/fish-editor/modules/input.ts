@@ -7,7 +7,7 @@ import { dom, transforms, helper } from "../utils";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
 import type { IRange } from "../core/selection";
-import type FishEditor from "../core/fish-editor";
+import type FishEditor from "../core/fishEditor";
 import { recordCompositionStartContainer, handleMaxLengthFn } from "./utils/maximum";
 
 const INSERT_TYPES = ["insertText", "insertReplacementText"];

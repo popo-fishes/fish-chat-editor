@@ -3,7 +3,7 @@
  * @Description: Modify here please
  */
 import { isNode } from "../../utils";
-import type FishEditor from "../../core/fish-editor";
+import type FishEditor from "../../core/fishEditor";
 import type { IRange } from "../../core/selection";
 
 export const EDITOR_TO_START_CONTAINER: WeakMap<

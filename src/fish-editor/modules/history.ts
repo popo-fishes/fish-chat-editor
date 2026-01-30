@@ -6,7 +6,7 @@ import throttle from "lodash/throttle";
 import { dom, transforms, helper, isNode, base } from "../utils";
 import Module from "../core/module";
 import Emitter from "../core/emitter";
-import type FishEditor from "../core/fish-editor";
+import type FishEditor from "../core/fishEditor";
 
 export type IDeltaSchemaContent = {
   type: "text" | "image" | "br";

@@ -4,7 +4,7 @@
  */
 import merge from "lodash/merge";
 import { base, dom, util, isNode } from "../utils";
-import type OtherEventType from "../modules/other-event";
+import type OtherEventType from "../modules/otherEvent";
 import type Keyboard from "../modules/keyboard";
 import type InputType from "../modules/input";
 import { emojiSize, setEditorEmojiList, getEditorEmojiList, type IEmojiType } from "../config";
@@ -15,7 +15,7 @@ import Module from "./module";
 import Theme from "./theme";
 import Editor from "./editor";
 import store from "./store";
-import scrollRectIntoView, { type Rect } from "./utils/scroll-rectInto-view";
+import scrollRectIntoView, { type Rect } from "./utils/scrollRectIntoView";
 import { removeEditorImageBse64Map } from "./helper";
 
 export interface IFishEditorOptions {
