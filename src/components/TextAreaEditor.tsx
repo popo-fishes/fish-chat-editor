@@ -31,7 +31,7 @@ type Props = {
 };
 
 /**
- * @name 富文本输入框
+ * @name 富文本-文本域
  * @param props
  * @returns
  */

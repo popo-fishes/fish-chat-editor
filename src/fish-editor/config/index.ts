@@ -4,24 +4,24 @@
  */
 export type IEmojiType = {
   /** 表情的url地址 */
-  url: string
+  url: string;
   /** 表情的名称，必须是“[爱心]”的格式 */
-  name: string
+  name: string;
   /** 表情的tip提示名 */
-  title: string
-}
+  title: string;
+};
 
-let editorEmojiList: IEmojiType[] = []
+let editorEmojiList: IEmojiType[] = [];
 
-export const emojiSize = 28
+export const emojiSize = 28;
 
 /**
  * @name Set emoji image data
  */
 export const setEditorEmojiList = (emojiData: IEmojiType[]) => {
-  editorEmojiList = [...emojiData]
-}
+  editorEmojiList = [...emojiData];
+};
 
 export const getEditorEmojiList = (): IEmojiType[] => {
-  return editorEmojiList || []
-}
+  return editorEmojiList || [];
+};
