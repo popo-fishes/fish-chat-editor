@@ -11,6 +11,9 @@ dependencies:
   classnames:
     specifier: ^2.5.1
     version: 2.5.1
+  lodash:
+    specifier: ^4.17.21
+    version: 4.17.21
   react:
     specifier: 17.0.2
     version: 17.0.2
@@ -115,9 +118,6 @@ devDependencies:
   lint-staged:
     specifier: ^15.1.0
     version: 15.2.10
-  lodash:
-    specifier: ^4.17.21
-    version: 4.17.21
   prettier:
     specifier: ^3.1.0
     version: 3.3.3
@@ -4797,6 +4797,7 @@ packages:
 
   /lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+    dev: false
 
   /log-update@6.1.0:
     resolution: {integrity: sha512-9ie8ItPR6tjY5uYJh8K/Zrv/RMZ5VOlOWvtZdEHYSTFKZfIBPQa9tOAEeAWhd+AnIneLJ22w5fjOYtoutpWq5w==}
