@@ -1,0 +1,37 @@
+<!--
+ * @Date: 2026-02-02 15:48:37
+ * @Description: Modify here please
+-->
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>页面标题</title>
+    <!-- 引入外部样式表 -->
+    <link rel="stylesheet" href="../dist/editor.css" />
+    <!-- 引入外部脚本 -->
+    <script src="../dist/index.full.min.js"></script>
+    <style>
+      #root {
+        width: 500px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 页面内容 -->
+    <header>
+      <div id="root"></div>
+    </header>
+
+    <!-- 引入外部脚本 -->
+    <script>
+      let FishEditor2 = FishEditor.default;
+      var dom = document.getElementById("root");
+      var demo = new FishEditor2(dom, {
+        placeholder: "cdn使用方式",
+        minHeight: 150
+      });
+    </script>
+  </body>
+</html>
