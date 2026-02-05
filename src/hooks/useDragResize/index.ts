@@ -2,8 +2,7 @@
  * @Date: 2026-01-29 16:05:39
  * @Description: Modify here please
  */
-import { useEffect } from "react";
-import { useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 
 interface UseDragResizeProps {
   // 最小高度
@@ -17,7 +16,6 @@ interface UseDragResizeProps {
   // 高度变化回调
   onChange?: (height: number) => void;
 }
-
 export const useDragResize = (props: UseDragResizeProps) => {
   const { minHeight, maxHeight, initialHeight, onChange, reverseDirection = false } = props;
   // 初始鼠标Y坐标
@@ -101,5 +99,63 @@ export const useDragResize = (props: UseDragResizeProps) => {
     [minHeight, maxHeight, onChange]
   );
 
-  return { containerRef, setContainerHeight, handleMouseDown };
+  // 移动端触屏拖拽开始（touchstart）
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault(); // 阻止触屏默认行为（如页面滚动、缩放）
+
+      if (!containerRef.current) return;
+
+      // 记录初始触摸点Y坐标（取第一个触摸点，适配单指拖拽）
+      startYRef.current = e.touches[0].clientY;
+      // 记录容器当前的初始高度
+      startHeightRef.current = containerRef.current.offsetHeight;
+
+      // 禁止页面文本选中（优化触屏体验）
+      document.body.style.userSelect = "none";
+      // 禁止触屏默认行为（防止滚动、缩放干扰拖拽）
+      document.body.style.touchAction = "none";
+
+      // 触屏移动过程（touchmove）：实时计算并更新高度
+      const handleTouchMove = (moveEvent: TouchEvent) => {
+        moveEvent.stopPropagation();
+        moveEvent.preventDefault();
+
+        // 实时获取当前触摸点Y坐标
+        const currentY = moveEvent.touches[0].clientY;
+        // 计算触摸点移动的差值
+        const deltaY = currentY - startYRef.current;
+        // 根据是否反转方向，调整差值方向
+        const adjustedDeltaY = reverseDirection ? -deltaY : deltaY;
+
+        // 计算新高度，并限制在 min ~ max 范围内
+        const newHeight = Math.min(Math.max(startHeightRef.current + adjustedDeltaY, minHeight), maxHeight ?? Infinity);
+
+        // 更新容器高度并触发回调
+        if (containerRef.current) {
+          containerRef.current.style.height = `${newHeight}px`;
+          onChange?.(newHeight);
+        }
+      };
+
+      // 触屏拖拽结束（touchend）：清除事件监听和全局样式
+      const handleTouchEnd = () => {
+        // 恢复默认样式
+        document.body.style.userSelect = "";
+        document.body.style.touchAction = "";
+
+        // 移除全局触屏事件监听（防止内存泄漏）
+        document.removeEventListener("touchmove", handleTouchMove);
+        document.removeEventListener("touchend", handleTouchEnd);
+      };
+
+      // 绑定全局触屏事件（监听整个文档，保证拖拽不中断）
+      document.addEventListener("touchmove", handleTouchMove);
+      document.addEventListener("touchend", handleTouchEnd);
+    },
+    [minHeight, maxHeight, onChange, reverseDirection]
+  );
+
+  return { containerRef, setContainerHeight, handleMouseDown, handleTouchStart };
 };

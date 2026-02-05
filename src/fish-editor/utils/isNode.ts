@@ -81,6 +81,30 @@ export const isEmojiImgNode = (node: HTMLElement): boolean => {
   return false;
 };
 
+/**
+ * @name Pass in an editing Element row node to determine if the row is empty
+ * @param Element node
+ * @returns
+ */
+export const isEditElementEmpty = (node: HTMLElement): boolean => {
+  if (!node) return true;
+  if (!isEditElement(node)) return true;
+  if (node.childNodes.length == 0) {
+    return true;
+  }
+  const nodes: any[] = Array.from(node.childNodes);
+
+  let exist = false;
+  for (const cld of nodes) {
+    if ((cld as any)?.nodeName == "BR") {
+      exist = true;
+      break;
+    }
+  }
+
+  return exist;
+};
+
 export const isNodeNotTtxt = (node: HTMLElement): boolean => {
   if (isDOMText(node)) {
     if (node?.nodeValue == "") {

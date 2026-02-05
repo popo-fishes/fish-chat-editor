@@ -293,20 +293,35 @@ class FishEditor {
       insertTextFn(contentText);
     } else {
       const leftLength = this.getLeftLengthOfMaxLength();
-      const emojiList = getEditorEmojiList();
+      // const emojiList = getEditorEmojiList()
       // todo：表情不算字符拦截。
-      // console.log(leftLength, emojiList)
+      // console.log(leftLength, emojiList, contentText.length)
       if (leftLength <= 0) {
         callBack(false);
         return;
       }
-      // console.log(contentText.length, contentText)
-      if (leftLength < contentText.length) {
-        insertTextFn(contentText.slice(0, leftLength));
-        return;
+      /** Does a newline character count as the number of characters */
+      const isLineBreakCount = this.options.isLineBreakCount;
+      // 换行符不算字符数
+      if (!isLineBreakCount) {
+        const result = contentText.split(/[\r\n]+/).join("");
+        const newContentLength = result.length;
+        // truncate
+        if (leftLength < newContentLength) {
+          insertTextFn(contentText.slice(0, leftLength));
+          return;
+        }
+        // direct insertion
+        insertTextFn(contentText);
+      } else {
+        // truncate
+        if (leftLength < contentText.length) {
+          insertTextFn(contentText.slice(0, leftLength));
+          return;
+        }
+        // direct insertion
+        insertTextFn(contentText);
       }
-
-      insertTextFn(contentText);
     }
   }
   getText(isPure = false) {

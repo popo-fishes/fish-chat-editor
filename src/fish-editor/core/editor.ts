@@ -307,7 +307,16 @@ class Editor {
         if (showCursor) {
           const referenceNode = focusNode.parentNode;
           if (referenceNode) {
-            this.fishEditor.selection.setCursorPosition(focusNode, "after");
+            // 获取光标节点I标签的兄弟节点
+            const previousNode = focusNode.previousSibling;
+            // console.log(previousNode)
+            if (previousNode && previousNode.nodeName == "BR") {
+              focusNode?.remove();
+              this.fishEditor.selection.setCursorPosition(previousNode, "before");
+            } else {
+              this.fishEditor.selection.setCursorPosition(focusNode, "after");
+              focusNode?.remove();
+            }
           }
         }
         focusNode?.remove();
